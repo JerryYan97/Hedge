@@ -4,3 +4,6 @@
 [submodule "external/bullet"]
 	path = external/bullet
 	url = https://github.com/bulletphysics/bullet3.git
+[submodule "external/VMA"]
+	path = external/VMA
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
