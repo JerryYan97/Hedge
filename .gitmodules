@@ -1,3 +1,6 @@
 [submodule "external/DearImGUI"]
 	path = external/DearImGUI
 	url = https://github.com/ocornut/imgui.git
+[submodule "external/bullet"]
+	path = external/bullet
+	url = https://github.com/bulletphysics/bullet3.git
