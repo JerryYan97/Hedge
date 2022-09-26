@@ -10,3 +10,6 @@
 [submodule "external/glfw"]
 	path = external/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "external/USD"]
+	path = external/USD
+	url = https://github.com/PixarAnimationStudios/USD.git
