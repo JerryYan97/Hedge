@@ -10,3 +10,9 @@
 [submodule "external/glfw"]
 	path = external/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "external/ImGUICustomLayout"]
+	path = external/ImGUICustomLayout
+	url = https://github.com/JerryYan97/ImGUIExplore.git
+[submodule "external/Gardener"]
+	path = external/Gardener
+	url = https://github.com/JerryYan97/Gardener.git
