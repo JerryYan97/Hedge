@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 set(MY_APP_NAME "HedgeEditor")
 project(HedgeEditor VERSION 0.1 LANGUAGES CXX)
 
@@ -15,14 +15,20 @@ link_directories("$ENV{VULKAN_SDK}/lib")
 link_directories("./external/glfw/build/src/Debug/")
 
 add_definitions(-DSOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\")
+
+set(IMGUI_SRC_LIST 
+    ${DearImGUIPath}/imgui.cpp
+    ${DearImGUIPath}/imgui_draw.cpp
+    ${DearImGUIPath}/imgui_demo.cpp
+    ${DearImGUIPath}/imgui_tables.cpp
+    ${DearImGUIPath}/imgui_widgets.cpp
+    ${DearImGUIPath}/backends/imgui_impl_vulkan.cpp
+    ${DearImGUIPath}/backends/imgui_impl_glfw.cpp)
+
 add_executable(${MY_APP_NAME} ./src/main.cpp
-                              ${DearImGUIPath}/imgui.cpp
-                              ${DearImGUIPath}/imgui_draw.cpp
-                              ${DearImGUIPath}/imgui_demo.cpp
-                              ${DearImGUIPath}/imgui_tables.cpp
-                              ${DearImGUIPath}/imgui_widgets.cpp
-                              ${DearImGUIPath}/backends/imgui_impl_vulkan.cpp
-                              ${DearImGUIPath}/backends/imgui_impl_glfw.cpp)
+                              ${IMGUI_SRC_LIST})
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${IMGUI_SRC_LIST})
 
 target_compile_features(${MY_APP_NAME} PRIVATE cxx_std_17)
 target_link_libraries(${MY_APP_NAME} vulkan-1)
