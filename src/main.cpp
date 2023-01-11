@@ -1,6 +1,7 @@
-#include <iostream>
+#include "HedgeEditor.h"
 
-void main()
+void main(int argc, char** argv)
 {
-    std::cout << "Hello World" << std::endl;
+    HedgeEditor editor;
+    editor.Run();
 }
