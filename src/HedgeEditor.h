@@ -1,4 +1,9 @@
 
+namespace DearImGuiExt
+{
+    class CustomLayout;
+}
+
 class HedgeEditor
 {
 public:
@@ -6,4 +11,7 @@ public:
     ~HedgeEditor();
 
     void Run();
+
+private:
+    DearImGuiExt::CustomLayout* myLayout
 };
