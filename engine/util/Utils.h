@@ -6,3 +6,5 @@ public:
 private:
 
 };
+
+void UtilPrint();

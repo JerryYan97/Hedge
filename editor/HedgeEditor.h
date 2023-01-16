@@ -2,7 +2,7 @@
 namespace DearImGuiExt
 {
     class CustomLayout;
-}
+};
 
 class HedgeEditor
 {
@@ -13,5 +13,5 @@ public:
     void Run();
 
 private:
-    DearImGuiExt::CustomLayout* myLayout
+    DearImGuiExt::CustomLayout* myLayout;
 };

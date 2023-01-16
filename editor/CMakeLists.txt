@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.8)
+set(EDITOR_NAME "HedgeEditor")
+project(HedgeEditor VERSION 0.1 LANGUAGES CXX)
+
+set(EDITOR_SRC_LIST
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditor.h)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_SRC_LIST})
+
+add_subdirectory(../engine/ ./engine)
+
+add_executable(${EDITOR_NAME} ${EDITOR_SRC_LIST})
+target_link_libraries(${EDITOR_NAME} LINK_PUBLIC HedgeEngine)
+target_include_directories(${EDITOR_NAME} PUBLIC ../engine/)
