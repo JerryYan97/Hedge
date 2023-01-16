@@ -19,11 +19,12 @@ void HedgeEditor::Run()
 void HedgeEditor::BuildGame(
     const char* pPathFileName)
 {
-    std::system("cd");
+    std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
+    std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
 }
 
 void main(
-    int    argc, 
+    int    argc,
     char** argv)
 {
     HedgeEditor editor;
