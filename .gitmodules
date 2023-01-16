@@ -16,3 +16,6 @@
 [submodule "external/Gardener"]
 	path = external/Gardener
 	url = https://github.com/JerryYan97/Gardener.git
+[submodule "external/spdLog"]
+	path = external/spdLog
+	url = https://github.com/gabime/spdlog.git
