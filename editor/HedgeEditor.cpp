@@ -1,5 +1,6 @@
 #include "HedgeEditor.h"
 #include "util/Utils.h"
+#include "logging/HLogger.h"
 #include <iostream>
 #include <cstdlib>
 
@@ -30,5 +31,8 @@ void main(
     HedgeEditor editor;
     editor.Run();
     UtilPrint();
-    editor.BuildGame(nullptr);
+    Hedge::HLogger logger;
+
+    HDG_CORE_WARN("Init Log!");
+    HDG_INFO("Another Log from client.");
 }
