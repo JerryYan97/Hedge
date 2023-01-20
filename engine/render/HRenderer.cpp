@@ -1,8 +1,12 @@
 #include "HRenderer.h"
 #include "../logging/HLogger.h"
+
+#include <GLFW/glfw3.h>
+
 #include <string>
 #include <cassert>
 #include <vector>
+#include <set>
 
 #ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(
@@ -35,8 +39,13 @@ namespace Hedge
         // Create vulkan instance and possible debug initialization.
         CreateVulkanAppInstDebugger();
 
-        // Create physical device and logical device
+        // Init glfw window and create vk surface from it.
+        CreateGlfwWindowAndVkSurface();
+
+        // Create physical device and logical device.
         CreateVulkanPhyLogicalDevice();
+
+        // 
     }
 
     // ================================================================================================================
@@ -137,7 +146,84 @@ namespace Hedge
         std::vector<VkQueueFamilyProperties> queueFamilyProps(queueFamilyPropCount);
         vkGetPhysicalDeviceQueueFamilyProperties(m_vkPhyDevice, &queueFamilyPropCount, queueFamilyProps.data());
 
+        bool foundGraphics = false;
+        bool foundPresent  = false;
+        bool foundCompute  = false;
+        for (uint32_t i = 0; i < queueFamilyPropCount; ++i)
+        {
+            if (queueFamilyProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            {
+                m_gfxQueueFamilyIdx = i;
+                foundGraphics = true;
+            }
+            VkBool32 supportPresentSurface;
+            vkGetPhysicalDeviceSurfaceSupportKHR(m_vkPhyDevice, i, m_surface, &supportPresentSurface);
+            if (supportPresentSurface)
+            {
+                m_presentQueueFamilyIdx = i;
+                foundPresent = true;
+            }
+
+            if (foundCompute)
+            {
+                m_computeQueueFamilyIdx = i;
+                foundCompute = true;
+            }
+
+            if (foundGraphics && foundPresent && foundCompute)
+            {
+                break;
+            }
+        }
+        assert(foundGraphics && foundPresent && foundCompute);
+
+        // Use the queue family index to initialize the queue create info.
+        float queue_priorities[1] = { 0.0 };
+
+        // Queue family index should be unique in vk1.2:
+        // https://vulkan.lunarg.com/doc/view/1.2.198.0/windows/1.2-extensions/vkspec.html#VUID-VkDeviceCreateInfo-queueFamilyIndex-02802
+        std::set<uint32_t> uniqueQueueFamilies = { m_gfxQueueFamilyIdx, m_presentQueueFamilyIdx, m_computeQueueFamilyIdx };
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        float queuePriority = 1.0f;
+        for (uint32_t queueFamily : uniqueQueueFamilies) {
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = queueFamily;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+            queueCreateInfos.push_back(queueCreateInfo);
+        }
+
+        // We need the swap chain device extension
+        const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+        // Assembly the info into the device create info
+        VkDeviceCreateInfo deviceInfo{};
+        {
+            deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+            deviceInfo.queueCreateInfoCount = queueCreateInfos.size();
+            deviceInfo.pQueueCreateInfos = queueCreateInfos.data();
+            deviceInfo.enabledExtensionCount = 1;
+            deviceInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        }
+
+        // Create the logical device
+        VK_CHECK(vkCreateDevice(m_vkPhyDevice, &deviceInfo, nullptr, &m_vkDevice));
+
     }
+
+    // ================================================================================================================
+    void HRenderManager::CreateGlfwWindowAndVkSurface()
+    {
+        // Init glfw window.
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        m_pGlfwWindow = glfwCreateWindow(1280, 640, "Hedge Default Title", nullptr, nullptr);
+        glfwSetFramebufferSizeCallback(m_pGlfwWindow, HRenderManager::GlfwFramebufferResizeCallback);
+
+        // Create vulkan surface from the glfw window.
+        VK_CHECK(glfwCreateWindowSurface(m_vkInst, m_pGlfwWindow, nullptr, &m_surface));
+    }
+
 
 #ifndef NDEBUG
 

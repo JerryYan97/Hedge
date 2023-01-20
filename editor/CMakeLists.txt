@@ -8,7 +8,7 @@ set(EDITOR_SRC_LIST
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_SRC_LIST})
 
-add_subdirectory(../engine/ ./engine)
+add_subdirectory(../engine/ ./build/engine)
 
 add_executable(${EDITOR_NAME} ${EDITOR_SRC_LIST})
 target_link_libraries(${EDITOR_NAME} LINK_PUBLIC HedgeEngine)

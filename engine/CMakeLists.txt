@@ -6,6 +6,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils/CMakeUtil.cmake)
 
 CheckVulkanSDK()
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw ${CMAKE_CURRENT_SOURCE_DIR}/glfw)
+include_directories(../../../ThirdPartyLibs/glfw/include)
+
 set(ENG_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/entry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Utils.h
@@ -21,8 +24,10 @@ add_library(${ENG_NAME} STATIC ${ENG_SRC_LIST})
 
 target_include_directories(${ENG_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/spdLog/include
-                                              $ENV{VULKAN_SDK}/Include)
+                                              $ENV{VULKAN_SDK}/Include
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include)
 
 target_link_directories(${ENG_NAME} PUBLIC $ENV{VULKAN_SDK}/lib)
 
-target_link_libraries(${ENG_NAME} vulkan-1)
+target_link_libraries(${ENG_NAME} LINK_PUBLIC vulkan-1
+                                              GLFW)
