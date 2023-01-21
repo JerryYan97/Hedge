@@ -1,6 +1,6 @@
 #include "HedgeEditor.h"
 #include "util/Utils.h"
-#include "render/HRenderer.h"
+#include "render/HRenderManager.h"
 #include "logging/HLogger.h"
 #include <iostream>
 #include <cstdlib>
