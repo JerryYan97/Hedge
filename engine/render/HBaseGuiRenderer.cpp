@@ -1,5 +1,7 @@
 #include "HBaseGuiRenderer.h"
 #include "Utils.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
 #include <vector>
 #include <cassert>
 #include <GLFW/glfw3.h>
@@ -20,7 +22,7 @@ namespace Hedge
           m_pSurface(pSurface),
           m_pWindow(pWindow)
     {
-        CreateSwapChain(graphicsQueueFamilyIdx, presentQueueFamilyIdx);
+        CreateSwapchain(graphicsQueueFamilyIdx, presentQueueFamilyIdx);
         CreateSwapchainImageViews();
         CreateRenderpass();
     }
@@ -29,16 +31,11 @@ namespace Hedge
     HBaseGuiRenderer::~HBaseGuiRenderer()
     {
         CleanupSwapchain();
+        vkDestroyRenderPass(*m_pDevice, m_renderpass, nullptr);
     }
 
     // ================================================================================================================
-    void HBaseGuiRenderer::Init()
-    {
-        
-    }
-
-    // ================================================================================================================
-    void HBaseGuiRenderer::CreateSwapChain(
+    void HBaseGuiRenderer::CreateSwapchain(
         uint32_t graphicsQueueFamilyIdx,
         uint32_t presentQueueFamilyIdx)
     {
@@ -240,7 +237,7 @@ namespace Hedge
         // Create Framebuffer
         m_pSwapchainFramebuffers = new VkFramebuffer[m_swapchainImgViewsCnt];
 
-        for (int i = 0; i < m_swapchainImgViewsCnt; i++)
+        for (uint32_t i = 0; i < m_swapchainImgViewsCnt; i++)
         {
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -271,4 +268,15 @@ namespace Hedge
     // ================================================================================================================
     void HBaseGuiRenderer::RecreateSwapchain()
     {}
+
+    // ================================================================================================================
+    void HBaseGuiRenderer::Render()
+    {
+        // Prepare the Dear ImGUI frame data
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+
+    }
 }

@@ -1,8 +1,6 @@
 #pragma once
 #include "HRenderer.h"
 
-class GLFWwindow;
-
 namespace Hedge
 {
     // The base gui renderer manages swap chain and dear imgui rendering.
@@ -19,12 +17,12 @@ namespace Hedge
 
         ~HBaseGuiRenderer();
 
-        virtual void Render() = 0;
+        virtual void Render();
 
-        virtual void Init();
+        virtual void ImGUIWindowDataArrange() = 0;
 
     private:
-        void CreateSwapChain(
+        void CreateSwapchain(
             uint32_t graphicsQueueFamilyIdx,
             uint32_t presentQueueFamilyIdx);
 

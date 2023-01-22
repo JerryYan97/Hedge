@@ -51,8 +51,6 @@ namespace Hedge
     // ================================================================================================================
     HRenderManager::~HRenderManager()
     {
-
-
 #ifndef NDEBUG
         // Destroy debug messenger
         auto fpVkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_vkInst, "vkDestroyDebugUtilsMessengerEXT");
@@ -64,6 +62,10 @@ namespace Hedge
 #endif
 
         vkDestroyInstance(m_vkInst, nullptr);
+
+        glfwDestroyWindow(m_pGlfwWindow);
+
+        glfwTerminate();
     }
 
     // ================================================================================================================
@@ -228,6 +230,15 @@ namespace Hedge
 
         // Create vulkan surface from the glfw window.
         VK_CHECK(glfwCreateWindowSurface(m_vkInst, m_pGlfwWindow, nullptr, &m_surface));
+    }
+
+    // ================================================================================================================
+    void HRenderManager::Render()
+    {
+        for (uint32_t i = 0; i < m_rendererCnt; i++)
+        {
+            m_pRenderers[i].Render();
+        }
     }
 
 

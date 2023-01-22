@@ -7,7 +7,7 @@
 #include <vulkan/vulkan.h>
 #include <iostream>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace Hedge
 {
@@ -18,7 +18,6 @@ namespace Hedge
         ~HRenderer();
 
         virtual void Render() = 0;
-        virtual void Init() = 0;
     private:
 
     };

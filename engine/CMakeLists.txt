@@ -23,7 +23,8 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENG_SRC_LIST})
 target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/spdLog/include
                                               $ENV{VULKAN_SDK}/Include
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include)
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/DearImGUI)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)
