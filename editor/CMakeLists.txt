@@ -11,5 +11,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_SRC_LIST})
 add_subdirectory(../engine/ ./build/engine)
 
 add_executable(${EDITOR_NAME} ${EDITOR_SRC_LIST})
+target_compile_features(${EDITOR_NAME} PRIVATE cxx_std_17)
+
 target_link_libraries(${EDITOR_NAME} LINK_PUBLIC HedgeEngine)
 target_include_directories(${EDITOR_NAME} PUBLIC ../engine/)

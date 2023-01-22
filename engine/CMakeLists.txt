@@ -28,5 +28,7 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)
 
+target_compile_features(HedgeEngine PRIVATE cxx_std_17)
+
 target_link_libraries(HedgeEngine LINK_PUBLIC vulkan-1
                                               glfw3)

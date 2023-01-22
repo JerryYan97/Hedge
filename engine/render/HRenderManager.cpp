@@ -1,6 +1,7 @@
 #include "HRenderManager.h"
 #include "HRenderer.h"
 #include "../logging/HLogger.h"
+#include "Utils.h"
 
 #include <GLFW/glfw3.h>
 
@@ -45,8 +46,6 @@ namespace Hedge
 
         // Create physical device and logical device.
         CreateVulkanPhyLogicalDevice();
-
-        // 
     }
 
     // ================================================================================================================
@@ -81,7 +80,13 @@ namespace Hedge
             appInfo.apiVersion = VK_API_VERSION_1_3;
         }
 
-        std::vector<const char*> extensions;
+        // Init glfw and get the glfw required extension. NOTE: Initialize GLFW before calling any function that requires initialization.
+        glfwInit();
+        uint32_t glfwExtCnt = 0;
+        const char** glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtCnt);
+        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtCnt);
+
 #ifndef NDEBUG
         ValidateDebugExtAndValidationLayer();
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
