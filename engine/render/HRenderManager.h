@@ -1,11 +1,15 @@
 #pragma once
 /*
-* The hedge render manager holds the gpu context, glfw window context and a set of renderer.
-* A renderer is an entity to construct a command buffer or a set of command buffers for rendering.
+* The hedge render manager holds the gpu context, glfw window context, swapchain and a set of renderer.
+* The manager also manages the sync between renderers for the final rendering result on the screen.
+* 
+* A renderer is an entity to construct a command buffer or a set of command buffers for a specific rendering result.
+* The specific rendering result would be collected by the render manager to build the final rendering result.
 */
 
 #include <vulkan/vulkan.h>
 #include <iostream>
+#include <vector>
 
 class GLFWwindow;
 
@@ -19,8 +23,12 @@ namespace Hedge
         HRenderManager();
         ~HRenderManager();
 
-        // Trigger all renderer's Render() managed by this manager.
-        void Render();
+        void RenderCurrentScene();
+        void HandleResize();
+        void FinalizeSceneAndSwapBuffers();
+        void DrawHud();
+
+        bool WindowShouldClose() { return true; };
 
     private:
         void CreateVulkanAppInstDebugger();
@@ -28,6 +36,13 @@ namespace Hedge
         void CreateVulkanPhyLogicalDevice();
 
         static void GlfwFramebufferResizeCallback(GLFWwindow* window, int width, int height) { m_frameBufferResize = true; }
+
+        void CreateSwapchain();
+        void CleanupSwapchain();
+        void RecreateSwapchain();
+        void CreateSwapchainImageViews();
+        void CreateRenderpass();
+        void CreateSwapchainFramebuffer();
 
         // Vulkan core objects
         VkInstance       m_vkInst;
@@ -44,9 +59,17 @@ namespace Hedge
         uint32_t m_computeQueueFamilyIdx;
         uint32_t m_presentQueueFamilyIdx;
 
-        // Renderers: The order matters.
+        // Swapchain information
+        VkSurfaceFormatKHR         m_surfaceFormat;
+        VkExtent2D                 m_swapchainImageExtent;
+        VkSwapchainKHR             m_swapchain;
+        std::vector<VkImageView>   m_swapchainImgViews;
+        std::vector<VkFramebuffer> m_swapchainFramebuffers;
+        VkRenderPass               m_renderpass;
+
+        // Renderers.
         HRenderer* m_pRenderers;
-        uint32_t   m_rendererCnt;
+        uint32_t   m_activeRendererIdx;
 
 
 #ifndef NDEBUG

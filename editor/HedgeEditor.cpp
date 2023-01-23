@@ -24,7 +24,7 @@ void HedgeEditor::BuildGame(
     std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
     std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
 }
-
+/*
 void main(
     int    argc,
     char** argv)
@@ -39,3 +39,4 @@ void main(
     HDG_CORE_WARN("Init Log!");
     HDG_INFO("Another Log from client.");
 }
+*/
