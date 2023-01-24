@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace Hedge
 {
@@ -23,17 +23,19 @@ namespace Hedge
         HRenderManager();
         ~HRenderManager();
 
+        void BeginNewFrame();
         void RenderCurrentScene();
-        void HandleResize();
         void FinalizeSceneAndSwapBuffers();
         void DrawHud();
 
-        bool WindowShouldClose() { return true; };
+        bool WindowShouldClose();
 
     private:
         void CreateVulkanAppInstDebugger();
         void CreateGlfwWindowAndVkSurface();
         void CreateVulkanPhyLogicalDevice();
+
+        void HandleResize();
 
         static void GlfwFramebufferResizeCallback(GLFWwindow* window, int width, int height) { m_frameBufferResize = true; }
 

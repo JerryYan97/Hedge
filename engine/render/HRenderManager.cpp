@@ -59,6 +59,10 @@ namespace Hedge
 
         vkDestroyRenderPass(m_vkDevice, m_renderpass, nullptr);
 
+        vkDestroyDevice(m_vkDevice, nullptr);
+
+        vkDestroySurfaceKHR(m_vkInst, m_surface, nullptr);
+
 #ifndef NDEBUG
         // Destroy debug messenger
         auto fpVkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_vkInst, "vkDestroyDebugUtilsMessengerEXT");
@@ -74,6 +78,13 @@ namespace Hedge
         glfwDestroyWindow(m_pGlfwWindow);
 
         glfwTerminate();
+    }
+
+    // ================================================================================================================
+    void HRenderManager::BeginNewFrame()
+    {
+        glfwPollEvents();
+        // Resize swapchain
     }
 
     // ================================================================================================================
@@ -141,6 +152,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    bool HRenderManager::WindowShouldClose()
+    {
+        return glfwWindowShouldClose(m_pGlfwWindow);
+    }
+
+    // ================================================================================================================
     void HRenderManager::CreateVulkanPhyLogicalDevice()
     {
         // Enumerate the physicalDevices, select the first one and display the name of it.
@@ -180,7 +197,7 @@ namespace Hedge
                 foundPresent = true;
             }
 
-            if (foundCompute)
+            if (queueFamilyProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
             {
                 m_computeQueueFamilyIdx = i;
                 foundCompute = true;
@@ -217,7 +234,7 @@ namespace Hedge
         VkDeviceCreateInfo deviceInfo{};
         {
             deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-            deviceInfo.queueCreateInfoCount = queueCreateInfos.size();
+            deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
             deviceInfo.pQueueCreateInfos = queueCreateInfos.data();
             deviceInfo.enabledExtensionCount = 1;
             deviceInfo.ppEnabledExtensionNames = deviceExtensions.data();

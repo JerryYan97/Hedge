@@ -1,16 +1,18 @@
 #include <iostream>
 #include "render/HRenderManager.h"
+#include "logging/HLogger.h"
 
 void main(int argc, char** argv)
 {
     std::cout << "Hello From Hedge Engine!" << std::endl;
 
-    // Hedge::HRenderManager renderManager;
+    Hedge::HLogger logger;
+    Hedge::HRenderManager renderManager;
 
-    // while (renderManager.WindowShouldClose() == false)
-    while(0)
+    while (renderManager.WindowShouldClose() == false)
     {
-        // Resize handling
+        // Poll events, resize handling
+        renderManager.BeginNewFrame();
 
         // Frame listener frame start
 
