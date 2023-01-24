@@ -3,13 +3,15 @@
 
 namespace Hedge
 {
-    // The base gui renderer manages swap chain and dear imgui rendering.
-    class HBaseGuiRenderer : public HRenderer
+    // The base gui renderer manages dear imgui context and render data.
+    class HBaseGuiManager
     {
     public:
-        HBaseGuiRenderer(const VkRenderPass* const pRenderpass);
+        HBaseGuiManager(const VkRenderPass* const pRenderpass);
 
-        ~HBaseGuiRenderer();
+        ~HBaseGuiManager();
+
+        void StartNewFrame();
 
         virtual void Render();
 

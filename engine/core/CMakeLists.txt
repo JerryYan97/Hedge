@@ -4,4 +4,6 @@ target_sources(
     HComponent.h
     HObject.cpp
     HObject.h
+    HFrameListener.cpp
+    HFrameListener.h
 )

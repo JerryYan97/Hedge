@@ -1,7 +1,7 @@
 target_sources(
     HedgeEngine PRIVATE
-    HBaseGuiRenderer.cpp
-    HBaseGuiRenderer.h
+    HBaseGuiManager.cpp
+    HBaseGuiManager.h
     HRenderer.cpp
     HRenderer.h
     HRenderManager.cpp

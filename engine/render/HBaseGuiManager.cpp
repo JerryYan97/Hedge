@@ -1,4 +1,4 @@
-#include "HBaseGuiRenderer.h"
+#include "HBaseGuiManager.h"
 #include "Utils.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
@@ -10,19 +10,19 @@
 namespace Hedge
 {
     // ================================================================================================================
-    HBaseGuiRenderer::HBaseGuiRenderer(
+    HBaseGuiManager::HBaseGuiManager(
         const VkRenderPass* const pRenderpass)
         : m_pRenderPass(pRenderpass)
     {
     }
 
     // ================================================================================================================
-    HBaseGuiRenderer::~HBaseGuiRenderer()
+    HBaseGuiManager::~HBaseGuiManager()
     {
     }
 
     // ================================================================================================================
-    void HBaseGuiRenderer::Render()
+    void HBaseGuiManager::Render()
     {
         // Prepare the Dear ImGUI frame data
         ImGui_ImplVulkan_NewFrame();

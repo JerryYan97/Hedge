@@ -37,7 +37,8 @@ namespace Hedge
 
         void HandleResize();
 
-        static void GlfwFramebufferResizeCallback(GLFWwindow* window, int width, int height) { m_frameBufferResize = true; }
+        static void GlfwFramebufferResizeCallback(GLFWwindow* window, int width, int height) 
+            { m_frameBufferResize = true; }
 
         void CreateSwapchain();
         void CleanupSwapchain();
@@ -52,8 +53,8 @@ namespace Hedge
         VkDevice         m_vkDevice;
 
         // GLFW and window context
-        GLFWwindow* m_pGlfwWindow;
-        static bool m_frameBufferResize;
+        GLFWwindow*  m_pGlfwWindow;
+        static bool  m_frameBufferResize;
         VkSurfaceKHR m_surface;
 
         // Logical and physical devices context
