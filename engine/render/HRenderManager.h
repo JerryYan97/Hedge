@@ -44,6 +44,7 @@ namespace Hedge
         void CleanupSwapchain();
         void RecreateSwapchain();
         void CreateSwapchainImageViews();
+        void CreateSwapchainSynObjs();
         void CreateRenderpass();
         void CreateSwapchainFramebuffer();
 
@@ -68,7 +69,11 @@ namespace Hedge
         VkSwapchainKHR             m_swapchain;
         std::vector<VkImageView>   m_swapchainImgViews;
         std::vector<VkFramebuffer> m_swapchainFramebuffers;
+        std::vector<VkSemaphore>   m_swapchainImgAvailableSemaphores;
         VkRenderPass               m_renderpass;
+        uint32_t                   m_curSwapchainFrameIdx;
+        uint32_t                   m_swapchainImgCnt;
+        uint32_t                   m_acqSwapchainImgIdx;
 
         // Renderers.
         HRenderer* m_pRenderers;

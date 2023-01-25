@@ -36,6 +36,7 @@ namespace Hedge
 
     // ================================================================================================================
     HRenderManager::HRenderManager()
+        : m_curSwapchainFrameIdx(0)
     {
         // Create vulkan instance and possible debug initialization.
         CreateVulkanAppInstDebugger();
@@ -48,6 +49,7 @@ namespace Hedge
 
         CreateSwapchain();
         CreateSwapchainImageViews();
+        CreateSwapchainSynObjs();
         CreateRenderpass();
         CreateSwapchainFramebuffer();
     }
@@ -84,7 +86,29 @@ namespace Hedge
     void HRenderManager::BeginNewFrame()
     {
         glfwPollEvents();
-        // Resize swapchain
+        HandleResize();
+    }
+
+    // ================================================================================================================
+    void HRenderManager::HandleResize()
+    {
+        VkResult result = vkAcquireNextImageKHR(m_vkDevice, 
+                                                m_swapchain, 
+                                                UINT64_MAX, 
+                                                m_swapchainImgAvailableSemaphores[m_curSwapchainFrameIdx], 
+                                                VK_NULL_HANDLE, 
+                                                &m_acqSwapchainImgIdx);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            // The surface is imcompatiable with the swapchain (resize window).
+            RecreateSwapchain();
+        }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+        {
+            // Not success or usable.
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
     }
 
     // ================================================================================================================
@@ -374,14 +398,13 @@ namespace Hedge
     {
         // Create image views for the swapchain images
         std::vector<VkImage> swapchainImages;
-        uint32_t swapchainImageCount;
-        vkGetSwapchainImagesKHR(m_vkDevice, m_swapchain, &swapchainImageCount, nullptr);
-        swapchainImages.resize(swapchainImageCount);
-        vkGetSwapchainImagesKHR(m_vkDevice, m_swapchain, &swapchainImageCount, swapchainImages.data());
+        vkGetSwapchainImagesKHR(m_vkDevice, m_swapchain, &m_swapchainImgCnt, nullptr);
+        swapchainImages.resize(m_swapchainImgCnt);
+        vkGetSwapchainImagesKHR(m_vkDevice, m_swapchain, &m_swapchainImgCnt, swapchainImages.data());
 
-        m_swapchainImgViews.resize(swapchainImageCount);
+        m_swapchainImgViews.resize(m_swapchainImgCnt);
 
-        for (size_t i = 0; i < swapchainImageCount; i++)
+        for (size_t i = 0; i < m_swapchainImgCnt; i++)
         {
             VkImageViewCreateInfo createInfo{};
             createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -398,6 +421,22 @@ namespace Hedge
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
             VK_CHECK(vkCreateImageView(m_vkDevice, &createInfo, nullptr, &m_swapchainImgViews[i]));
+        }
+    }
+
+    // ================================================================================================================
+    void HRenderManager::CreateSwapchainSynObjs()
+    {
+        m_swapchainImgAvailableSemaphores.resize(m_swapchainImgCnt);
+
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        {
+            semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        }
+
+        for (size_t i = 0; i < m_swapchainImgCnt; i++)
+        {
+            VK_CHECK(vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_swapchainImgAvailableSemaphores[i]));
         }
     }
 
@@ -495,7 +534,21 @@ namespace Hedge
 
     // ================================================================================================================
     void HRenderManager::RecreateSwapchain()
-    {}
+    {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(m_pGlfwWindow, &width, &height);
+        while (width == 0 || height == 0)
+        {
+            glfwGetFramebufferSize(m_pGlfwWindow, &width, &height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(m_vkDevice);
+        CleanupSwapchain();
+        CreateSwapchain();
+        CreateSwapchainImageViews();
+        CreateSwapchainFramebuffer();
+    }
 
 #ifndef NDEBUG
 
