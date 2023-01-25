@@ -5,38 +5,39 @@
 #include <iostream>
 #include <cstdlib>
 
-HedgeEditor::HedgeEditor()
-{
-}
+Hedge::HFrameListener* g_pFrameListener = new Hedge::HedgeEditor();
 
-HedgeEditor::~HedgeEditor()
+namespace Hedge
 {
-}
+    // ================================================================================================================
+    HedgeEditor::HedgeEditor()
+    {
+    }
 
-void HedgeEditor::Run()
-{
-    std::cout << "Hello World From the Editor" << std::endl;
-}
+    // ================================================================================================================
+    HedgeEditor::~HedgeEditor()
+    {
+    }
 
-void HedgeEditor::BuildGame(
-    const char* pPathFileName)
-{
-    std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
-    std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
-}
-/*
-void main(
-    int    argc,
-    char** argv)
-{
-    HedgeEditor editor;
-    editor.Run();
-    UtilPrint();
-    Hedge::HLogger logger;
+    // ================================================================================================================
+    void HedgeEditor::Run()
+    {
+        std::cout << "Hello World From the Editor" << std::endl;
+    }
 
-    Hedge::HRenderManager renderManager;
+    // ================================================================================================================
+    void HedgeEditor::FrameStarted()
+    {}
 
-    HDG_CORE_WARN("Init Log!");
-    HDG_INFO("Another Log from client.");
+    // ================================================================================================================
+    void HedgeEditor::FrameEnded()
+    {}
+
+    // ================================================================================================================
+    void HedgeEditor::BuildGame(
+        const char* pPathFileName)
+    {
+        std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
+        std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
+    }
 }
-*/

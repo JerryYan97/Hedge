@@ -88,6 +88,14 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HRenderManager::RenderCurrentScene()
+    {}
+
+    // ================================================================================================================
+    void HRenderManager::FinalizeSceneAndSwapBuffers()
+    {}
+
+    // ================================================================================================================
     void HRenderManager::CreateVulkanAppInstDebugger()
     {
         // Initialize instance and application

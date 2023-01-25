@@ -1,20 +1,30 @@
+#pragma once
+
+#include "core/HFrameListener.h"
+
 namespace DearImGuiExt
 {
     class CustomLayout;
 };
 
-class HedgeEditor
+namespace Hedge
 {
-public:
-    HedgeEditor();
-    ~HedgeEditor();
+    class HedgeEditor : public HFrameListener
+    {
+    public:
+        HedgeEditor();
+        ~HedgeEditor();
 
-    void BuildGame(const char* pPathFileName);
+        void BuildGame(const char* pPathFileName);
 
-    void CreateGameProject(const char* pPath);
+        void CreateGameProject(const char* pPath);
 
-    void Run();
+        void Run();
 
-private:
-    DearImGuiExt::CustomLayout* myLayout;
-};
+        virtual void FrameStarted();
+        virtual void FrameEnded();
+
+    private:
+        DearImGuiExt::CustomLayout* myLayout;
+    };
+}

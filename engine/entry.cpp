@@ -1,6 +1,9 @@
 #include <iostream>
 #include "render/HRenderManager.h"
 #include "logging/HLogger.h"
+#include "core/HFrameListener.h"
+
+extern Hedge::HFrameListener* g_pFrameListener;
 
 void main(int argc, char** argv)
 {
@@ -15,11 +18,17 @@ void main(int argc, char** argv)
         renderManager.BeginNewFrame();
 
         // Frame listener frame start
+        g_pFrameListener->FrameStarted();
 
         // Render current scene
+        renderManager.RenderCurrentScene();
 
         // Frame listener frame end
+        g_pFrameListener->FrameEnded();
 
         // Finalize the scene and swap buffers
+        renderManager.FinalizeSceneAndSwapBuffers();
     }
+
+    delete g_pFrameListener;
 }
