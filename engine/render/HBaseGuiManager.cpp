@@ -14,6 +14,7 @@ namespace Hedge
         const VkRenderPass* const pRenderpass)
         : m_pRenderPass(pRenderpass)
     {
+
     }
 
     // ================================================================================================================
@@ -22,13 +23,18 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HBaseGuiManager::Render()
+    void HBaseGuiManager::StartNewFrame()
     {
         // Prepare the Dear ImGUI frame data
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        // ImGui_ImplVulkan_NewFrame();
+        // ImGui_ImplGlfw_NewFrame();
+        // ImGui::NewFrame();
 
         // 
+    }
+
+    // ================================================================================================================
+    void HBaseGuiManager::ImGUIWindowDataArrange()
+    {
     }
 }

@@ -2,6 +2,7 @@
 #include "HRenderer.h"
 #include "../logging/HLogger.h"
 #include "Utils.h"
+#include "HBaseGuiManager.h"
 
 #include <GLFW/glfw3.h>
 
@@ -52,11 +53,15 @@ namespace Hedge
         CreateSwapchainSynObjs();
         CreateRenderpass();
         CreateSwapchainFramebuffer();
+
+        m_pGuiManager = new HBaseGuiManager(&m_renderpass);
     }
 
     // ================================================================================================================
     HRenderManager::~HRenderManager()
     {
+        delete m_pGuiManager;
+
         CleanupSwapchain();
 
         vkDestroyRenderPass(m_vkDevice, m_renderpass, nullptr);

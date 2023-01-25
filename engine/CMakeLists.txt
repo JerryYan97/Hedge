@@ -15,16 +15,26 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/render)
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/scene)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/util)
 
-target_sources(HedgeEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/entry.cpp)
+set(DearImGUIPath ${CMAKE_CURRENT_SOURCE_DIR}/../external/DearImGUI)
+
+target_sources(HedgeEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/entry.cpp
+                                   ${DearImGUIPath}/imgui.cpp
+                                   ${DearImGUIPath}/imgui_draw.cpp
+                                   ${DearImGUIPath}/imgui_demo.cpp
+                                   ${DearImGUIPath}/imgui_tables.cpp
+                                   ${DearImGUIPath}/imgui_widgets.cpp
+                                   ${DearImGUIPath}/backends/imgui_impl_vulkan.cpp
+                                   ${DearImGUIPath}/backends/imgui_impl_glfw.cpp)
 
 get_target_property(ENG_SRC_LIST HedgeEngine SOURCES)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENG_SRC_LIST})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/../ FILES ${ENG_SRC_LIST})
 
 target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/spdLog/include
                                               $ENV{VULKAN_SDK}/Include
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/DearImGUI)
+                                              ${DearImGUIPath}
+                                              ${DearImGUIPath}/backends)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)

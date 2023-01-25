@@ -16,6 +16,7 @@ struct GLFWwindow;
 namespace Hedge
 {
     class HRenderer;
+    class HBaseGuiManager;
 
     class HRenderManager
     {
@@ -78,6 +79,9 @@ namespace Hedge
         // Renderers.
         HRenderer* m_pRenderers;
         uint32_t   m_activeRendererIdx;
+
+        // GUI
+        HBaseGuiManager* m_pGuiManager;
 
 
 #ifndef NDEBUG

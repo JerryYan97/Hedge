@@ -13,9 +13,7 @@ namespace Hedge
 
         void StartNewFrame();
 
-        virtual void Render();
-
-        virtual void ImGUIWindowDataArrange() = 0;
+        void ImGUIWindowDataArrange();
 
     private:
         // Input information.
