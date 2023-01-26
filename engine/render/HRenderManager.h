@@ -11,6 +11,8 @@
 #include <iostream>
 #include <vector>
 
+#include "vk_mem_alloc.h"
+
 struct GLFWwindow;
 
 namespace Hedge
@@ -41,6 +43,7 @@ namespace Hedge
         static void GlfwFramebufferResizeCallback(GLFWwindow* window, int width, int height) 
             { m_frameBufferResize = true; }
 
+        // Swapchain functions
         void CreateSwapchain();
         void CleanupSwapchain();
         void RecreateSwapchain();
@@ -48,6 +51,11 @@ namespace Hedge
         void CreateSwapchainSynObjs();
         void CreateRenderpass();
         void CreateSwapchainFramebuffer();
+
+        // Create basic and shared graphics widgets
+        void CreateCommandPoolBuffers();
+        void CreateDescriptorPool();
+        void CreateVmaObjects();
 
         // Vulkan core objects
         VkInstance       m_vkInst;
@@ -63,18 +71,29 @@ namespace Hedge
         uint32_t m_gfxQueueFamilyIdx;
         uint32_t m_computeQueueFamilyIdx;
         uint32_t m_presentQueueFamilyIdx;
+        VkQueue  m_gfxQueue;
+        VkQueue  m_computeQueue;
+        VkQueue  m_presentQueue;
 
         // Swapchain information
-        VkSurfaceFormatKHR         m_surfaceFormat;
-        VkExtent2D                 m_swapchainImageExtent;
-        VkSwapchainKHR             m_swapchain;
-        std::vector<VkImageView>   m_swapchainImgViews;
-        std::vector<VkFramebuffer> m_swapchainFramebuffers;
-        std::vector<VkSemaphore>   m_swapchainImgAvailableSemaphores;
-        VkRenderPass               m_renderpass;
-        uint32_t                   m_curSwapchainFrameIdx;
-        uint32_t                   m_swapchainImgCnt;
-        uint32_t                   m_acqSwapchainImgIdx;
+        VkSurfaceFormatKHR           m_surfaceFormat;
+        VkExtent2D                   m_swapchainImageExtent;
+        VkSwapchainKHR               m_swapchain;
+        std::vector<VkImageView>     m_swapchainImgViews;
+        std::vector<VkFramebuffer>   m_swapchainFramebuffers;
+        std::vector<VkSemaphore>     m_swapchainImgAvailableSemaphores;
+        std::vector<VkSemaphore>     m_swapchainRenderFinishedSemaphores;
+        std::vector<VkFence>         m_inFlightFences;
+        std::vector<VkCommandBuffer> m_swapchainRenderCmdBuffers;
+        VkRenderPass                 m_renderPass; // The render pass for gui rendering.
+        uint32_t                     m_curSwapchainFrameIdx;
+        uint32_t                     m_swapchainImgCnt;
+        uint32_t                     m_acqSwapchainImgIdx;
+
+        // Shared graphics widgets
+        VkCommandPool    m_gfxCmdPool;
+        VkDescriptorPool m_descriptorPool;
+        VmaAllocator     m_vmaAllocator;
 
         // Renderers.
         HRenderer* m_pRenderers;

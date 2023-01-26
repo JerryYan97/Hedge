@@ -34,7 +34,8 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               $ENV{VULKAN_SDK}/Include
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include
                                               ${DearImGUIPath}
-                                              ${DearImGUIPath}/backends)
+                                              ${DearImGUIPath}/backends
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/VMA/include)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)

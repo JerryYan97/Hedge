@@ -1,3 +1,4 @@
+#define VMA_IMPLEMENTATION
 #include "HRenderManager.h"
 #include "HRenderer.h"
 #include "../logging/HLogger.h"
@@ -31,6 +32,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(
 }
 #endif // !NDEBUG
 
+static void CheckVkResult(VkResult err)
+{
+    VK_CHECK(err);
+}
+
 namespace Hedge
 {
     bool HRenderManager::m_frameBufferResize = false;
@@ -48,23 +54,64 @@ namespace Hedge
         // Create physical device and logical device.
         CreateVulkanPhyLogicalDevice();
 
+        // Create swapchain related objects
         CreateSwapchain();
         CreateSwapchainImageViews();
         CreateSwapchainSynObjs();
         CreateRenderpass();
         CreateSwapchainFramebuffer();
 
-        m_pGuiManager = new HBaseGuiManager(&m_renderpass);
+        // Create other basic and shared graphics widgets
+        CreateCommandPoolBuffers();
+        CreateDescriptorPool();
+        CreateVmaObjects();
+
+        m_pGuiManager = new HBaseGuiManager();
+        
+        m_pGuiManager->Init(m_pGlfwWindow,
+                            m_vkInst,
+                            m_vkPhyDevice,
+                            m_vkDevice,
+                            m_gfxQueueFamilyIdx,
+                            m_gfxQueue,
+                            m_gfxCmdPool,
+                            m_descriptorPool,
+                            m_swapchainImgCnt,
+                            m_renderPass,
+                            CheckVkResult);
     }
 
     // ================================================================================================================
     HRenderManager::~HRenderManager()
     {
+        vkDeviceWaitIdle(m_vkDevice);
+
         delete m_pGuiManager;
 
         CleanupSwapchain();
 
-        vkDestroyRenderPass(m_vkDevice, m_renderpass, nullptr);
+        for (auto itr : m_swapchainImgAvailableSemaphores)
+        {
+            vkDestroySemaphore(m_vkDevice, itr, nullptr);
+        }
+
+        for (auto itr : m_swapchainRenderFinishedSemaphores)
+        {
+            vkDestroySemaphore(m_vkDevice, itr, nullptr);
+        }
+
+        for (auto itr : m_inFlightFences)
+        {
+            vkDestroyFence(m_vkDevice, itr, nullptr);
+        }
+
+        vkDestroyDescriptorPool(m_vkDevice, m_descriptorPool, nullptr);
+
+        vmaDestroyAllocator(m_vmaAllocator);
+
+        vkDestroyRenderPass(m_vkDevice, m_renderPass, nullptr);
+
+        vkDestroyCommandPool(m_vkDevice, m_gfxCmdPool, nullptr);
 
         vkDestroyDevice(m_vkDevice, nullptr);
 
@@ -91,7 +138,15 @@ namespace Hedge
     void HRenderManager::BeginNewFrame()
     {
         glfwPollEvents();
+
+        // Wait for the resources from the possible on flight frame
+        vkWaitForFences(m_vkDevice, 1, &m_inFlightFences[m_curSwapchainFrameIdx], VK_TRUE, UINT64_MAX);
+
+        vkResetFences(m_vkDevice, 1, &m_inFlightFences[m_curSwapchainFrameIdx]);
+        vkResetCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 0);
+
         HandleResize();
+        m_pGuiManager->StartNewFrame();
     }
 
     // ================================================================================================================
@@ -117,12 +172,142 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HRenderManager::CreateCommandPoolBuffers()
+    {
+        // Create the command pool belongs to the graphics queue
+        VkCommandPoolCreateInfo commandPoolInfo{};
+        {
+            commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            commandPoolInfo.queueFamilyIndex = m_gfxQueueFamilyIdx;
+        }
+        VK_CHECK(vkCreateCommandPool(m_vkDevice, &commandPoolInfo, nullptr, &m_gfxCmdPool));
+
+        // Create the command buffers for swapchain syn on the graphics pool
+        m_swapchainRenderCmdBuffers.resize(m_swapchainImgCnt);
+        VkCommandBufferAllocateInfo commandBufferAllocInfo{};
+        {
+            commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            commandBufferAllocInfo.commandPool = m_gfxCmdPool;
+            commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            commandBufferAllocInfo.commandBufferCount = (uint32_t)m_swapchainRenderCmdBuffers.size();
+        }
+        VK_CHECK(vkAllocateCommandBuffers(m_vkDevice, &commandBufferAllocInfo, m_swapchainRenderCmdBuffers.data()));
+    }
+
+    // ================================================================================================================
+    void HRenderManager::CreateDescriptorPool()
+    {
+        // Create the descriptor pool
+        VkDescriptorPoolSize poolSizes[] =
+        {
+            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+        };
+        VkDescriptorPoolCreateInfo pool_info{};
+        {
+            pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+            pool_info.maxSets = 1000 * sizeof(poolSizes) / sizeof(VkDescriptorPoolSize);
+            pool_info.poolSizeCount = (uint32_t)(sizeof(poolSizes) / sizeof(VkDescriptorPoolSize));
+            pool_info.pPoolSizes = poolSizes;
+        }
+        VK_CHECK(vkCreateDescriptorPool(m_vkDevice, &pool_info, nullptr, &m_descriptorPool));
+    }
+
+    // ================================================================================================================
+    void HRenderManager::CreateVmaObjects()
+    {
+        // Create the VMA
+        VmaVulkanFunctions vkFuncs = {};
+        {
+            vkFuncs.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+            vkFuncs.vkGetDeviceProcAddr   = &vkGetDeviceProcAddr;
+        }
+
+        VmaAllocatorCreateInfo allocCreateInfo = {};
+        {
+            allocCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+            allocCreateInfo.physicalDevice = m_vkPhyDevice;
+            allocCreateInfo.device = m_vkDevice;
+            allocCreateInfo.instance = m_vkInst;
+            allocCreateInfo.pVulkanFunctions = &vkFuncs;
+        }
+        vmaCreateAllocator(&allocCreateInfo, &m_vmaAllocator);
+    }
+
+    // ================================================================================================================
     void HRenderManager::RenderCurrentScene()
     {}
 
     // ================================================================================================================
     void HRenderManager::FinalizeSceneAndSwapBuffers()
-    {}
+    {
+        // Fill the command buffer
+        VkCommandBufferBeginInfo beginInfo{};
+        {
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        }
+        VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
+
+        m_pGuiManager->RecordGuiDraw(m_renderPass, 
+                                     m_swapchainFramebuffers[m_curSwapchainFrameIdx],
+                                     m_swapchainImageExtent,
+                                     m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx]);
+
+        VK_CHECK(vkEndCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx]));
+
+        // Submit the filled command buffer to the graphics queue to draw the image
+        VkSubmitInfo submitInfo{};
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        {
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            // This draw would wait at dstStage and wait for the waitSemaphores
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &m_swapchainImgAvailableSemaphores[m_curSwapchainFrameIdx];
+            submitInfo.pWaitDstStageMask = waitStages;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
+            // This draw would let the signalSemaphore sign when it finishes
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = &m_swapchainRenderFinishedSemaphores[m_curSwapchainFrameIdx];
+        }
+        
+        VK_CHECK(vkQueueSubmit(m_gfxQueue, 1, &submitInfo, m_inFlightFences[m_curSwapchainFrameIdx]));
+
+        // Put the swapchain into the present info and wait for the graphics queue previously before presenting.
+        VkPresentInfoKHR presentInfo{};
+        {
+            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            presentInfo.waitSemaphoreCount = 1;
+            presentInfo.pWaitSemaphores = &m_swapchainRenderFinishedSemaphores[m_curSwapchainFrameIdx];
+            presentInfo.swapchainCount = 1;
+            presentInfo.pSwapchains = &m_swapchain;
+            presentInfo.pImageIndices = &m_acqSwapchainImgIdx;
+        }
+        VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_frameBufferResize)
+        {
+            m_frameBufferResize = false;
+            RecreateSwapchain();
+        }
+        else if (result != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to present swap chain image!");
+        }
+
+        m_curSwapchainFrameIdx = (m_curSwapchainFrameIdx + 1) % m_swapchainImgCnt;
+    }
 
     // ================================================================================================================
     void HRenderManager::CreateVulkanAppInstDebugger()
@@ -280,6 +465,10 @@ namespace Hedge
         // Create the logical device
         VK_CHECK(vkCreateDevice(m_vkPhyDevice, &deviceInfo, nullptr, &m_vkDevice));
 
+        // Get present, graphics and compute queue from the logical device
+        vkGetDeviceQueue(m_vkDevice, m_gfxQueueFamilyIdx,     0, &m_gfxQueue);
+        vkGetDeviceQueue(m_vkDevice, m_presentQueueFamilyIdx, 0, &m_presentQueue);
+        vkGetDeviceQueue(m_vkDevice, m_computeQueueFamilyIdx, 0, &m_computeQueue);
     }
 
     // ================================================================================================================
@@ -433,15 +622,25 @@ namespace Hedge
     void HRenderManager::CreateSwapchainSynObjs()
     {
         m_swapchainImgAvailableSemaphores.resize(m_swapchainImgCnt);
+        m_swapchainRenderFinishedSemaphores.resize(m_swapchainImgCnt);
+        m_inFlightFences.resize(m_swapchainImgCnt);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         {
             semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         }
 
+        VkFenceCreateInfo fenceInfo{};
+        {
+            fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        }
+
         for (size_t i = 0; i < m_swapchainImgCnt; i++)
         {
             VK_CHECK(vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_swapchainImgAvailableSemaphores[i]));
+            VK_CHECK(vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_swapchainRenderFinishedSemaphores[i]));
+            VK_CHECK(vkCreateFence(m_vkDevice, &fenceInfo, nullptr, &m_inFlightFences[i]));
         }
     }
 
@@ -500,7 +699,7 @@ namespace Hedge
             guiRenderPassInfo.dependencyCount = 1;
             guiRenderPassInfo.pDependencies = &guiSubpassesDependency;
         }
-        VK_CHECK(vkCreateRenderPass(m_vkDevice, &guiRenderPassInfo, nullptr, &m_renderpass));
+        VK_CHECK(vkCreateRenderPass(m_vkDevice, &guiRenderPassInfo, nullptr, &m_renderPass));
     }
 
     // ================================================================================================================
@@ -513,7 +712,7 @@ namespace Hedge
         {
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = m_renderpass;
+            framebufferInfo.renderPass = m_renderPass;
             framebufferInfo.attachmentCount = 1;
             framebufferInfo.pAttachments = &m_swapchainImgViews[i];
             framebufferInfo.width = m_swapchainImageExtent.width;

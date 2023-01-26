@@ -7,16 +7,34 @@ namespace Hedge
     class HBaseGuiManager
     {
     public:
-        HBaseGuiManager(const VkRenderPass* const pRenderpass);
+        HBaseGuiManager();
 
         ~HBaseGuiManager();
 
+        void Init(
+            GLFWwindow*      pWindow,
+            VkInstance       instance,
+            VkPhysicalDevice physicalDevice,
+            VkDevice         device,
+            uint32_t         graphicsQueueFamilyIdx,
+            VkQueue          graphicsQueue,
+            VkCommandPool    graphicsCmdPool,
+            VkDescriptorPool descriptorPool,
+            uint32_t         swapchainImgCnt,
+            VkRenderPass     guiRenderPass,
+            void             (*CheckVkResultFn)(VkResult err));
+
         void StartNewFrame();
+        void RecordGuiDraw(
+            VkRenderPass    guiRenderPass, 
+            VkFramebuffer   swapchainFramebuffer, 
+            VkExtent2D      swapchainImageExtent,
+            VkCommandBuffer gfxCmdBuffer);
 
         void ImGUIWindowDataArrange();
 
     private:
         // Input information.
-        const VkRenderPass* const m_pRenderPass;
+        // const VkRenderPass* const m_pRenderPass;
     };
 }
