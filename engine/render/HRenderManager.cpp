@@ -260,7 +260,7 @@ namespace Hedge
         VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
 
         m_pGuiManager->RecordGuiDraw(m_renderPass, 
-                                     m_swapchainFramebuffers[m_curSwapchainFrameIdx],
+                                     m_swapchainFramebuffers[m_acqSwapchainImgIdx],
                                      m_swapchainImageExtent,
                                      m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx]);
 
