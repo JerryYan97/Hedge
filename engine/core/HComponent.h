@@ -1,28 +1,15 @@
 #pragma once
-#include "HObject.h"
 
 namespace Hedge
 {
-    class HActorComponent : public HObject 
+    struct TransformComponent
     {
-    public:
-        HActorComponent();
-        ~HActorComponent();
-
-
+        float m_pos[3];
+        float m_rotQ[4];
     };
 
-    class HSceneComponent : public HActorComponent
+    struct StaticMeshComponent
     {
-    public:
-        HSceneComponent();
-        ~HSceneComponent();
-    };
-
-    class HPrimitiveComponent : public HSceneComponent
-    {
-    public:
-        HPrimitiveComponent();
-        ~HPrimitiveComponent();
+        
     };
 }

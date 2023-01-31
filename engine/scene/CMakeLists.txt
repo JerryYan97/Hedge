@@ -1,5 +1,5 @@
 target_sources(
     HedgeEngine PRIVATE
-    scene.cpp
-    scene.h
+    HScene.cpp
+    HScene.h
 )
