@@ -12,7 +12,7 @@ add_library(HedgeEngine STATIC)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/logging)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/render)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/scene)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/scene)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/util)
 
 set(DearImGUIPath ${CMAKE_CURRENT_SOURCE_DIR}/../external/DearImGUI)
@@ -35,7 +35,8 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include
                                               ${DearImGUIPath}
                                               ${DearImGUIPath}/backends
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/VMA/include)
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/VMA/include
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/EnTT/single_include/entt)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)
