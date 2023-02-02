@@ -4,6 +4,7 @@
 #include "../logging/HLogger.h"
 #include "Utils.h"
 #include "HBaseGuiManager.h"
+#include "../scene/HScene.h"
 
 #include <GLFW/glfw3.h>
 
@@ -32,7 +33,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(
 }
 #endif // !NDEBUG
 
-static void CheckVkResult(VkResult err)
+static void CheckVkResult(
+    VkResult err)
 {
     VK_CHECK(err);
 }
@@ -79,6 +81,9 @@ namespace Hedge
                             m_swapchainImgCnt,
                             m_renderPass,
                             CheckVkResult);
+
+        m_pRenderers.push_back(new HBasicRenderer());
+        m_activeRendererIdx = 0;
     }
 
     // ================================================================================================================
@@ -103,6 +108,11 @@ namespace Hedge
         for (auto itr : m_inFlightFences)
         {
             vkDestroyFence(m_vkDevice, itr, nullptr);
+        }
+
+        for (auto itr : m_pRenderers)
+        {
+            delete itr;
         }
 
         vkDestroyDescriptorPool(m_vkDevice, m_descriptorPool, nullptr);
@@ -246,8 +256,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HRenderManager::RenderCurrentScene()
-    {}
+    void HRenderManager::RenderCurrentScene(
+        const HScene& scene)
+    {
+        SceneRenderInfo renderInfo = scene.GetSceneRenderInfo();
+        m_pRenderers[m_activeRendererIdx]->Render(renderInfo);
+    }
 
     // ================================================================================================================
     void HRenderManager::FinalizeSceneAndSwapBuffers()

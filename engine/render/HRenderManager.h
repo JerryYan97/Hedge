@@ -19,6 +19,7 @@ namespace Hedge
 {
     class HRenderer;
     class HBaseGuiManager;
+    class HScene;
 
     class HRenderManager
     {
@@ -27,7 +28,7 @@ namespace Hedge
         ~HRenderManager();
 
         void BeginNewFrame();
-        void RenderCurrentScene();
+        void RenderCurrentScene(const HScene& scene);
         void FinalizeSceneAndSwapBuffers();
         void DrawHud();
 
@@ -96,7 +97,7 @@ namespace Hedge
         VmaAllocator     m_vmaAllocator;
 
         // Renderers.
-        HRenderer* m_pRenderers;
+        std::vector<HRenderer*> m_pRenderers;
         uint32_t   m_activeRendererIdx;
 
         // GUI

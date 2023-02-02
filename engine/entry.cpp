@@ -21,7 +21,7 @@ void main(int argc, char** argv)
         g_pFrameListener->FrameStarted();
 
         // Render current scene
-        renderManager.RenderCurrentScene();
+        renderManager.RenderCurrentScene(g_pFrameListener->GetActiveScene());
 
         // Frame listener frame end
         g_pFrameListener->FrameEnded();

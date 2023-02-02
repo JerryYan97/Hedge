@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/HFrameListener.h"
+#include <vector>
 
 namespace DearImGuiExt
 {
@@ -9,6 +10,8 @@ namespace DearImGuiExt
 
 namespace Hedge
 {
+    class HScene;
+
     class HedgeEditor : public HFrameListener
     {
     public:
@@ -17,14 +20,18 @@ namespace Hedge
 
         void BuildGame(const char* pPathFileName);
 
-        void CreateGameProject(const char* pPath);
+        void CreateGameProject(const char* pPath) {};
 
         void Run();
 
-        virtual void FrameStarted();
-        virtual void FrameEnded();
+        virtual void FrameStarted() override;
+        virtual void FrameEnded() override;
+
+        virtual const HScene& GetActiveScene() override;
 
     private:
-        DearImGuiExt::CustomLayout* myLayout;
+        DearImGuiExt::CustomLayout* m_pLayout;
+        std::vector<HScene*> m_pScenes;
+        uint32_t m_activeScene;
     };
 }

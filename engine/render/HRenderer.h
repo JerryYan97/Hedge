@@ -11,14 +11,25 @@ struct GLFWwindow;
 
 namespace Hedge
 {
+    struct SceneRenderInfo;
+
     class HRenderer
     {
     public:
         HRenderer();
         ~HRenderer();
 
-        virtual void Render() = 0;
+        virtual void Render(const SceneRenderInfo& renderInfo) = 0;
     private:
 
+    };
+
+    class HBasicRenderer : public HRenderer
+    {
+    public:
+        HBasicRenderer();
+        ~HBasicRenderer();
+
+        virtual void Render(const SceneRenderInfo& renderInfo) override;
     };
 }

@@ -2,6 +2,8 @@
 
 namespace Hedge
 {
+    class HScene;
+
     class HFrameListener
     {
     public:
@@ -10,5 +12,6 @@ namespace Hedge
 
         virtual void FrameStarted() = 0;
         virtual void FrameEnded()   = 0;
+        virtual const HScene& GetActiveScene() = 0;
     };
 }

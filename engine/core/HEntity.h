@@ -24,7 +24,7 @@ namespace Hedge
         virtual void OnDefineEntity() = 0;
 
     protected:
-        template<typename... Args>
+        template<typename Type, typename... Args>
         void AddComponent(Args &&...args);
 
         template<typename T>
@@ -38,7 +38,7 @@ namespace Hedge
     class HCubeEntity : public HEntity
     {
     public:
-        HCubeEntity();
+        HCubeEntity() {};
         ~HCubeEntity();
 
         virtual void OnDefineEntity();

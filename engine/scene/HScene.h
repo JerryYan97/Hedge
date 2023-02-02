@@ -6,6 +6,14 @@ namespace Hedge
 {
     class HEntity;
 
+    struct SceneRenderInfo
+    {
+        uint32_t* m_pIdx;
+        float*    m_pPos;
+        float*    m_pUv;
+        uint32_t  m_vertCnt;
+    };
+
     class HScene
     {
     public:
@@ -14,12 +22,15 @@ namespace Hedge
 
         void SpawnEntity(HEntity* pEntity);
 
-        template<typename... Args>
-        void EntityAddComponent(uint32_t entityHandle, Args &&...args);
+        template<typename Type, typename... Args>
+        void EntityAddComponent(uint32_t entityHandle, Args &&...args) 
+            { m_registry.emplace<Type>(static_cast<entt::entity>(entityHandle), std::forward<Args>(args)...); }
         
         template<typename T>
-        T& EntityGetComponent(uint32_t entityHandle);
+        T& EntityGetComponent(uint32_t entityHandle)
+            { return m_registry.get<T>(static_cast<entt::entity>(entityHandle)); }
         
+        SceneRenderInfo GetSceneRenderInfo() const;
         
     private:
         entt::registry m_registry;
