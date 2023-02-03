@@ -12,6 +12,6 @@ namespace Hedge
 
         virtual void FrameStarted() = 0;
         virtual void FrameEnded()   = 0;
-        virtual const HScene& GetActiveScene() = 0;
+        virtual HScene& GetActiveScene() = 0;
     };
 }

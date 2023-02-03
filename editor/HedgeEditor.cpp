@@ -50,7 +50,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    const HScene& HedgeEditor::GetActiveScene()
+    HScene& HedgeEditor::GetActiveScene()
     {
         return *m_pScenes[m_activeScene];
     }

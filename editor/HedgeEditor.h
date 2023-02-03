@@ -27,7 +27,7 @@ namespace Hedge
         virtual void FrameStarted() override;
         virtual void FrameEnded() override;
 
-        virtual const HScene& GetActiveScene() override;
+        virtual HScene& GetActiveScene() override;
 
     private:
         DearImGuiExt::CustomLayout* m_pLayout;

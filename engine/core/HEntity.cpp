@@ -44,7 +44,7 @@ namespace Hedge
     {
         StaticMeshComponent& meshComponent = GetComponent<StaticMeshComponent>();
         delete meshComponent.m_pIdx;
-        delete meshComponent.m_pPos;
+        delete meshComponent.m_pVert;
     }
 
     // ================================================================================================================
@@ -66,7 +66,6 @@ namespace Hedge
 
         AddComponent<StaticMeshComponent>(vertIdx,
                                           verts,
-                                          nullptr,
                                           6);
     }
 }
