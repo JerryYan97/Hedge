@@ -9,9 +9,9 @@ namespace Hedge
     struct SceneRenderInfo
     {
         uint32_t* m_pIdx;
-        float*    m_pPos;
-        float*    m_pUv;
+        float*    m_pVert;
         uint32_t  m_vertCnt;
+        bool      m_reuse;
     };
 
     class HScene
@@ -30,10 +30,11 @@ namespace Hedge
         T& EntityGetComponent(uint32_t entityHandle)
             { return m_registry.get<T>(static_cast<entt::entity>(entityHandle)); }
         
-        SceneRenderInfo GetSceneRenderInfo() const;
+        SceneRenderInfo GetSceneRenderInfo();
         
     private:
         entt::registry m_registry;
         std::unordered_map<uint32_t, HEntity*> m_entitiesHashTable;
+        bool m_reuseRenderScene;
     };
 }

@@ -1,5 +1,7 @@
 #include "HRenderer.h"
+#include "HRenderManager.h"
 #include "../logging/HLogger.h"
+#include "../scene/HScene.h"
 
 #include <GLFW/glfw3.h>
 
@@ -24,15 +26,19 @@ namespace Hedge
 
     // ================================================================================================================
     HBasicRenderer::HBasicRenderer()
-    {}
+    {
+        
+    }
 
     // ================================================================================================================
     HBasicRenderer::~HBasicRenderer()
     {}
 
     // ================================================================================================================
-    void HBasicRenderer::Render(const SceneRenderInfo& renderInfo)
+    void HBasicRenderer::Render(
+        GpuResource idxResource, 
+        GpuResource vertResource)
     {
-
+        
     }
 }

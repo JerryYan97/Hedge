@@ -1,5 +1,6 @@
 #include "HEntity.h"
 #include "../scene/HScene.h"
+#include "../render/HRenderManager.h"
 #include "HComponent.h"
 
 namespace Hedge
@@ -16,11 +17,11 @@ namespace Hedge
 
     // ================================================================================================================
     void HEntity::CreateInSceneInternal(
-        HScene*  pScene, 
+        HScene*  pScene,
         uint32_t handle)
     {
-        m_pScene       = pScene;
-        m_entityHandle = handle;
+        m_pScene         = pScene;
+        m_entityHandle   = handle;
     }
 
     // ================================================================================================================

@@ -6,6 +6,7 @@ namespace Hedge
 {
     // ================================================================================================================
     HScene::HScene()
+        : m_reuseRenderScene(false)
     {}
 
     // ================================================================================================================
@@ -27,37 +28,29 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    /*
-    template<typename Type, typename... Args>
-    void HScene::EntityAddComponent(uint32_t entityHandle, Args &&...args)
-    {
-        m_registry.emplace<Type>(entityHandle, std::forward<Args>(args)...);
-    }
-    */
-
-    // ================================================================================================================
-    /*
-    template<typename T>
-    T& HScene::EntityGetComponent(uint32_t entityHandle)
-    {
-        return m_registry.get<T>(entityHandle);
-    }
-    */
-
-    // ================================================================================================================
-    SceneRenderInfo HScene::GetSceneRenderInfo() const
+    SceneRenderInfo HScene::GetSceneRenderInfo()
     {
         SceneRenderInfo renderInfo{};
-        auto view = m_registry.view<StaticMeshComponent>();
-        for (auto entity : view)
-        {
-            auto& meshComponent  = view.get<StaticMeshComponent>(entity);
-            renderInfo.m_pIdx    = meshComponent.m_pIdx;
-            renderInfo.m_pPos    = meshComponent.m_pPos;
-            renderInfo.m_pUv     = meshComponent.m_pUv;
-            renderInfo.m_vertCnt = meshComponent.m_vertCnt;
 
-            return renderInfo;
+        if (m_reuseRenderScene == false)
+        {
+            auto view = m_registry.view<StaticMeshComponent>();
+            for (auto entity : view)
+            {
+                auto& meshComponent = view.get<StaticMeshComponent>(entity);
+                renderInfo.m_pIdx = meshComponent.m_pIdx;
+                renderInfo.m_pVert = meshComponent.m_pVert;
+                renderInfo.m_vertCnt = meshComponent.m_vertCnt;
+                renderInfo.m_reuse = false;
+
+                m_reuseRenderScene = true;
+            }
         }
+        else
+        {
+            renderInfo.m_reuse = true;
+        }
+
+        return renderInfo;
     }
 }

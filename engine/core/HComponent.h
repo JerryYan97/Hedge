@@ -23,25 +23,21 @@ namespace Hedge
     {
         StaticMeshComponent(
             uint32_t* pIdx,
-            float*    pPos,
-            float*    pUv,
+            float*    pVert,
             uint32_t  vertCnt)
             : m_pIdx(pIdx),
-              m_pPos(pPos),
-              m_pUv(pUv),
+              m_pVert(pVert),
               m_vertCnt(vertCnt)
         {}
 
         ~StaticMeshComponent()
         {
             delete m_pIdx;
-            delete m_pPos;
-            delete m_pUv;
+            delete m_pVert;
         }
 
-        uint32_t* m_pIdx = nullptr;
-        float*    m_pPos = nullptr;
-        float*    m_pUv  = nullptr;
+        uint32_t* m_pIdx  = nullptr;
+        float*    m_pVert = nullptr;
         uint32_t  m_vertCnt;
     };
 }

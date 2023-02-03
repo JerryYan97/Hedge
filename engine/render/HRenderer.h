@@ -12,6 +12,8 @@ struct GLFWwindow;
 namespace Hedge
 {
     struct SceneRenderInfo;
+    struct GpuResource;
+    class HRenderManager;
 
     class HRenderer
     {
@@ -19,7 +21,7 @@ namespace Hedge
         HRenderer();
         ~HRenderer();
 
-        virtual void Render(const SceneRenderInfo& renderInfo) = 0;
+        virtual void Render(GpuResource idxResource, GpuResource vertResource) = 0;
     private:
 
     };
@@ -30,6 +32,8 @@ namespace Hedge
         HBasicRenderer();
         ~HBasicRenderer();
 
-        virtual void Render(const SceneRenderInfo& renderInfo) override;
+        virtual void Render(GpuResource idxResource, GpuResource vertResource) override;
+
+    private:
     };
 }

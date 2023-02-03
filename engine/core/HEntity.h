@@ -6,6 +6,7 @@ namespace Hedge
 {
     class HScene;
     class HComponent;
+    class HRenderManager;
 
     class HEntity
     {

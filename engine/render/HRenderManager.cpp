@@ -257,10 +257,28 @@ namespace Hedge
 
     // ================================================================================================================
     void HRenderManager::RenderCurrentScene(
-        const HScene& scene)
+        HScene& scene)
     {
         SceneRenderInfo renderInfo = scene.GetSceneRenderInfo();
-        m_pRenderers[m_activeRendererIdx]->Render(renderInfo);
+
+        // TODO: logical flaw: Switch renderer must recreates gpu memory resource.
+        if (renderInfo.m_reuse == false)
+        {
+            m_vertRendererGpuResource = CreateGpuBuffer(sizeof(float) * 24);
+            m_idxRendererGpuResource = CreateGpuBuffer(sizeof(uint32_t) * 6);
+
+            void* mappedData = nullptr;
+
+            VK_CHECK(vmaMapMemory(m_vmaAllocator, *m_vertRendererGpuResource.m_pAlloc, &mappedData));
+            memcpy(mappedData, renderInfo.m_pVert, sizeof(float) * 24);
+            vmaUnmapMemory(m_vmaAllocator, *m_vertRendererGpuResource.m_pAlloc);
+
+            VK_CHECK(vmaMapMemory(m_vmaAllocator, *m_idxRendererGpuResource.m_pAlloc, &mappedData));
+            memcpy(mappedData, renderInfo.m_pIdx, sizeof(uint32_t) * 6);
+            vmaUnmapMemory(m_vmaAllocator, *m_idxRendererGpuResource.m_pAlloc);
+        }
+
+        m_pRenderers[m_activeRendererIdx]->Render(m_idxRendererGpuResource, m_vertRendererGpuResource);
     }
 
     // ================================================================================================================
@@ -766,6 +784,40 @@ namespace Hedge
         CreateSwapchain();
         CreateSwapchainImageViews();
         CreateSwapchainFramebuffer();
+    }
+
+    // ================================================================================================================
+    GpuResource HRenderManager::CreateGpuBuffer(
+        uint32_t bytesNum)
+    {
+        // Create Buffer and allocate memory for vertex buffer, index buffer and render target.
+        VmaAllocationCreateInfo mappableBufCreateInfo = {};
+        {
+            mappableBufCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            mappableBufCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                                          VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        }
+
+        // Create Vertex Buffer
+        VkBufferCreateInfo vertBufferInfo = {};
+        {
+            vertBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            vertBufferInfo.size  = bytesNum;
+            vertBufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        }
+
+        GpuResource gpuRes{};
+        gpuRes.m_pBuffer = new VkBuffer;
+        gpuRes.m_pAlloc  = new VmaAllocation;
+
+        VK_CHECK(vmaCreateBuffer(m_vmaAllocator, 
+                                 &vertBufferInfo, 
+                                 &mappableBufCreateInfo, 
+                                 gpuRes.m_pBuffer, 
+                                 gpuRes.m_pAlloc, 
+                                 nullptr));
+
+        return gpuRes;
     }
 
 #ifndef NDEBUG

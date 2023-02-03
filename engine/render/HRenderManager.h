@@ -21,6 +21,12 @@ namespace Hedge
     class HBaseGuiManager;
     class HScene;
 
+    struct GpuResource
+    {
+        VkBuffer*      m_pBuffer;
+        VmaAllocation* m_pAlloc;
+    };
+
     class HRenderManager
     {
     public:
@@ -28,11 +34,17 @@ namespace Hedge
         ~HRenderManager();
 
         void BeginNewFrame();
-        void RenderCurrentScene(const HScene& scene);
+        void RenderCurrentScene(HScene& scene);
         void FinalizeSceneAndSwapBuffers();
         void DrawHud();
 
         bool WindowShouldClose();
+
+        // TODO: Create a GPU resource manager in future.
+        // Contains VkInst, VMA, devices...
+        // 
+        // GPU resource manage functions
+        GpuResource CreateGpuBuffer(uint32_t bytesNum);
 
     private:
         void CreateVulkanAppInstDebugger();
@@ -99,10 +111,11 @@ namespace Hedge
         // Renderers.
         std::vector<HRenderer*> m_pRenderers;
         uint32_t   m_activeRendererIdx;
+        GpuResource m_idxRendererGpuResource;
+        GpuResource m_vertRendererGpuResource;
 
         // GUI
         HBaseGuiManager* m_pGuiManager;
-
 
 #ifndef NDEBUG
         // Debug mode
