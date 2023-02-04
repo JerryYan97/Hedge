@@ -275,33 +275,33 @@ namespace Hedge
             sceneImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         }
         
-        m_vkImgs.resize(m_onFlightResCnt);
-        m_vmaAllocations.resize(m_onFlightResCnt);
+        m_vkResultImgs.resize(m_onFlightResCnt);
+        m_vmaResultImgsAllocations.resize(m_onFlightResCnt);
 
-        for (int i = 0; i < m_onFlightResCnt; i++)
+        for (uint32_t i = 0; i < m_onFlightResCnt; i++)
         {
             vmaCreateImage(*m_pVmaAllocator,
                            &sceneImgsInfo,
                 &sceneImgsAllocInfo,
-                &m_vkImgs[i],
-                &m_vmaAllocations[i],
+                &m_vkResultImgs[i],
+                &m_vmaResultImgsAllocations[i],
                 nullptr);
 
-            sceneRenderImagesExtents[i] = VkExtent2D{ extent.width, extent.height };
+            m_resultImgsExtents[i] = VkExtent2D{ extent.width, extent.height };
 
             // Create the Image View
             VkImageViewCreateInfo info = {};
             {
                 info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-                info.image = sceneRenderImages[i];
+                info.image = m_vkResultImgs[i];
                 info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                info.format = choisenSurfaceFormat.format;
+                info.format = m_renderSurfFormat;
                 info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 info.subresourceRange.levelCount = 1;
                 info.subresourceRange.layerCount = 1;
             }
 
-            VK_CHECK(vkCreateImageView(device, &info, nullptr, &sceneRenderImageViews[i]));
+            VK_CHECK(vkCreateImageView(*m_pVkDevice, &info, nullptr, &m_vkResultImgsViews[i]));
 
             VkSamplerCreateInfo sampler_info{};
             {
@@ -316,16 +316,91 @@ namespace Hedge
                 sampler_info.maxLod = 1000;
                 sampler_info.maxAnisotropy = 1.0f;
             }
-            VK_CHECK(vkCreateSampler(device, &sampler_info, nullptr, &guiImgRenderSamplers[i]));
+            VK_CHECK(vkCreateSampler(*m_pVkDevice, &sampler_info, nullptr, &m_vkResultImgsSamplers[i]));
         }
+    }
+
+    // ================================================================================================================
+    void HBasicRenderer::RecreateResource(
+        VkExtent2D resultExtent,
+        uint32_t frameIdx)
+    {
+        vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[frameIdx], m_vmaResultImgsAllocations[frameIdx]);
+
+        VmaAllocationCreateInfo sceneImgsAllocInfo{};
+        {
+            sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
+        VkExtent3D extent{};
+        {
+            extent.width = resultExtent.width;
+            extent.height = resultExtent.height;
+            extent.depth = 1;
+        }
+
+        VkImageCreateInfo sceneImgsInfo{};
+        {
+            sceneImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            sceneImgsInfo.imageType = VK_IMAGE_TYPE_2D;
+            sceneImgsInfo.format = m_renderSurfFormat;
+            sceneImgsInfo.extent = extent;
+            sceneImgsInfo.mipLevels = 1;
+            sceneImgsInfo.arrayLayers = 1;
+            sceneImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            sceneImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            sceneImgsInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            sceneImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        }
+
+        vmaCreateImage(*m_pVmaAllocator,
+            &sceneImgsInfo,
+            &sceneImgsAllocInfo,
+            &m_vkResultImgs[frameIdx],
+            &m_vmaResultImgsAllocations[frameIdx],
+            nullptr);
+
+        m_resultImgsExtents[frameIdx] = resultExtent;
+
+        vkDestroyImageView(*m_pVkDevice, m_vkResultImgsViews[frameIdx], nullptr);
+
+        // Create the Image View
+        VkImageViewCreateInfo info = {};
+        {
+            info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            info.image = m_vkResultImgs[frameIdx];
+            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            info.format = m_renderSurfFormat;
+            info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            info.subresourceRange.levelCount = 1;
+            info.subresourceRange.layerCount = 1;
+        }
+        VK_CHECK(vkCreateImageView(*m_pVkDevice, &info, nullptr, &m_vkResultImgsViews[frameIdx]));
+    }
+
+    // ================================================================================================================
+    bool HBasicRenderer::NeedResize(
+        VkExtent2D inExtent,
+        uint32_t frameIdx)
+    {
+        return (inExtent.width != m_resultImgsExtents[frameIdx].width) || 
+               (inExtent.height != m_resultImgsExtents[frameIdx].height);
     }
 
     // ================================================================================================================
     void HBasicRenderer::Render(
         VkCommandBuffer& cmdBuf,
         GpuResource idxResource, 
-        GpuResource vertResource)
+        GpuResource vertResource,
+        VkExtent2D renderExtent,
+        uint32_t   frameIdx)
     {
-        
+        if (NeedResize(renderExtent, frameIdx))
+        {
+            RecreateResource(renderExtent, frameIdx);
+        }
+
+
     }
 }

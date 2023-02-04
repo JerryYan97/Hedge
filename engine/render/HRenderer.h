@@ -6,10 +6,10 @@
 
 #include <vulkan/vulkan.h>
 #include <iostream>
+#include <vector>
+#include "vk_mem_alloc.h"
 
 struct GLFWwindow;
-class VmaAllocator;
-class VmaAllocation;
 
 namespace Hedge
 {
@@ -23,7 +23,11 @@ namespace Hedge
         explicit HRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HRenderer();
 
-        virtual void Render(VkCommandBuffer& cmdBuf, GpuResource idxResource, GpuResource vertResource) = 0;
+        virtual void Render(VkCommandBuffer& cmdBuf, 
+                            GpuResource idxResource, 
+                            GpuResource vertResource, 
+                            VkExtent2D renderExtent,
+                            uint32_t frameIdx) = 0;
 
     protected:
         void CreateShaderModule(VkShaderModule* pShaderModule, uint32_t* pShaderScript, uint32_t scriptByteCnt);
@@ -44,17 +48,28 @@ namespace Hedge
         explicit HBasicRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HBasicRenderer();
 
-        virtual void Render(VkCommandBuffer& cmdBuf, GpuResource idxResource, GpuResource vertResource) override;
+        virtual void Render(VkCommandBuffer& cmdBuf, 
+                            GpuResource idxResource, 
+                            GpuResource vertResource,
+                            VkExtent2D renderExtent,
+                            uint32_t   frameIdx) override;
 
     private:
         void InitResource();
-        void RecreateResource();
+        void RecreateResource(VkExtent2D resultExtent, uint32_t frameIdx);
+        inline bool NeedResize(VkExtent2D inExtent, uint32_t frameIdx);
 
         VkShaderModule m_shaderVertModule;
         VkShaderModule m_shaderFragModule;
         VkPipeline     m_pipeline;
 
-        std::vector<VkImage> m_vkImgs;
-        std::vector<VmaAllocation> m_vmaAllocations;
+        std::vector<VkImage> m_vkResultImgs;
+        std::vector<VkImageView> m_vkResultImgsViews;
+        std::vector<VkSampler> m_vkResultImgsSamplers;
+        std::vector<VmaAllocation> m_vmaResultImgsAllocations;
+        std::vector<VkExtent2D> m_resultImgsExtents;
+
+        uint32_t m_lastFrameIdx;
+        
     };
 }

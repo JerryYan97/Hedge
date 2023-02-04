@@ -82,7 +82,7 @@ namespace Hedge
                             m_renderPass,
                             CheckVkResult);
 
-        m_pRenderers.push_back(new HBasicRenderer());
+        m_pRenderers.push_back(new HBasicRenderer(m_swapchainImgCnt, &m_vkDevice, m_surfaceFormat.format, &m_vmaAllocator));
         m_activeRendererIdx = 0;
     }
 
@@ -278,7 +278,11 @@ namespace Hedge
             vmaUnmapMemory(m_vmaAllocator, *m_idxRendererGpuResource.m_pAlloc);
         }
 
-        m_pRenderers[m_activeRendererIdx]->Render(m_idxRendererGpuResource, m_vertRendererGpuResource);
+        m_pRenderers[m_activeRendererIdx]->Render(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 
+                                                  m_idxRendererGpuResource, 
+                                                  m_vertRendererGpuResource,
+                                                  m_swapchainImageExtent,
+                                                  m_curSwapchainFrameIdx);
     }
 
     // ================================================================================================================
