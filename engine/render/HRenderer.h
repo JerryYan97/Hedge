@@ -8,6 +8,8 @@
 #include <iostream>
 
 struct GLFWwindow;
+class VmaAllocator;
+class VmaAllocation;
 
 namespace Hedge
 {
@@ -18,10 +20,20 @@ namespace Hedge
     class HRenderer
     {
     public:
-        HRenderer();
+        explicit HRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HRenderer();
 
-        virtual void Render(GpuResource idxResource, GpuResource vertResource) = 0;
+        virtual void Render(VkCommandBuffer& cmdBuf, GpuResource idxResource, GpuResource vertResource) = 0;
+
+    protected:
+        void CreateShaderModule(VkShaderModule* pShaderModule, uint32_t* pShaderScript, uint32_t scriptByteCnt);
+
+        VkDevice*     m_pVkDevice;
+        VkFormat      m_renderSurfFormat;
+        VmaAllocator* m_pVmaAllocator;
+
+        const uint32_t m_onFlightResCnt;
+        
     private:
 
     };
@@ -29,11 +41,20 @@ namespace Hedge
     class HBasicRenderer : public HRenderer
     {
     public:
-        HBasicRenderer();
+        explicit HBasicRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HBasicRenderer();
 
-        virtual void Render(GpuResource idxResource, GpuResource vertResource) override;
+        virtual void Render(VkCommandBuffer& cmdBuf, GpuResource idxResource, GpuResource vertResource) override;
 
     private:
+        void InitResource();
+        void RecreateResource();
+
+        VkShaderModule m_shaderVertModule;
+        VkShaderModule m_shaderFragModule;
+        VkPipeline     m_pipeline;
+
+        std::vector<VkImage> m_vkImgs;
+        std::vector<VmaAllocation> m_vmaAllocations;
     };
 }
