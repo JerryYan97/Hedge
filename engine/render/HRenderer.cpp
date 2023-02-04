@@ -277,6 +277,9 @@ namespace Hedge
         
         m_vkResultImgs.resize(m_onFlightResCnt);
         m_vmaResultImgsAllocations.resize(m_onFlightResCnt);
+        m_vkResultImgsViews.resize(m_onFlightResCnt);
+        m_vkResultImgsSamplers.resize(m_onFlightResCnt);
+        m_resultImgsExtents.resize(m_onFlightResCnt);
 
         for (uint32_t i = 0; i < m_onFlightResCnt; i++)
         {
@@ -389,7 +392,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HBasicRenderer::Render(
+    const VkImageView& HBasicRenderer::Render(
         VkCommandBuffer& cmdBuf,
         GpuResource idxResource, 
         GpuResource vertResource,
@@ -401,6 +404,108 @@ namespace Hedge
             RecreateResource(renderExtent, frameIdx);
         }
 
+        // Transfer the scene rendering image format from undefined or shader read to shader output.
+        VkImageSubresourceRange subResRange{};
+        {
+            subResRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            subResRange.baseMipLevel = 0;
+            subResRange.levelCount = 1;
+            subResRange.baseArrayLayer = 0;
+            subResRange.layerCount = 1;
+        }
 
+        VkImageMemoryBarrier sceneImgAsOutputLayoutTransitionBarrier{};
+        {
+            sceneImgAsOutputLayoutTransitionBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            sceneImgAsOutputLayoutTransitionBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            sceneImgAsOutputLayoutTransitionBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            sceneImgAsOutputLayoutTransitionBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            sceneImgAsOutputLayoutTransitionBarrier.image = m_vkResultImgs[frameIdx];
+            sceneImgAsOutputLayoutTransitionBarrier.subresourceRange = subResRange;
+        }
+
+        vkCmdPipelineBarrier(cmdBuf,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            0, 0, nullptr, 0, nullptr,
+            1, &sceneImgAsOutputLayoutTransitionBarrier);
+
+        // Draw the scene
+        VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+
+        VkRenderingAttachmentInfoKHR renderAttachmentInfo{};
+        {
+            renderAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+            renderAttachmentInfo.imageView = m_vkResultImgsViews[frameIdx];
+            renderAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+            renderAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            renderAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            renderAttachmentInfo.clearValue = clearColor;
+        }
+
+        VkRenderingInfoKHR renderInfo{};
+        {
+            renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+            renderInfo.renderArea.offset = { 0, 0 };
+            renderInfo.renderArea.extent = renderExtent;
+            renderInfo.layerCount = 1;
+            renderInfo.colorAttachmentCount = 1;
+            renderInfo.pColorAttachments = &renderAttachmentInfo;
+        }
+
+        vkCmdBeginRendering(cmdBuf, &renderInfo);
+
+        // Bind the graphics pipeline
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+
+        // Set the viewport
+        VkViewport viewport{};
+        {
+            viewport.x = 0.f;
+            viewport.y = 0.f;
+            viewport.width = (float)renderExtent.width;
+            viewport.height = (float)renderExtent.height;
+            viewport.minDepth = 0.f;
+            viewport.maxDepth = 1.f;
+        }
+        vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
+
+        // Set the scissor
+        VkRect2D scissor{};
+        {
+            scissor.offset = { 0, 0 };
+            scissor.extent = renderExtent;
+            vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+        }
+
+        // TODO: Make it general enought by using the scene geometries.
+        VkDeviceSize vbOffset = 0;
+        vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertResource.m_pBuffer, &vbOffset);
+        vkCmdBindIndexBuffer(cmdBuf, *idxResource.m_pBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmdBuf, 6, 1, 0, 0, 0);
+
+        vkCmdEndRendering(cmdBuf);
+
+        // Transform the layout of the scene image from shader output to shader read for GUI rendering consumption.
+        VkImageMemoryBarrier sceneImgLayoutAsInputTransitionBarrier{};
+        {
+            sceneImgLayoutAsInputTransitionBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            sceneImgLayoutAsInputTransitionBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            sceneImgLayoutAsInputTransitionBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            sceneImgLayoutAsInputTransitionBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            sceneImgLayoutAsInputTransitionBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            sceneImgLayoutAsInputTransitionBarrier.image = m_vkResultImgs[frameIdx];
+            sceneImgLayoutAsInputTransitionBarrier.subresourceRange = subResRange;
+        }
+
+        vkCmdPipelineBarrier(cmdBuf,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &sceneImgLayoutAsInputTransitionBarrier);
+
+        return m_vkResultImgsViews[frameIdx];
     }
 }

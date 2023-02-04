@@ -20,6 +20,7 @@ namespace Hedge
     class HRenderer;
     class HBaseGuiManager;
     class HScene;
+    class HFrameListener;
 
     struct GpuResource
     {
@@ -30,13 +31,13 @@ namespace Hedge
     class HRenderManager
     {
     public:
-        HRenderManager();
+        HRenderManager(HBaseGuiManager* pGuiManager);
         ~HRenderManager();
 
         void BeginNewFrame();
         void RenderCurrentScene(HScene& scene);
         void FinalizeSceneAndSwapBuffers();
-        void DrawHud();
+        virtual void DrawHud(HFrameListener* pFrameListener) = 0;
 
         bool WindowShouldClose();
 
@@ -45,6 +46,10 @@ namespace Hedge
         // 
         // GPU resource manage functions
         GpuResource CreateGpuBuffer(uint32_t bytesNum);
+
+    protected:
+        // GUI
+        HBaseGuiManager* m_pGuiManager;
 
     private:
         void CreateVulkanAppInstDebugger();
@@ -113,9 +118,6 @@ namespace Hedge
         uint32_t   m_activeRendererIdx;
         GpuResource m_idxRendererGpuResource;
         GpuResource m_vertRendererGpuResource;
-
-        // GUI
-        HBaseGuiManager* m_pGuiManager;
 
 #ifndef NDEBUG
         // Debug mode

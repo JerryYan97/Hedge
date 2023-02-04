@@ -44,8 +44,9 @@ namespace Hedge
     bool HRenderManager::m_frameBufferResize = false;
 
     // ================================================================================================================
-    HRenderManager::HRenderManager()
-        : m_curSwapchainFrameIdx(0)
+    HRenderManager::HRenderManager(HBaseGuiManager* pGuiManager)
+        : m_curSwapchainFrameIdx(0),
+          m_pGuiManager(pGuiManager)
     {
         // Create vulkan instance and possible debug initialization.
         CreateVulkanAppInstDebugger();
@@ -68,8 +69,6 @@ namespace Hedge
         CreateDescriptorPool();
         CreateVmaObjects();
 
-        m_pGuiManager = new HBaseGuiManager();
-        
         m_pGuiManager->Init(m_pGlfwWindow,
                             m_vkInst,
                             m_vkPhyDevice,
@@ -278,16 +277,6 @@ namespace Hedge
             vmaUnmapMemory(m_vmaAllocator, *m_idxRendererGpuResource.m_pAlloc);
         }
 
-        m_pRenderers[m_activeRendererIdx]->Render(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 
-                                                  m_idxRendererGpuResource, 
-                                                  m_vertRendererGpuResource,
-                                                  m_swapchainImageExtent,
-                                                  m_curSwapchainFrameIdx);
-    }
-
-    // ================================================================================================================
-    void HRenderManager::FinalizeSceneAndSwapBuffers()
-    {
         // Fill the command buffer
         VkCommandBufferBeginInfo beginInfo{};
         {
@@ -295,7 +284,21 @@ namespace Hedge
         }
         VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
 
-        m_pGuiManager->RecordGuiDraw(m_renderPass, 
+        /*
+        const VkImageView& renderedImgView= m_pRenderers[m_activeRendererIdx]->Render(
+                                                  m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 
+                                                  m_idxRendererGpuResource, 
+                                                  m_vertRendererGpuResource,
+                                                  m_swapchainImageExtent,
+                                                  m_curSwapchainFrameIdx);
+        */
+
+    }
+
+    // ================================================================================================================
+    void HRenderManager::FinalizeSceneAndSwapBuffers()
+    {
+        m_pGuiManager->RecordGuiDraw(m_renderPass,
                                      m_swapchainFramebuffers[m_acqSwapchainImgIdx],
                                      m_swapchainImageExtent,
                                      m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx]);
@@ -486,15 +489,22 @@ namespace Hedge
         }
 
         // We need the swap chain device extension
-        const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
+
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamic_rendering_feature{};
+        {
+            dynamic_rendering_feature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+            dynamic_rendering_feature.dynamicRendering = VK_TRUE;
+        }
 
         // Assembly the info into the device create info
         VkDeviceCreateInfo deviceInfo{};
         {
             deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+            deviceInfo.pNext = &dynamic_rendering_feature;
             deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
             deviceInfo.pQueueCreateInfos = queueCreateInfos.data();
-            deviceInfo.enabledExtensionCount = 1;
+            deviceInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
             deviceInfo.ppEnabledExtensionNames = deviceExtensions.data();
         }
 

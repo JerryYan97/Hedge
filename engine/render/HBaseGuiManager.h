@@ -33,6 +33,8 @@ namespace Hedge
 
         void ImGUIWindowDataArrange();
 
+        virtual void GenerateImGuiData() = 0;
+
     private:
         // Input information.
         // const VkRenderPass* const m_pRenderPass;

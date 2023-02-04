@@ -23,11 +23,11 @@ namespace Hedge
         explicit HRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HRenderer();
 
-        virtual void Render(VkCommandBuffer& cmdBuf, 
-                            GpuResource idxResource, 
-                            GpuResource vertResource, 
-                            VkExtent2D renderExtent,
-                            uint32_t frameIdx) = 0;
+        virtual const VkImageView& Render(VkCommandBuffer& cmdBuf, 
+                                          GpuResource idxResource, 
+                                          GpuResource vertResource, 
+                                          VkExtent2D renderExtent,
+                                          uint32_t frameIdx) = 0;
 
     protected:
         void CreateShaderModule(VkShaderModule* pShaderModule, uint32_t* pShaderScript, uint32_t scriptByteCnt);
@@ -48,7 +48,7 @@ namespace Hedge
         explicit HBasicRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HBasicRenderer();
 
-        virtual void Render(VkCommandBuffer& cmdBuf, 
+        virtual const VkImageView& Render(VkCommandBuffer& cmdBuf,
                             GpuResource idxResource, 
                             GpuResource vertResource,
                             VkExtent2D renderExtent,
@@ -70,6 +70,5 @@ namespace Hedge
         std::vector<VkExtent2D> m_resultImgsExtents;
 
         uint32_t m_lastFrameIdx;
-        
     };
 }
