@@ -32,7 +32,7 @@ namespace Hedge
     {
     public:
         HRenderManager(HBaseGuiManager* pGuiManager);
-        ~HRenderManager();
+        virtual ~HRenderManager();
 
         void BeginNewFrame();
         void RenderCurrentScene(HScene& scene);
@@ -41,17 +41,22 @@ namespace Hedge
 
         bool WindowShouldClose();
 
+        void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
+
         // TODO: Create a GPU resource manager in future.
         // Contains VkInst, VMA, devices...
         // 
         // GPU resource manage functions
-        GpuResource CreateGpuBuffer(uint32_t bytesNum);
+        GpuResource CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
 
         VkImageView* GetCurrentRenderImgView() { return m_pRenderImgViews[m_curSwapchainFrameIdx]; }
 
     protected:
         // GUI
         HBaseGuiManager* m_pGuiManager;
+
+        // Render
+        uint32_t m_activeRendererIdx;
 
     private:
         void CreateVulkanAppInstDebugger();
@@ -118,7 +123,6 @@ namespace Hedge
         // Renderers.
         std::vector<HRenderer*> m_pRenderers;
         std::vector<VkImageView*> m_pRenderImgViews;
-        uint32_t   m_activeRendererIdx;
         GpuResource m_idxRendererGpuResource;
         GpuResource m_vertRendererGpuResource;
 

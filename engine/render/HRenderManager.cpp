@@ -70,15 +70,15 @@ namespace Hedge
         CreateVmaObjects();
 
         m_pGuiManager->Init(m_pGlfwWindow,
-                            m_vkInst,
-                            m_vkPhyDevice,
-                            m_vkDevice,
+                            &m_vkInst,
+                            &m_vkPhyDevice,
+                            &m_vkDevice,
                             m_gfxQueueFamilyIdx,
-                            m_gfxQueue,
-                            m_gfxCmdPool,
-                            m_descriptorPool,
+                            &m_gfxQueue,
+                            &m_gfxCmdPool,
+                            &m_descriptorPool,
                             m_swapchainImgCnt,
-                            m_renderPass,
+                            &m_renderPass,
                             CheckVkResult);
 
         m_pRenderers.push_back(new HBasicRenderer(m_swapchainImgCnt, &m_vkDevice, m_surfaceFormat.format, &m_vmaAllocator));
@@ -90,10 +90,6 @@ namespace Hedge
     // ================================================================================================================
     HRenderManager::~HRenderManager()
     {
-        vkDeviceWaitIdle(m_vkDevice);
-
-        delete m_pGuiManager;
-
         CleanupSwapchain();
 
         for (auto itr : m_swapchainImgAvailableSemaphores)
@@ -117,6 +113,21 @@ namespace Hedge
         }
 
         vkDestroyDescriptorPool(m_vkDevice, m_descriptorPool, nullptr);
+
+        // Destroy the vertex buffer
+        vmaDestroyBuffer(m_vmaAllocator,
+                         *m_idxRendererGpuResource.m_pBuffer, 
+                         *m_idxRendererGpuResource.m_pAlloc);
+
+        // Destroy the index buffer
+        vmaDestroyBuffer(m_vmaAllocator, 
+                         *m_vertRendererGpuResource.m_pBuffer,
+                         *m_vertRendererGpuResource.m_pAlloc);
+
+        delete m_idxRendererGpuResource.m_pBuffer;
+        delete m_idxRendererGpuResource.m_pAlloc;
+        delete m_vertRendererGpuResource.m_pBuffer;
+        delete m_vertRendererGpuResource.m_pAlloc;
 
         vmaDestroyAllocator(m_vmaAllocator);
 
@@ -265,8 +276,8 @@ namespace Hedge
         // TODO: logical flaw: Switch renderer must recreates gpu memory resource.
         if (renderInfo.m_reuse == false)
         {
-            m_vertRendererGpuResource = CreateGpuBuffer(sizeof(float) * 24);
-            m_idxRendererGpuResource = CreateGpuBuffer(sizeof(uint32_t) * 6);
+            m_vertRendererGpuResource = CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, sizeof(float) * 24);
+            m_idxRendererGpuResource = CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * 6);
 
             void* mappedData = nullptr;
 
@@ -286,7 +297,6 @@ namespace Hedge
         }
         VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
 
-        
         m_pRenderImgViews[m_curSwapchainFrameIdx] = m_pRenderers[m_activeRendererIdx]->Render(
                                                   m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 
                                                   m_idxRendererGpuResource, 
@@ -802,14 +812,18 @@ namespace Hedge
 
     // ================================================================================================================
     GpuResource HRenderManager::CreateGpuBuffer(
-        uint32_t bytesNum)
+        VkBufferUsageFlags usage,
+        uint32_t           bytesNum)
     {
+        char debugStr[] = "GPU buffer";
+
         // Create Buffer and allocate memory for vertex buffer, index buffer and render target.
         VmaAllocationCreateInfo mappableBufCreateInfo = {};
         {
             mappableBufCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
             mappableBufCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                                           VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            mappableBufCreateInfo.pUserData = debugStr;
         }
 
         // Create Vertex Buffer
@@ -817,7 +831,7 @@ namespace Hedge
         {
             vertBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             vertBufferInfo.size  = bytesNum;
-            vertBufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            vertBufferInfo.usage = usage;
         }
 
         GpuResource gpuRes{};

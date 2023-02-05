@@ -11,22 +11,28 @@ namespace Hedge
 {
     // ================================================================================================================
     HBaseGuiManager::HBaseGuiManager()
+        : m_pVkDevice(nullptr),
+          m_pDescriptorPool(nullptr)
     {}
 
     // ================================================================================================================
     void HBaseGuiManager::Init(
-        GLFWwindow*      pWindow,
-        VkInstance       instance,
-        VkPhysicalDevice physicalDevice,
-        VkDevice         device,
-        uint32_t         graphicsQueueFamilyIdx,
-        VkQueue          graphicsQueue,
-        VkCommandPool    graphicsCmdPool,
-        VkDescriptorPool descriptorPool,
-        uint32_t         swapchainImgCnt,
-        VkRenderPass     guiRenderPass,
-        void             (*CheckVkResultFn)(VkResult err))
+        GLFWwindow*       pWindow,
+        VkInstance*       pInstance,
+        VkPhysicalDevice* pPhysicalDevice,
+        VkDevice*         pDevice,
+        uint32_t          graphicsQueueFamilyIdx,
+        VkQueue*          pGraphicsQueue,
+        VkCommandPool*    pGraphicsCmdPool,
+        VkDescriptorPool* pDescriptorPool,
+        uint32_t          swapchainImgCnt,
+        VkRenderPass*     pGuiRenderPass,
+        void              (*CheckVkResultFn)(VkResult err))
     {
+        m_pVkDevice = pDevice;
+        m_pDescriptorPool = pDescriptorPool;
+        m_guiImgSamplers.resize(swapchainImgCnt);
+
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -39,34 +45,34 @@ namespace Hedge
         ImGui_ImplGlfw_InitForVulkan(pWindow, true);
         ImGui_ImplVulkan_InitInfo initInfo{};
         {
-            initInfo.Instance = instance;
-            initInfo.PhysicalDevice = physicalDevice;
-            initInfo.Device = device;
+            initInfo.Instance = *pInstance;
+            initInfo.PhysicalDevice = *pPhysicalDevice;
+            initInfo.Device = *pDevice;
             initInfo.QueueFamily = graphicsQueueFamilyIdx;
-            initInfo.Queue = graphicsQueue;
-            initInfo.DescriptorPool = descriptorPool;
+            initInfo.Queue = *pGraphicsQueue;
+            initInfo.DescriptorPool = *pDescriptorPool;
             initInfo.Subpass = 0; // GUI render will use the first subpass.
             initInfo.MinImageCount = swapchainImgCnt;
             initInfo.ImageCount = swapchainImgCnt;
             initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
             initInfo.CheckVkResultFn = CheckVkResultFn;
         }
-        ImGui_ImplVulkan_Init(&initInfo, guiRenderPass);
+        ImGui_ImplVulkan_Init(&initInfo, *pGuiRenderPass);
 
         // Upload Fonts
         {
             // Use any command queue
-            VK_CHECK(vkResetCommandPool(device, graphicsCmdPool, 0));
+            VK_CHECK(vkResetCommandPool(*pDevice, *pGraphicsCmdPool, 0));
 
             VkCommandBufferAllocateInfo fontUploadCmdBufAllocInfo{};
             {
                 fontUploadCmdBufAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-                fontUploadCmdBufAllocInfo.commandPool = graphicsCmdPool;
+                fontUploadCmdBufAllocInfo.commandPool = *pGraphicsCmdPool;
                 fontUploadCmdBufAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
                 fontUploadCmdBufAllocInfo.commandBufferCount = 1;
             }
             VkCommandBuffer fontUploadCmdBuf;
-            VK_CHECK(vkAllocateCommandBuffers(device, &fontUploadCmdBufAllocInfo, &fontUploadCmdBuf));
+            VK_CHECK(vkAllocateCommandBuffers(*pDevice, &fontUploadCmdBufAllocInfo, &fontUploadCmdBuf));
 
             VkCommandBufferBeginInfo begin_info{};
             {
@@ -86,11 +92,12 @@ namespace Hedge
 
             VK_CHECK(vkEndCommandBuffer(fontUploadCmdBuf));
 
-            VK_CHECK(vkQueueSubmit(graphicsQueue, 1, &end_info, VK_NULL_HANDLE));
+            VK_CHECK(vkQueueSubmit(*pGraphicsQueue, 1, &end_info, VK_NULL_HANDLE));
 
-            VK_CHECK(vkDeviceWaitIdle(device));
+            VK_CHECK(vkDeviceWaitIdle(*pDevice));
             ImGui_ImplVulkan_DestroyFontUploadObjects();
         }
+
     }
 
     // ================================================================================================================
@@ -99,6 +106,11 @@ namespace Hedge
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
+
+        for (auto itr : m_guiImgSamplers)
+        {
+            vkDestroySampler(*m_pVkDevice, itr, nullptr);
+        }
     }
 
     // ================================================================================================================
@@ -150,15 +162,12 @@ namespace Hedge
     }
 
     void HBaseGuiManager::AddTextureToImGUI(
-        VkDescriptorSet* img_ds, 
-        VkDevice* pVkDevice,
-        VkSampler* pVkSampler,
-        VkDescriptorPool* pDescriptorPool,
-        VkImageView* pTextureImgView,
-        uint32_t frameIdx)
+        VkDescriptorSet* img_ds,
+        VkImageView*     pTextureImgView,
+        uint32_t         frameIdx)
     {
         // Create the Sampler
-        vkDestroySampler(*pVkDevice, *pVkSampler, nullptr);
+        vkDestroySampler(*m_pVkDevice, m_guiImgSamplers[frameIdx], nullptr);
         VkSamplerCreateInfo sampler_info{};
         {
             sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -172,15 +181,17 @@ namespace Hedge
             sampler_info.maxLod = 1000;
             sampler_info.maxAnisotropy = 1.0f;
         }
-        VK_CHECK(vkCreateSampler(*pVkDevice, &sampler_info, nullptr, pVkSampler));
+        VK_CHECK(vkCreateSampler(*m_pVkDevice, &sampler_info, nullptr, &m_guiImgSamplers[frameIdx]));
 
         if (m_guiImgDescriptors.size() == m_swapchainImgCnt)
         {
-            vkFreeDescriptorSets(*pVkDevice, *pDescriptorPool, 1, &m_guiImgDescriptors[frameIdx]);
+            vkFreeDescriptorSets(*m_pVkDevice, *m_pDescriptorPool, 1, &m_guiImgDescriptors[frameIdx]);
         }
 
         // Create Descriptor Set using ImGUI's implementation
-        *img_ds = ImGui_ImplVulkan_AddTexture(*pVkSampler, *pTextureImgView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        *img_ds = ImGui_ImplVulkan_AddTexture(m_guiImgSamplers[frameIdx],
+                                              *pTextureImgView,
+                                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         if (m_guiImgDescriptors.size() < m_swapchainImgCnt)
         {

@@ -9,7 +9,7 @@ namespace Hedge
     {
     public:
         HFrameListener();
-        ~HFrameListener();
+        virtual ~HFrameListener();
 
         virtual void FrameStarted() = 0;
         virtual void FrameEnded()   = 0;

@@ -18,7 +18,7 @@ namespace Hedge
     {
     public:
         HedgeEditor();
-        ~HedgeEditor();
+        virtual ~HedgeEditor();
 
         void BuildGame(const char* pPathFileName);
 
@@ -41,7 +41,7 @@ namespace Hedge
     {
     public:
         HedgeEditorRenderManager(HBaseGuiManager* pGuiManager);
-        ~HedgeEditorRenderManager();
+        virtual ~HedgeEditorRenderManager();
 
         virtual void DrawHud(HFrameListener* pFrameListener) override;
     };
@@ -50,12 +50,27 @@ namespace Hedge
     {
     public:
         HedgeEditorGuiManager();
-        ~HedgeEditorGuiManager();
+        virtual ~HedgeEditorGuiManager();
 
         virtual void GenerateImGuiData() override {};
-        void GenerateImGuiData(VkImageView* resultImgView);
+        void GenerateImGuiData(VkImageView* resultImgView, uint32_t frameIdx);
 
     private:
         
+    };
+
+    class GlobalVariablesRAIIManager
+    {
+    public:
+        GlobalVariablesRAIIManager();
+        ~GlobalVariablesRAIIManager();
+
+        HedgeEditor* GetHedgeEditor() { return m_pHedgeEditor; }
+        HedgeEditorRenderManager* GetHedgeEditorRenderManager() { return m_pHedgeEditorRenderManager; }
+
+    private:
+        HedgeEditor*              m_pHedgeEditor;
+        HedgeEditorGuiManager*    m_pHedgeEditorGuiManager;
+        HedgeEditorRenderManager* m_pHedgeEditorRenderManager;
     };
 }

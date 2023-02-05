@@ -30,5 +30,5 @@ void main(int argc, char** argv)
         g_pRenderManager->FinalizeSceneAndSwapBuffers();
     }
 
-    delete g_pFrameListener;
+    g_pRenderManager->WaitDeviceIdel();
 }

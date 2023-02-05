@@ -206,8 +206,7 @@ namespace Hedge
             pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
             pipelineLayoutInfo.setLayoutCount = 0;
         }
-        VkPipelineLayout pipelineLayout{};
-        VK_CHECK(vkCreatePipelineLayout(*m_pVkDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout));
+        VK_CHECK(vkCreatePipelineLayout(*m_pVkDevice, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 
         // Create the graphics pipeline -- The graphics pipeline is used for scene rendering
         VkPipelineRenderingCreateInfoKHR pipelineRenderCreateInfo{};
@@ -231,7 +230,7 @@ namespace Hedge
             pipelineInfo.pMultisampleState = &multiSampleInfo;
             pipelineInfo.pColorBlendState = &colorBlendInfo;
             pipelineInfo.pDynamicState = &dynamicState;
-            pipelineInfo.layout = pipelineLayout;
+            pipelineInfo.layout = m_pipelineLayout;
             pipelineInfo.pDepthStencilState = &depthStencilInfo;
             pipelineInfo.renderPass = nullptr;
             pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -243,15 +242,34 @@ namespace Hedge
 
     // ================================================================================================================
     HBasicRenderer::~HBasicRenderer()
-    {}
+    {
+        for (uint32_t i = 0; i < m_vkResultImgsViews.size(); i++)
+        {
+            vkDestroyImageView(*m_pVkDevice, m_vkResultImgsViews[i], nullptr);
+            vkDestroySampler(*m_pVkDevice, m_vkResultImgsSamplers[i], nullptr);
+            vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[i], m_vmaResultImgsAllocations[i]);
+        }
+
+        // Destroy Pipeline
+        vkDestroyPipeline(*m_pVkDevice, m_pipeline, nullptr);
+
+        // Destroy the pipeline layout
+        vkDestroyPipelineLayout(*m_pVkDevice, m_pipelineLayout, nullptr);
+
+        // Destroy both of the shader modules
+        vkDestroyShaderModule(*m_pVkDevice, m_shaderVertModule, nullptr);
+        vkDestroyShaderModule(*m_pVkDevice, m_shaderFragModule, nullptr);
+    }
 
     // ================================================================================================================
     void HBasicRenderer::InitResource()
     {
+        char dbgStr[] = "Init Images";
         VmaAllocationCreateInfo sceneImgsAllocInfo{};
         {
             sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            sceneImgsAllocInfo.pUserData = dbgStr;
         }
 
         VkExtent3D extent{};
@@ -330,10 +348,13 @@ namespace Hedge
     {
         vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[frameIdx], m_vmaResultImgsAllocations[frameIdx]);
 
+        // char dbgStr[] = "Recreate Images";
+
         VmaAllocationCreateInfo sceneImgsAllocInfo{};
         {
             sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            // sceneImgsAllocInfo.pUserData = dbgStr;
         }
 
         VkExtent3D extent{};

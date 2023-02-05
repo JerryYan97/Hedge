@@ -7,8 +7,10 @@
 #include <iostream>
 #include <cstdlib>
 
-Hedge::HFrameListener* g_pFrameListener = new Hedge::HedgeEditor();
-Hedge::HRenderManager* g_pRenderManager = new Hedge::HedgeEditorRenderManager(new Hedge::HedgeEditorGuiManager());
+Hedge::GlobalVariablesRAIIManager raiiManager;
+
+Hedge::HFrameListener* g_pFrameListener = raiiManager.GetHedgeEditor();
+Hedge::HRenderManager* g_pRenderManager = raiiManager.GetHedgeEditorRenderManager();
 
 namespace Hedge
 {
@@ -76,7 +78,7 @@ namespace Hedge
     {
         HedgeEditorGuiManager* pGuiManager = dynamic_cast<HedgeEditorGuiManager*>(m_pGuiManager);
         
-        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView());
+        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), m_activeRendererIdx);
     }
 
     // ================================================================================================================
@@ -88,34 +90,49 @@ namespace Hedge
     {}
 
     // ================================================================================================================
-    void HedgeEditorGuiManager::GenerateImGuiData(VkImageView* pResultImgView)
+    void HedgeEditorGuiManager::GenerateImGuiData(
+        VkImageView* pResultImgView,
+        uint32_t frameIdx)
     {
-        static bool use_work_area = true;
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
-        bool open = true;
 
         // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
         // Based on your use case you may want one of the other.
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
-        ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
 
-        if (ImGui::Begin("Example: Fullscreen window", &open, flags))
+        VkDescriptorSet my_image_texture = 0;
+
+        if (ImGui::Begin("Example: Fullscreen window", nullptr, flags))
         {
-            ImGui::Checkbox("Use work area instead of main area", &use_work_area);
-            ImGui::SameLine();
+            ImVec2 winContentExtentUL = ImGui::GetWindowContentRegionMax();
+            ImVec2 winContentExtentDR = ImGui::GetWindowContentRegionMin();
+            ImVec2 winContentExtent;
+            winContentExtent.x = winContentExtentUL.x - winContentExtentDR.x;
+            winContentExtent.y = winContentExtentUL.y - winContentExtentDR.y;
 
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
-            ImGui::Indent();
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
-            ImGui::Unindent();
+            uint32_t newWidth = std::max(static_cast<uint32_t>(winContentExtent.x), static_cast<uint32_t>(64));
+            uint32_t newHeight = std::max(static_cast<uint32_t>(winContentExtent.y), static_cast<uint32_t>(64));
 
-            if (&open && ImGui::Button("Close this window"))
-                open = false;
+            AddTextureToImGUI(&my_image_texture, pResultImgView, frameIdx);
         }
         ImGui::End();
+    }
+
+    // ================================================================================================================
+    GlobalVariablesRAIIManager::GlobalVariablesRAIIManager()
+    {
+        m_pHedgeEditor              = new HedgeEditor();
+        m_pHedgeEditorGuiManager    = new HedgeEditorGuiManager();
+        m_pHedgeEditorRenderManager = new HedgeEditorRenderManager(m_pHedgeEditorGuiManager);
+    }
+
+    // ================================================================================================================
+    GlobalVariablesRAIIManager::~GlobalVariablesRAIIManager()
+    {
+        delete m_pHedgeEditorGuiManager;
+        delete m_pHedgeEditorRenderManager;
+        delete m_pHedgeEditor;     
     }
 }

@@ -21,7 +21,7 @@ namespace Hedge
     {
     public:
         explicit HRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
-        ~HRenderer();
+        virtual ~HRenderer();
 
         virtual VkImageView* Render(VkCommandBuffer& cmdBuf, 
                                           GpuResource idxResource, 
@@ -46,7 +46,7 @@ namespace Hedge
     {
     public:
         explicit HBasicRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
-        ~HBasicRenderer();
+        virtual ~HBasicRenderer();
 
         virtual VkImageView* Render(VkCommandBuffer& cmdBuf,
                             GpuResource idxResource, 
@@ -59,9 +59,10 @@ namespace Hedge
         void RecreateResource(VkExtent2D resultExtent, uint32_t frameIdx);
         inline bool NeedResize(VkExtent2D inExtent, uint32_t frameIdx);
 
-        VkShaderModule m_shaderVertModule;
-        VkShaderModule m_shaderFragModule;
-        VkPipeline     m_pipeline;
+        VkShaderModule   m_shaderVertModule;
+        VkShaderModule   m_shaderFragModule;
+        VkPipeline       m_pipeline;
+        VkPipelineLayout m_pipelineLayout;
 
         std::vector<VkImage> m_vkResultImgs;
         std::vector<VkImageView> m_vkResultImgsViews;
