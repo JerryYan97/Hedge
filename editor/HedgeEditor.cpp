@@ -112,10 +112,8 @@ namespace Hedge
             winContentExtent.x = winContentExtentUL.x - winContentExtentDR.x;
             winContentExtent.y = winContentExtentUL.y - winContentExtentDR.y;
 
-            uint32_t newWidth = std::max(static_cast<uint32_t>(winContentExtent.x), static_cast<uint32_t>(64));
-            uint32_t newHeight = std::max(static_cast<uint32_t>(winContentExtent.y), static_cast<uint32_t>(64));
-
             AddTextureToImGUI(&my_image_texture, pResultImgView, frameIdx);
+            ImGui::Image((ImTextureID)my_image_texture, winContentExtent);
         }
         ImGui::End();
     }

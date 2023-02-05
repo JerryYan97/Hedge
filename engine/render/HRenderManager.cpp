@@ -815,15 +815,12 @@ namespace Hedge
         VkBufferUsageFlags usage,
         uint32_t           bytesNum)
     {
-        char debugStr[] = "GPU buffer";
-
         // Create Buffer and allocate memory for vertex buffer, index buffer and render target.
         VmaAllocationCreateInfo mappableBufCreateInfo = {};
         {
             mappableBufCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
             mappableBufCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                                           VMA_ALLOCATION_CREATE_MAPPED_BIT;
-            mappableBufCreateInfo.pUserData = debugStr;
         }
 
         // Create Vertex Buffer

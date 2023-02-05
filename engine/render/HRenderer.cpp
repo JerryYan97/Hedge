@@ -348,13 +348,10 @@ namespace Hedge
     {
         vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[frameIdx], m_vmaResultImgsAllocations[frameIdx]);
 
-        // char dbgStr[] = "Recreate Images";
-
         VmaAllocationCreateInfo sceneImgsAllocInfo{};
         {
             sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-            // sceneImgsAllocInfo.pUserData = dbgStr;
         }
 
         VkExtent3D extent{};
