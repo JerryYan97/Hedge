@@ -53,7 +53,7 @@ namespace Hedge
         ~HedgeEditorGuiManager();
 
         virtual void GenerateImGuiData() override {};
-        void GenerateImGuiData(VkImageView& resultImgView);
+        void GenerateImGuiData(VkImageView* resultImgView);
 
     private:
         

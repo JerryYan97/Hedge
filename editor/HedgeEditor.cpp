@@ -75,8 +75,8 @@ namespace Hedge
         HFrameListener* pFrameListener)
     {
         HedgeEditorGuiManager* pGuiManager = dynamic_cast<HedgeEditorGuiManager*>(m_pGuiManager);
-        VkImageView dummy;
-        pGuiManager->GenerateImGuiData(dummy);
+        
+        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView());
     }
 
     // ================================================================================================================
@@ -88,7 +88,7 @@ namespace Hedge
     {}
 
     // ================================================================================================================
-    void HedgeEditorGuiManager::GenerateImGuiData(VkImageView& resultImgView)
+    void HedgeEditorGuiManager::GenerateImGuiData(VkImageView* pResultImgView)
     {
         static bool use_work_area = true;
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;

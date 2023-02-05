@@ -23,7 +23,7 @@ namespace Hedge
         explicit HRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HRenderer();
 
-        virtual const VkImageView& Render(VkCommandBuffer& cmdBuf, 
+        virtual VkImageView* Render(VkCommandBuffer& cmdBuf, 
                                           GpuResource idxResource, 
                                           GpuResource vertResource, 
                                           VkExtent2D renderExtent,
@@ -48,7 +48,7 @@ namespace Hedge
         explicit HBasicRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
         ~HBasicRenderer();
 
-        virtual const VkImageView& Render(VkCommandBuffer& cmdBuf,
+        virtual VkImageView* Render(VkCommandBuffer& cmdBuf,
                             GpuResource idxResource, 
                             GpuResource vertResource,
                             VkExtent2D renderExtent,

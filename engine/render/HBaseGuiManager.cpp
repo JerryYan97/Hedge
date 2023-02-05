@@ -148,4 +148,47 @@ namespace Hedge
     void HBaseGuiManager::ImGUIWindowDataArrange()
     {
     }
+
+    void HBaseGuiManager::AddTextureToImGUI(
+        VkDescriptorSet* img_ds, 
+        VkDevice* pVkDevice,
+        VkSampler* pVkSampler,
+        VkDescriptorPool* pDescriptorPool,
+        VkImageView* pTextureImgView,
+        uint32_t frameIdx)
+    {
+        // Create the Sampler
+        vkDestroySampler(*pVkDevice, *pVkSampler, nullptr);
+        VkSamplerCreateInfo sampler_info{};
+        {
+            sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            sampler_info.magFilter = VK_FILTER_LINEAR;
+            sampler_info.minFilter = VK_FILTER_LINEAR;
+            sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT; // outside image bounds just use border color
+            sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            sampler_info.minLod = -1000;
+            sampler_info.maxLod = 1000;
+            sampler_info.maxAnisotropy = 1.0f;
+        }
+        VK_CHECK(vkCreateSampler(*pVkDevice, &sampler_info, nullptr, pVkSampler));
+
+        if (m_guiImgDescriptors.size() == m_swapchainImgCnt)
+        {
+            vkFreeDescriptorSets(*pVkDevice, *pDescriptorPool, 1, &m_guiImgDescriptors[frameIdx]);
+        }
+
+        // Create Descriptor Set using ImGUI's implementation
+        *img_ds = ImGui_ImplVulkan_AddTexture(*pVkSampler, *pTextureImgView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        if (m_guiImgDescriptors.size() < m_swapchainImgCnt)
+        {
+            m_guiImgDescriptors.push_back(*img_ds);
+        }
+        else
+        {
+            m_guiImgDescriptors[frameIdx] = *img_ds;
+        }
+    }
 }

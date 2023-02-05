@@ -47,6 +47,8 @@ namespace Hedge
         // GPU resource manage functions
         GpuResource CreateGpuBuffer(uint32_t bytesNum);
 
+        VkImageView* GetCurrentRenderImgView() { return m_pRenderImgViews[m_curSwapchainFrameIdx]; }
+
     protected:
         // GUI
         HBaseGuiManager* m_pGuiManager;
@@ -115,6 +117,7 @@ namespace Hedge
 
         // Renderers.
         std::vector<HRenderer*> m_pRenderers;
+        std::vector<VkImageView*> m_pRenderImgViews;
         uint32_t   m_activeRendererIdx;
         GpuResource m_idxRendererGpuResource;
         GpuResource m_vertRendererGpuResource;

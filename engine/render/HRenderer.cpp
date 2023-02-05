@@ -392,7 +392,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    const VkImageView& HBasicRenderer::Render(
+    VkImageView* HBasicRenderer::Render(
         VkCommandBuffer& cmdBuf,
         GpuResource idxResource, 
         GpuResource vertResource,
@@ -506,6 +506,6 @@ namespace Hedge
             0, nullptr,
             1, &sceneImgLayoutAsInputTransitionBarrier);
 
-        return m_vkResultImgsViews[frameIdx];
+        return &m_vkResultImgsViews[frameIdx];
     }
 }
