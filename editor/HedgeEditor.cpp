@@ -96,6 +96,8 @@ namespace Hedge
     {
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+
         // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
         // Based on your use case you may want one of the other.
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -113,9 +115,10 @@ namespace Hedge
             winContentExtent.y = winContentExtentUL.y - winContentExtentDR.y;
 
             AddTextureToImGUI(&my_image_texture, pResultImgView, frameIdx);
-            ImGui::Image((ImTextureID)my_image_texture, winContentExtent);
+            ImGui::Image((ImTextureID)my_image_texture, viewport->WorkSize);
         }
         ImGui::End();
+        ImGui::PopStyleVar(1);
     }
 
     // ================================================================================================================
