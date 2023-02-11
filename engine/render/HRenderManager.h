@@ -50,6 +50,7 @@ namespace Hedge
         GpuResource CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
 
         VkImageView* GetCurrentRenderImgView() { return m_pRenderImgViews[m_curSwapchainFrameIdx]; }
+        VkExtent2D   GetCurrentRenderImgExtent() { return m_renderImgsExtents[m_curSwapchainFrameIdx]; }
 
     protected:
         // GUI
@@ -123,6 +124,7 @@ namespace Hedge
         // Renderers.
         std::vector<HRenderer*> m_pRenderers;
         std::vector<VkImageView*> m_pRenderImgViews;
+        std::vector<VkExtent2D> m_renderImgsExtents;
         GpuResource m_idxRendererGpuResource;
         GpuResource m_vertRendererGpuResource;
 

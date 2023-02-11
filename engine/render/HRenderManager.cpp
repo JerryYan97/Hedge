@@ -85,6 +85,7 @@ namespace Hedge
         m_activeRendererIdx = 0;
 
         m_pRenderImgViews.resize(m_swapchainImgCnt);
+        m_renderImgsExtents.resize(m_swapchainImgCnt);
     }
 
     // ================================================================================================================
@@ -297,12 +298,14 @@ namespace Hedge
         }
         VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
 
+        VkExtent2D renderImgExtent = m_pGuiManager->GetRenderExtent();
         m_pRenderImgViews[m_curSwapchainFrameIdx] = m_pRenderers[m_activeRendererIdx]->Render(
                                                   m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 
                                                   m_idxRendererGpuResource, 
                                                   m_vertRendererGpuResource,
-                                                  m_swapchainImageExtent,
+                                                  renderImgExtent,
                                                   m_curSwapchainFrameIdx);
+        m_renderImgsExtents[m_curSwapchainFrameIdx] = renderImgExtent;
     }
 
     // ================================================================================================================

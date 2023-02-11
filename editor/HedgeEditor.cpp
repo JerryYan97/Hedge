@@ -4,6 +4,7 @@
 #include "scene/HScene.h"
 #include "core/HEntity.h"
 #include "imgui.h"
+#include "CustomDearImGuiLayout.h"
 #include <iostream>
 #include <cstdlib>
 
@@ -16,7 +17,6 @@ namespace Hedge
 {
     // ================================================================================================================
     HedgeEditor::HedgeEditor()
-        : m_pLayout(nullptr)
     {
         m_pScenes.push_back(new HScene());
         m_activeScene = 0;
@@ -78,45 +78,177 @@ namespace Hedge
     {
         HedgeEditorGuiManager* pGuiManager = dynamic_cast<HedgeEditorGuiManager*>(m_pGuiManager);
         
-        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), m_activeRendererIdx);
+        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), GetCurrentRenderImgExtent(), m_activeRendererIdx);
     }
 
     // ================================================================================================================
     HedgeEditorGuiManager::HedgeEditorGuiManager()
+        : m_pLayout(CreateGuiLayout())
     {}
 
     // ================================================================================================================
     HedgeEditorGuiManager::~HedgeEditorGuiManager()
-    {}
+    {
+        delete m_pLayout;
+    }
+
+    // ================================================================================================================
+    VkExtent2D HedgeEditorGuiManager::GetRenderExtent()
+    {
+        m_pLayout->ResizeAll();
+        return VkExtent2D{ static_cast<uint32_t>(m_pRenderWindowNode->GetDomainPos().x),
+                           static_cast<uint32_t>(m_pRenderWindowNode->GetDomainPos().y) };
+    }
 
     // ================================================================================================================
     void HedgeEditorGuiManager::GenerateImGuiData(
         VkImageView* pResultImgView,
-        uint32_t frameIdx)
+        VkExtent2D resultImgExtent,
+        uint32_t     frameIdx)
     {
-        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+        m_frameIdx = frameIdx;
+        m_pRenderResultImgView = pResultImgView;
+        m_renderResultImgExtent = resultImgExtent;
+        m_pLayout->BeginEndLayout();
+    }
+
+    // ================================================================================================================
+    DearImGuiExt::CustomLayout* HedgeEditorGuiManager::CreateGuiLayout()
+    {
+        DearImGuiExt::CustomLayoutNode* pRoot = new DearImGuiExt::CustomLayoutNode(0.8f);
+
+        // Left and right splitter
+        pRoot->CreateLeftChild(0.8f);
+        pRoot->CreateRightChild(0.3f);
+
+        // Left splitter's top and bottom windows
+        DearImGuiExt::CustomLayoutNode* pLeftDomain = pRoot->GetLeftChild();
+        pLeftDomain->CreateLeftChild(SceneRenderWindow);
+        pLeftDomain->CreateRightChild(AssetWindow);
+        m_pRenderWindowNode = pLeftDomain->GetLeftChild();
+
+        // Right splitter's top and bottom windows
+        DearImGuiExt::CustomLayoutNode* pRightDomain = pRoot->GetRightChild();
+        pRightDomain->CreateLeftChild(SceneObjectsListWindow);
+        pRightDomain->CreateRightChild(ObjectPropertiesWindow);
+
+        return new DearImGuiExt::CustomLayout(pRoot);
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::SceneRenderWindow()
+    {
+        HedgeEditorGuiManager* pGui = raiiManager.GetHedgeEditorGuiManager();
+
+        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | 
+                                        ImGuiWindowFlags_NoMove | 
+                                        ImGuiWindowFlags_NoSavedSettings;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 
-        // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
-        // Based on your use case you may want one of the other.
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-
         VkDescriptorSet my_image_texture = 0;
 
-        if (ImGui::Begin("Example: Fullscreen window", nullptr, flags))
+        if (ImGui::Begin("Scene Render Window", nullptr, flags))
         {
-            ImVec2 winContentExtentUL = ImGui::GetWindowContentRegionMax();
-            ImVec2 winContentExtentDR = ImGui::GetWindowContentRegionMin();
-            ImVec2 winContentExtent;
-            winContentExtent.x = winContentExtentUL.x - winContentExtentDR.x;
-            winContentExtent.y = winContentExtentUL.y - winContentExtentDR.y;
-
-            AddTextureToImGUI(&my_image_texture, pResultImgView, frameIdx);
-            ImGui::Image((ImTextureID)my_image_texture, viewport->WorkSize);
+            pGui->AddTextureToImGUI(&my_image_texture, pGui->m_pRenderResultImgView, pGui->m_frameIdx);
+            ImGui::Image((ImTextureID)my_image_texture, 
+                         ImVec2(static_cast<float>(pGui->m_renderResultImgExtent.width), 
+                                static_cast<float>(pGui->m_renderResultImgExtent.height)));
         }
+        ImGui::End();
+        ImGui::PopStyleVar(1);
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::AssetWindow()
+    {
+        constexpr ImGuiWindowFlags TestWindowFlag = ImGuiWindowFlags_NoSavedSettings | 
+                                                    ImGuiWindowFlags_NoCollapse | 
+                                                    ImGuiWindowFlags_NoResize | 
+                                                    ImGuiWindowFlags_NoMove | 
+                                                    ImGuiWindowFlags_NoDecoration;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        ImGui::Begin("AssetWindow", nullptr, TestWindowFlag);
+
+        if (ImGui::TreeNode("Basic trees"))
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
+                {
+                    ImGui::Text("blah blah");
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("button")) {}
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+
+        ImGui::End();
+        ImGui::PopStyleVar(1);
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::SceneObjectsListWindow()
+    {
+        constexpr ImGuiWindowFlags TestWindowFlag = ImGuiWindowFlags_NoSavedSettings | 
+                                                    ImGuiWindowFlags_NoCollapse | 
+                                                    ImGuiWindowFlags_NoResize | 
+                                                    ImGuiWindowFlags_NoMove | 
+                                                    ImGuiWindowFlags_NoDecoration;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        ImGui::Begin("SceneObjectsListWindow", nullptr, TestWindowFlag);
+
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        if (ImGui::TreeNode("Basic trees"))
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
+                {
+                    ImGui::Text("blah blah");
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("button")) {}
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+
+        ImGui::End();
+        ImGui::PopStyleVar(1);
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::ObjectPropertiesWindow()
+    {
+        constexpr ImGuiWindowFlags TestWindowFlag = ImGuiWindowFlags_NoSavedSettings | 
+                                                    ImGuiWindowFlags_NoCollapse | 
+                                                    ImGuiWindowFlags_NoResize | 
+                                                    ImGuiWindowFlags_NoMove | 
+                                                    ImGuiWindowFlags_NoDecoration;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        ImGui::Begin("ObjectPropertiesWindow", nullptr, TestWindowFlag);
+
+        if (ImGui::TreeNode("Basic trees"))
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
+                {
+                    ImGui::Text("blah blah");
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("button")) {}
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+
         ImGui::End();
         ImGui::PopStyleVar(1);
     }

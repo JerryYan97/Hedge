@@ -40,6 +40,7 @@ namespace Hedge
         void ImGUIWindowDataArrange();
 
         virtual void GenerateImGuiData() = 0;
+        virtual VkExtent2D GetRenderExtent() = 0;
 
     protected:
         std::vector<VkDescriptorSet> m_guiImgDescriptors;

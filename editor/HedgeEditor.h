@@ -8,6 +8,7 @@
 namespace DearImGuiExt
 {
     class CustomLayout;
+    class CustomLayoutNode;
 };
 
 namespace Hedge
@@ -32,9 +33,8 @@ namespace Hedge
         virtual HScene& GetActiveScene() override;
 
     private:
-        DearImGuiExt::CustomLayout* m_pLayout;
         std::vector<HScene*> m_pScenes;
-        uint32_t m_activeScene;
+        uint32_t             m_activeScene;
     };
 
     class HedgeEditorRenderManager : public HRenderManager
@@ -53,10 +53,23 @@ namespace Hedge
         virtual ~HedgeEditorGuiManager();
 
         virtual void GenerateImGuiData() override {};
-        void GenerateImGuiData(VkImageView* resultImgView, uint32_t frameIdx);
+        void GenerateImGuiData(VkImageView* resultImgView, VkExtent2D resultImgExtent, uint32_t frameIdx);
+
+        virtual VkExtent2D GetRenderExtent() override;
+
+        DearImGuiExt::CustomLayout* CreateGuiLayout();
 
     private:
-        
+        static void SceneRenderWindow();
+        static void AssetWindow();
+        static void SceneObjectsListWindow();
+        static void ObjectPropertiesWindow();
+
+        VkImageView*                m_pRenderResultImgView;
+        VkExtent2D                  m_renderResultImgExtent;
+        uint32_t                    m_frameIdx;
+        DearImGuiExt::CustomLayout* m_pLayout;
+        DearImGuiExt::CustomLayoutNode* m_pRenderWindowNode;
     };
 
     class GlobalVariablesRAIIManager
@@ -67,6 +80,8 @@ namespace Hedge
 
         HedgeEditor* GetHedgeEditor() { return m_pHedgeEditor; }
         HedgeEditorRenderManager* GetHedgeEditorRenderManager() { return m_pHedgeEditorRenderManager; }
+        HedgeEditorGuiManager* GetHedgeEditorGuiManager() { return m_pHedgeEditorGuiManager; }
+
 
     private:
         HedgeEditor*              m_pHedgeEditor;
