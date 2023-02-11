@@ -7,6 +7,7 @@
 #include "CustomDearImGuiLayout.h"
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 Hedge::GlobalVariablesRAIIManager raiiManager;
 
@@ -96,8 +97,13 @@ namespace Hedge
     VkExtent2D HedgeEditorGuiManager::GetRenderExtent()
     {
         m_pLayout->ResizeAll();
-        return VkExtent2D{ static_cast<uint32_t>(m_pRenderWindowNode->GetDomainPos().x),
-                           static_cast<uint32_t>(m_pRenderWindowNode->GetDomainPos().y) };
+
+        uint32_t newWidth = std::max(static_cast<uint32_t>(m_pRenderWindowNode->GetDomainSize().x), 
+                                     static_cast<uint32_t>(64));
+        uint32_t newHeight = std::max(static_cast<uint32_t>(m_pRenderWindowNode->GetDomainSize().y), 
+                                      static_cast<uint32_t>(64));
+
+        return VkExtent2D{ newWidth, newHeight };
     }
 
     // ================================================================================================================
