@@ -6,4 +6,6 @@ target_sources(
     HEntity.h
     HFrameListener.cpp
     HFrameListener.h
+    HGpuRsrcManager.cpp
+    HGpuRsrcManager.h
 )

@@ -13,8 +13,6 @@
 #include <vector>
 #include <set>
 
-// TODO: Built-in shader generate header. E.g. Python script to generate g_shaderScript.h to replace the one in Util.h.
-
 namespace Hedge
 {
     // ================================================================================================================
@@ -24,7 +22,7 @@ namespace Hedge
         VkFormat surfFormat, 
         VmaAllocator* pVmaAllocator)
         : m_onFlightResCnt(onFlightResCnt),
-            m_pVkDevice(pVkDevice),
+          m_pVkDevice(pVkDevice),
           m_renderSurfFormat(surfFormat),
           m_pVmaAllocator(pVmaAllocator)
     {
