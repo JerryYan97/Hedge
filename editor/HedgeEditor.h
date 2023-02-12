@@ -3,6 +3,7 @@
 #include "core/HFrameListener.h"
 #include "render/HBaseGuiManager.h"
 #include "render/HRenderManager.h"
+#include "core/HGpuRsrcManager.h"
 #include <vector>
 
 namespace DearImGuiExt
@@ -40,7 +41,7 @@ namespace Hedge
     class HedgeEditorRenderManager : public HRenderManager
     {
     public:
-        HedgeEditorRenderManager(HBaseGuiManager* pGuiManager);
+        HedgeEditorRenderManager(HBaseGuiManager* pGuiManager, HGpuRsrcManager* pGpuRsrcManager);
         virtual ~HedgeEditorRenderManager();
 
         virtual void DrawHud(HFrameListener* pFrameListener) override;
@@ -81,11 +82,12 @@ namespace Hedge
         HedgeEditor* GetHedgeEditor() { return m_pHedgeEditor; }
         HedgeEditorRenderManager* GetHedgeEditorRenderManager() { return m_pHedgeEditorRenderManager; }
         HedgeEditorGuiManager* GetHedgeEditorGuiManager() { return m_pHedgeEditorGuiManager; }
-
+        HGpuRsrcManager* GetGpuRsrcManager() { return m_pGpuRsrcManager; }
 
     private:
         HedgeEditor*              m_pHedgeEditor;
         HedgeEditorGuiManager*    m_pHedgeEditorGuiManager;
         HedgeEditorRenderManager* m_pHedgeEditorRenderManager;
+        HGpuRsrcManager*          m_pGpuRsrcManager;
     };
 }

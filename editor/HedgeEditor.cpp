@@ -13,6 +13,7 @@ Hedge::GlobalVariablesRAIIManager raiiManager;
 
 Hedge::HFrameListener* g_pFrameListener = raiiManager.GetHedgeEditor();
 Hedge::HRenderManager* g_pRenderManager = raiiManager.GetHedgeEditorRenderManager();
+Hedge::HGpuRsrcManager* g_pGpuRsrcManager = raiiManager.GetGpuRsrcManager();
 
 namespace Hedge
 {
@@ -64,8 +65,9 @@ namespace Hedge
 
     // ================================================================================================================
     HedgeEditorRenderManager::HedgeEditorRenderManager(
-        HBaseGuiManager* pGuiManager)
-        : HRenderManager(pGuiManager)
+        HBaseGuiManager* pGuiManager,
+        HGpuRsrcManager* pGpuRsrcManager)
+        : HRenderManager(pGuiManager, pGpuRsrcManager)
     {}
 
     // ================================================================================================================
@@ -264,7 +266,8 @@ namespace Hedge
     {
         m_pHedgeEditor              = new HedgeEditor();
         m_pHedgeEditorGuiManager    = new HedgeEditorGuiManager();
-        m_pHedgeEditorRenderManager = new HedgeEditorRenderManager(m_pHedgeEditorGuiManager);
+        m_pGpuRsrcManager           = new HGpuRsrcManager();
+        m_pHedgeEditorRenderManager = new HedgeEditorRenderManager(m_pHedgeEditorGuiManager, m_pGpuRsrcManager);
     }
 
     // ================================================================================================================
@@ -272,6 +275,7 @@ namespace Hedge
     {
         delete m_pHedgeEditorGuiManager;
         delete m_pHedgeEditorRenderManager;
+        delete m_pGpuRsrcManager;
         delete m_pHedgeEditor;     
     }
 }

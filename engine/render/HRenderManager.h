@@ -10,8 +10,7 @@
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <vector>
-
-#include "vk_mem_alloc.h"
+#include "../core/HGpuRsrcManager.h"
 
 struct GLFWwindow;
 
@@ -22,16 +21,10 @@ namespace Hedge
     class HScene;
     class HFrameListener;
 
-    struct GpuResource
-    {
-        VkBuffer*      m_pBuffer;
-        VmaAllocation* m_pAlloc;
-    };
-
     class HRenderManager
     {
     public:
-        HRenderManager(HBaseGuiManager* pGuiManager);
+        HRenderManager(HBaseGuiManager* pGuiManager, HGpuRsrcManager* pGpuRsrcManager);
         virtual ~HRenderManager();
 
         void BeginNewFrame();
@@ -40,14 +33,6 @@ namespace Hedge
         virtual void DrawHud(HFrameListener* pFrameListener) = 0;
 
         bool WindowShouldClose();
-
-        void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
-
-        // TODO: Create a GPU resource manager in future.
-        // Contains VkInst, VMA, devices...
-        // 
-        // GPU resource manage functions
-        GpuResource CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
 
         VkImageView* GetCurrentRenderImgView() { return m_pRenderImgViews[m_curSwapchainFrameIdx]; }
         VkExtent2D   GetCurrentRenderImgExtent() { return m_renderImgsExtents[m_curSwapchainFrameIdx]; }
@@ -60,10 +45,8 @@ namespace Hedge
         uint32_t m_activeRendererIdx;
 
     private:
-        void CreateVulkanAppInstDebugger();
+        void CreateSwapchainCmdBuffers();
         void CreateGlfwWindowAndVkSurface();
-        void CreateVulkanPhyLogicalDevice();
-
         void HandleResize();
 
         static void GlfwFramebufferResizeCallback(GLFWwindow* window, int width, int height) 
@@ -78,28 +61,13 @@ namespace Hedge
         void CreateRenderpass();
         void CreateSwapchainFramebuffer();
 
-        // Create basic and shared graphics widgets
-        void CreateCommandPoolBuffers();
-        void CreateDescriptorPool();
-        void CreateVmaObjects();
-
-        // Vulkan core objects
-        VkInstance       m_vkInst;
-        VkPhysicalDevice m_vkPhyDevice;
-        VkDevice         m_vkDevice;
+        // Gpu resource
+        HGpuRsrcManager* m_pGpuRsrcManager;
 
         // GLFW and window context
         GLFWwindow*  m_pGlfwWindow;
         static bool  m_frameBufferResize;
         VkSurfaceKHR m_surface;
-
-        // Logical and physical devices context
-        uint32_t m_gfxQueueFamilyIdx;
-        uint32_t m_computeQueueFamilyIdx;
-        uint32_t m_presentQueueFamilyIdx;
-        VkQueue  m_gfxQueue;
-        VkQueue  m_computeQueue;
-        VkQueue  m_presentQueue;
 
         // Swapchain information
         VkSurfaceFormatKHR           m_surfaceFormat;
@@ -116,24 +84,11 @@ namespace Hedge
         uint32_t                     m_swapchainImgCnt;
         uint32_t                     m_acqSwapchainImgIdx;
 
-        // Shared graphics widgets
-        VkCommandPool    m_gfxCmdPool;
-        VkDescriptorPool m_descriptorPool;
-        VmaAllocator     m_vmaAllocator;
-
         // Renderers.
         std::vector<HRenderer*>   m_pRenderers;
         std::vector<VkImageView*> m_pRenderImgViews;
         std::vector<VkExtent2D>   m_renderImgsExtents;
         GpuResource               m_idxRendererGpuResource;
         GpuResource               m_vertRendererGpuResource;
-
-#ifndef NDEBUG
-        // Debug mode
-        void ValidateDebugExtAndValidationLayer();
-
-        VkDebugUtilsMessengerEXT m_dbgMsger;
-#endif
-
     };
 }
