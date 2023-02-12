@@ -1,8 +1,8 @@
-# Hedge building, linking, project organization
+# Prebuilt shaders and how to generate the header including them in the engine
 
 This design doc describes the design of the Hedge game engine project organization. This includes all relevant static libraries, dynamic libraries, relocatbale objects, executable objects and the generation of executable objects like the editor or a game.
 
-## Introduction to relating basic components
+## Prebuilt shaders
 
 * Engine: The Hedge game engine itself is a static library that contains most code of the engine. This library is used by linking it into the game editor or the game application executable. It contains the entry point of the game executable but it doesn't contain the editor's entry point.
 
@@ -12,11 +12,14 @@ This design doc describes the design of the Hedge game engine project organizati
 
 * Game: A final game should be an executable with all relevant data. It is built from the game projects' custom code and the engine static library.
 
-## Game packaging and generation (WIP)
+## Generation tool and process
 
-* Template game file
+```
+dxc.exe -spirv -T vs_6_0 -E main .\triangle.vert -Fo .\triangle.vert.spv
+```
 
 ## Reference
 
-1. Computer Systems A Programmer's Perspective 3rd Edition Section 7
-2. [Hazel Game Engine Dev Log Videos](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT)
+1. [Diffuse shading model](https://learnopengl.com/Lighting/Basic-Lighting)
+2. [HLSL in Vulkan](https://github.com/KhronosGroup/Vulkan-Guide/blob/main/chapters/hlsl.adoc)
+3. [HLSL to SPIR-V Feature Mapping Manual](https://github.com/microsoft/DirectXShaderCompiler/blob/main/docs/SPIR-V.rst)

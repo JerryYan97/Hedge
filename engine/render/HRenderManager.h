@@ -122,11 +122,11 @@ namespace Hedge
         VmaAllocator     m_vmaAllocator;
 
         // Renderers.
-        std::vector<HRenderer*> m_pRenderers;
+        std::vector<HRenderer*>   m_pRenderers;
         std::vector<VkImageView*> m_pRenderImgViews;
-        std::vector<VkExtent2D> m_renderImgsExtents;
-        GpuResource m_idxRendererGpuResource;
-        GpuResource m_vertRendererGpuResource;
+        std::vector<VkExtent2D>   m_renderImgsExtents;
+        GpuResource               m_idxRendererGpuResource;
+        GpuResource               m_vertRendererGpuResource;
 
 #ifndef NDEBUG
         // Debug mode

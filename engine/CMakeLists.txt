@@ -36,7 +36,8 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${DearImGUIPath}
                                               ${DearImGUIPath}/backends
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/VMA/include
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/EnTT/single_include/entt)
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/EnTT/single_include/entt
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../shaders)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)

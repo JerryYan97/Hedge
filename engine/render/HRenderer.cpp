@@ -4,6 +4,8 @@
 #include "../scene/HScene.h"
 #include "Utils.h"
 
+#include "g_prebuiltShaders.h"
+
 #include <GLFW/glfw3.h>
 
 #include <string>
