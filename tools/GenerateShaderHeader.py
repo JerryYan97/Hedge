@@ -21,7 +21,8 @@ def GenerateShaderFormatedArray(hexStr, arrayName):
 
 
 def GeneratePreShaderArrayStr():
-    preShadersStr = "#pragma once\n\n"
+    preShadersStr = "ATTENTION: This file is generated from HLSL shaders and the GenerateShaderHeader.py. Don't edit it manually!\n"
+    preShadersStr += "#pragma once\n\n"
     preShadersStr += "namespace Hedge\n"
     preShadersStr += "{\n"
     return preShadersStr

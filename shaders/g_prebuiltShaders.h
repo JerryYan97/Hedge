@@ -1,3 +1,4 @@
+ATTENTION: This file is generated from HLSL shaders and the GenerateShaderHeader.py. Don't edit it manually!
 #pragma once
 
 namespace Hedge
