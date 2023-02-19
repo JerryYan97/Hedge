@@ -496,7 +496,7 @@ namespace Hedge
             vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
         }
 
-        // TODO: Make it general enought by using the scene geometries.
+        // TODO: Make it general enough by using the scene geometries.
         VkDeviceSize vbOffset = 0;
         vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertResource.m_pBuffer, &vbOffset);
         vkCmdBindIndexBuffer(cmdBuf, *idxResource.m_pBuffer, 0, VK_INDEX_TYPE_UINT32);

@@ -56,6 +56,10 @@ def CompileShader(ShaderPathName, folderName, shaderType):
     result = subprocess.run(["dxc.exe", "-spirv", "-T", shaderFlag, "-E", "main", ShaderPathName, "-Fo", ShaderPathName + ".spv"])
 
 
+def CompileShaderGlsl(ShaderPathName, shaderType):
+    result = subprocess.run(["glslc.exe", "-o", ShaderPathName + ".spv", "-fshader-stage=" + shaderType, ShaderPathName])
+
+
 def DeleteSpirvInFolder(Path):
     fileGenerator = os.walk(Path)
     filenames = next(fileGenerator)
@@ -68,10 +72,12 @@ def CompileShadersInFolder(Path, FolderName):
     fileGenerator = os.walk(Path)
     filenames = next(fileGenerator)
     for fileName in filenames[2]:
-        if "Vert" in fileName and "hlsl" in fileName:
-            CompileShader(Path + "\\" + fileName, FolderName, "Vert")
-        elif "Frag" in fileName and "hlsl" in fileName:
-            CompileShader(Path + "\\" + fileName, FolderName, "Frag")
+        if "Vert" in fileName and "glsl" in fileName:
+            # CompileShader(Path + "\\" + fileName, FolderName, "Vert")
+            CompileShaderGlsl(Path + "\\" + fileName, "vert")
+        elif "Frag" in fileName and "glsl" in fileName:
+            # CompileShader(Path + "\\" + fileName, FolderName, "Frag")
+            CompileShaderGlsl(Path + "\\" + fileName, "frag")
 
 
 if __name__ == "__main__":
