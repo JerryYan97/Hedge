@@ -11,7 +11,6 @@ namespace Hedge
         uint32_t* m_pIdx;
         float*    m_pVert;
         uint32_t  m_vertCnt;
-        bool      m_reuse;
     };
 
     class HScene
@@ -35,6 +34,5 @@ namespace Hedge
     private:
         entt::registry m_registry;
         std::unordered_map<uint32_t, HEntity*> m_entitiesHashTable;
-        bool m_reuseRenderScene;
     };
 }

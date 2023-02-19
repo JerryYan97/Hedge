@@ -45,4 +45,13 @@ namespace Hedge
         virtual void OnDefineEntity();
         
     };
+
+    class HCameraEntity : public HEntity
+    {
+    public:
+        HCameraEntity() {};
+        ~HCameraEntity();
+
+        virtual void OnDefineEntity();
+    };
 }

@@ -6,7 +6,6 @@ namespace Hedge
 {
     // ================================================================================================================
     HScene::HScene()
-        : m_reuseRenderScene(false)
     {}
 
     // ================================================================================================================
@@ -35,23 +34,13 @@ namespace Hedge
     {
         SceneRenderInfo renderInfo{};
 
-        if (m_reuseRenderScene == false)
+        auto staticMeshView = m_registry.view<StaticMeshComponent>();
+        for (auto entity : staticMeshView)
         {
-            auto view = m_registry.view<StaticMeshComponent>();
-            for (auto entity : view)
-            {
-                auto& meshComponent = view.get<StaticMeshComponent>(entity);
-                renderInfo.m_pIdx = meshComponent.m_pIdx;
-                renderInfo.m_pVert = meshComponent.m_pVert;
-                renderInfo.m_vertCnt = meshComponent.m_vertCnt;
-                renderInfo.m_reuse = false;
-
-                m_reuseRenderScene = true;
-            }
-        }
-        else
-        {
-            renderInfo.m_reuse = true;
+            auto& meshComponent = staticMeshView.get<StaticMeshComponent>(entity);
+            renderInfo.m_pIdx = meshComponent.m_pIdx;
+            renderInfo.m_pVert = meshComponent.m_pVert;
+            renderInfo.m_vertCnt = meshComponent.m_vertCnt;
         }
 
         return renderInfo;

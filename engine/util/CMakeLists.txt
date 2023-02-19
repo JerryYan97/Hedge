@@ -1,7 +1,7 @@
 target_sources(
     HedgeEngine PRIVATE
-    UtilObjs.cpp
-    UtilObjs.h
+    UtilMath.cpp
+    UtilMath.h
     Utils.cpp
     Utils.h
 )

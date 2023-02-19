@@ -3,6 +3,9 @@
 #include "../render/HRenderManager.h"
 #include "HComponent.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 namespace Hedge
 {
     // ================================================================================================================
@@ -50,6 +53,13 @@ namespace Hedge
     // ================================================================================================================
     void HCubeEntity::OnDefineEntity()
     {
+        //
+        float pos[3] = {0.f, 0.f, 0.f};
+        float rot[4] = {0.f, 0.f, 0.f, 0.f};
+        float scale[3] = {1.f, 1.f, 1.f};
+
+        AddComponent<TransformComponent>(pos, rot, scale);
+
         // pos1, pos2, pos3, col1, col2, col3
         float* verts = new float[] {
                 -0.75f, -0.75f, 0.f, 1.f, 0.f, 0.f, // v0 - Top Left
@@ -67,5 +77,26 @@ namespace Hedge
         AddComponent<StaticMeshComponent>(vertIdx,
                                           verts,
                                           6);
+    }
+
+    // ================================================================================================================
+    HCameraEntity::~HCameraEntity()
+    {}
+
+    // ================================================================================================================
+    void HCameraEntity::OnDefineEntity()
+    {
+        float pos[3] = { 0.f, 0.f, -1.f };
+        float rot[4] = { 0.f, 0.f, 0.f, 0.f };
+        float scale[3] = { 1.f, 1.f, 1.f };
+
+        AddComponent<TransformComponent>(pos, rot, scale);
+
+        float view[3] = { 0.f, 0.f, 1.f };
+        float up[3] = { 0.f, 1.f, 0.f };
+        float fov = 60.f * M_PI / 180.f;
+        float aspect = 960.f / 680.f;
+
+        AddComponent<CameraComponent>(view, up, fov, aspect);
     }
 }

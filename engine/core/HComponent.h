@@ -3,6 +3,7 @@
 
 namespace Hedge
 {
+    // x -- pitch, y -- head, z -- roll; m_rot[pitch, head, roll].
     struct TransformComponent
     {
         TransformComponent(
@@ -10,12 +11,12 @@ namespace Hedge
             float* pRot, 
             float* pScale)
         {
-            m_pos[0]   = pPos[0];   m_pos[1]   = pPos[1];   m_pos[2]   = pPos[2];
-            m_rotQ[0]  = pRot[0];   m_rotQ[1]  = pRot[1];   m_rotQ[2]  = pRot[2];   m_rotQ[3] = pRot[3];
-            m_scale[0] = pScale[0]; m_scale[1] = pScale[1]; m_scale[2] = pScale[2];
+            memcpy(m_pos, pPos, 3 * sizeof(float));
+            memcpy(m_rot, pRot, 3 * sizeof(float));
+            memcpy(m_scale, pScale, 3 * sizeof(float));
         }
         float m_pos[3];
-        float m_rotQ[4];
+        float m_rot[3];
         float m_scale[3];
     };
 
@@ -39,5 +40,27 @@ namespace Hedge
         uint32_t* m_pIdx  = nullptr;
         float*    m_pVert = nullptr;
         uint32_t  m_vertCnt;
+    };
+
+    struct CameraComponent
+    {
+        CameraComponent(
+            float* pView,
+            float* pUp,
+            float  fov,
+            float  aspect)
+            : m_active(true)
+        {
+            memcpy(m_view, pView, 3 * sizeof(float));
+            memcpy(m_up, pUp, 3 * sizeof(float));
+            m_fov = fov;
+            m_aspect = aspect;
+        }
+
+        float m_view[3];
+        float m_up[3];
+        float m_fov;
+        float m_aspect; // Width / Height;
+        bool  m_active;
     };
 }
