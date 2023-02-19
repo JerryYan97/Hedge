@@ -16,6 +16,7 @@ namespace Hedge
     struct SceneRenderInfo;
     struct GpuResource;
     class HRenderManager;
+    class HGpuRsrcManager;
 
     class HRenderer
     {
@@ -45,7 +46,12 @@ namespace Hedge
     class HBasicRenderer : public HRenderer
     {
     public:
-        explicit HBasicRenderer(uint32_t onFlightResCnt, VkDevice* pVkDevice, VkFormat surfFormat, VmaAllocator* pVmaAllocator);
+        explicit HBasicRenderer(uint32_t      onFlightResCnt, 
+                                VkDevice*     pVkDevice, 
+                                VkFormat      surfFormat, 
+                                VmaAllocator* pVmaAllocator,
+                                HGpuRsrcManager* pGpuRsrcManager);
+
         virtual ~HBasicRenderer();
 
         virtual VkImageView* Render(VkCommandBuffer& cmdBuf,
@@ -59,16 +65,20 @@ namespace Hedge
         void RecreateResource(VkExtent2D resultExtent, uint32_t frameIdx);
         inline bool NeedResize(VkExtent2D inExtent, uint32_t frameIdx);
 
-        VkShaderModule   m_shaderVertModule;
-        VkShaderModule   m_shaderFragModule;
-        VkPipeline       m_pipeline;
-        VkPipelineLayout m_pipelineLayout;
+        VkShaderModule        m_shaderVertModule;
+        VkShaderModule        m_shaderFragModule;
+        VkPipeline            m_pipeline;
+        VkPipelineLayout      m_pipelineLayout;
+        VkDescriptorSetLayout m_descriptorSetLayout;
+        HGpuRsrcManager*      m_pGpuRsrcManager;
 
         std::vector<VkImage> m_vkResultImgs;
         std::vector<VkImageView> m_vkResultImgsViews;
         std::vector<VkSampler> m_vkResultImgsSamplers;
         std::vector<VmaAllocation> m_vmaResultImgsAllocations;
         std::vector<VkExtent2D> m_resultImgsExtents;
+        std::vector<VkDescriptorSet> m_uboDescriptorSets;
+        std::vector<GpuResource> m_uboBuffers;
 
         uint32_t m_lastFrameIdx;
     };

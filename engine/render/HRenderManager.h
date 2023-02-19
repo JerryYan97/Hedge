@@ -89,7 +89,7 @@ namespace Hedge
         std::vector<HRenderer*>   m_pRenderers;
         std::vector<VkImageView*> m_pRenderImgViews;
         std::vector<VkExtent2D>   m_renderImgsExtents;
-        GpuResource               m_idxRendererGpuResource;
-        GpuResource               m_vertRendererGpuResource;
+        std::vector<GpuResource>  m_idxRendererGpuRsrcs;
+        std::vector<GpuResource>  m_vertRendererGpuRsrcs;
     };
 }

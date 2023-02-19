@@ -26,7 +26,6 @@ namespace Hedge
         void CreateDescriptorPool();
         void CreateVmaObjects();
 
-
         // Getting interface
         VkInstance* GetVkInstance() { return &m_vkInst; }
         VkPhysicalDevice* GetPhysicalDevice() { return &m_vkPhyDevice; }

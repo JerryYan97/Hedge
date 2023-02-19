@@ -55,8 +55,10 @@ namespace Hedge
         uint32_t onFlightResCnt, 
         VkDevice* pVkDevice, 
         VkFormat surfFormat, 
-        VmaAllocator* pVmaAllocator)
-        : HRenderer(onFlightResCnt, pVkDevice, surfFormat, pVmaAllocator)
+        VmaAllocator* pVmaAllocator,
+        HGpuRsrcManager* pGpuRsrcManager)
+        : HRenderer(onFlightResCnt, pVkDevice, surfFormat, pVmaAllocator),
+          m_pGpuRsrcManager(pGpuRsrcManager)
     {
         // Create Shader Modules
         CreateShaderModule(&m_shaderVertModule, (uint32_t*)BasicRendererVertScript, sizeof(BasicRendererVertScript));
@@ -196,15 +198,52 @@ namespace Hedge
                 VK_DYNAMIC_STATE_SCISSOR
         };
         VkPipelineDynamicStateCreateInfo dynamicState{};
-        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-        dynamicState.pDynamicStates = dynamicStates.data();
+        {
+            dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+            dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+            dynamicState.pDynamicStates = dynamicStates.data();
+        }
+        
+        // Create a descriptor set layout for binding MVP matrix
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        {
+            uboLayoutBinding.binding = 0;
+            uboLayoutBinding.descriptorCount = 1;
+            uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboLayoutBinding.pImmutableSamplers = nullptr;
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        }
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        {
+            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutInfo.bindingCount = 1;
+            layoutInfo.pBindings = &uboLayoutBinding;
+        }
+
+        VK_CHECK(vkCreateDescriptorSetLayout(*m_pVkDevice, &layoutInfo, nullptr, &m_descriptorSetLayout));
+
+        // Allocate the descriptor set from the descriptor pool.
+        VkDescriptorPool* pDescriptorPool = m_pGpuRsrcManager->GetDescriptorPool();
+        m_uboDescriptorSets.resize(onFlightResCnt);
+
+        VkDescriptorSetLayout desciptorSetLayouts[2] = { m_descriptorSetLayout, m_descriptorSetLayout };
+        VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
+        {
+            descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            descriptorSetAllocInfo.descriptorPool = *pDescriptorPool;
+            descriptorSetAllocInfo.descriptorSetCount = onFlightResCnt;
+            descriptorSetAllocInfo.pSetLayouts = desciptorSetLayouts;
+        }
+
+        vkAllocateDescriptorSets(*m_pVkDevice, &descriptorSetAllocInfo, m_uboDescriptorSets.data());
 
         // Create a pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         {
             pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            pipelineLayoutInfo.setLayoutCount = 0;
+            pipelineLayoutInfo.setLayoutCount = 1;
+            pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
         }
         VK_CHECK(vkCreatePipelineLayout(*m_pVkDevice, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 
@@ -248,10 +287,14 @@ namespace Hedge
             vkDestroyImageView(*m_pVkDevice, m_vkResultImgsViews[i], nullptr);
             vkDestroySampler(*m_pVkDevice, m_vkResultImgsSamplers[i], nullptr);
             vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[i], m_vmaResultImgsAllocations[i]);
+            m_pGpuRsrcManager->DestroyGpuResource(m_uboBuffers[i]);
         }
 
         // Destroy Pipeline
         vkDestroyPipeline(*m_pVkDevice, m_pipeline, nullptr);
+
+        // Destroy the descriptor set layout
+        vkDestroyDescriptorSetLayout(*m_pVkDevice, m_descriptorSetLayout, nullptr);
 
         // Destroy the pipeline layout
         vkDestroyPipelineLayout(*m_pVkDevice, m_pipelineLayout, nullptr);
@@ -264,12 +307,10 @@ namespace Hedge
     // ================================================================================================================
     void HBasicRenderer::InitResource()
     {
-        char dbgStr[] = "Init Images";
         VmaAllocationCreateInfo sceneImgsAllocInfo{};
         {
             sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-            sceneImgsAllocInfo.pUserData = dbgStr;
         }
 
         VkExtent3D extent{};
@@ -298,6 +339,7 @@ namespace Hedge
         m_vkResultImgsViews.resize(m_onFlightResCnt);
         m_vkResultImgsSamplers.resize(m_onFlightResCnt);
         m_resultImgsExtents.resize(m_onFlightResCnt);
+        m_uboBuffers.resize(m_onFlightResCnt);
 
         for (uint32_t i = 0; i < m_onFlightResCnt; i++)
         {
@@ -338,6 +380,31 @@ namespace Hedge
                 sampler_info.maxAnisotropy = 1.0f;
             }
             VK_CHECK(vkCreateSampler(*m_pVkDevice, &sampler_info, nullptr, &m_vkResultImgsSamplers[i]));
+
+            // Create ubo buffers
+            m_uboBuffers[i] = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                                 16 * sizeof(float));
+
+            // Update the descriptor to let it point to the ubo buffer.
+            VkDescriptorBufferInfo descriptorBufferInfo{};
+            {
+                descriptorBufferInfo.buffer = *m_uboBuffers[i].m_pBuffer;
+                descriptorBufferInfo.offset = 0;
+                descriptorBufferInfo.range = 16 * sizeof(float);
+            }
+
+            VkWriteDescriptorSet descriptorWrite{};
+            {
+                descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrite.dstSet = m_uboDescriptorSets[i];
+                descriptorWrite.dstBinding = 0;
+                descriptorWrite.dstArrayElement = 0;
+                descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrite.descriptorCount = 1;
+                descriptorWrite.pBufferInfo = &descriptorBufferInfo;
+            }
+
+            vkUpdateDescriptorSets(*m_pVkDevice, 1, &descriptorWrite, 0, nullptr);
         }
     }
 
