@@ -81,9 +81,9 @@ namespace Hedge
         return res;
     }
 
-    inline void GenViewMat(
-        float* pView, 
-        float* pPos, 
+    inline void GenViewMatUpdateUp(
+        float* const pView, 
+        float* const pPos, 
         float* pUp, 
         float* pResMat)
     {
@@ -91,17 +91,16 @@ namespace Hedge
         CrossProductVec3(pView, pUp, right);
         NormalizeVec(right, 3);
 
-        float realUp[3];
-        CrossProductVec3(right, pView, realUp);
-        NormalizeVec(realUp, 3);
+        CrossProductVec3(right, pView, pUp);
+        NormalizeVec(pUp, 3);
 
         float e03 = -DotProduct(pPos, right,  3);
-        float e13 = -DotProduct(pPos, realUp, 3);
+        float e13 = -DotProduct(pPos, pUp, 3);
         float e23 = -DotProduct(pPos, pView,  3);
 
         memset(pResMat,     0,      16 * sizeof(float));
         memcpy(pResMat,     right,  sizeof(right));
-        memcpy(&pResMat[4], realUp, sizeof(realUp));
+        memcpy(&pResMat[4], pUp,    3 * sizeof(float));
         memcpy(&pResMat[8], pView,  3 * sizeof(float));
         
         pResMat[3]  = e03;

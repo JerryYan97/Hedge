@@ -11,6 +11,8 @@ namespace Hedge
         uint32_t* m_pIdx;
         float*    m_pVert;
         uint32_t  m_vertCnt;
+        float m_modelMat[16];
+        float m_vpMat[16];
     };
 
     class HScene

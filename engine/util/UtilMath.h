@@ -20,7 +20,7 @@ namespace Hedge
 
     // Generate 4x4 matrices
     // Realtime rendering -- P67
-    inline void GenViewMat(float* pView, float* pPos, float* pUp, float* pResMat);
+    inline void GenViewMatUpdateUp(float* const pView, float* const pPos, float* const pUp, float* pResMat);
 
     // Realtime rendering -- P99. Far are near are posive, which correspond to f' and n'. And far > near.
     inline void GenPerspectiveProjMat(float near, float far, float fov, float aspect, float* pResMat);

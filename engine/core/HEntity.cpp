@@ -97,6 +97,6 @@ namespace Hedge
         float fov = 60.f * M_PI / 180.f;
         float aspect = 960.f / 680.f;
 
-        AddComponent<CameraComponent>(view, up, fov, aspect);
+        AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 10.f);
     }
 }

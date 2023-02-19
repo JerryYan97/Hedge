@@ -48,8 +48,12 @@ namespace Hedge
             float* pView,
             float* pUp,
             float  fov,
-            float  aspect)
-            : m_active(true)
+            float  aspect,
+            float near,
+            float far)
+            : m_active(true),
+              m_far(far),
+              m_near(near)
         {
             memcpy(m_view, pView, 3 * sizeof(float));
             memcpy(m_up, pUp, 3 * sizeof(float));
@@ -61,6 +65,8 @@ namespace Hedge
         float m_up[3];
         float m_fov;
         float m_aspect; // Width / Height;
+        float m_far;  // Far and near are positive and m_far > m_near > 0.
+        float m_near;
         bool  m_active;
     };
 }

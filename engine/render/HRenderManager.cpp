@@ -172,27 +172,27 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    // TODO: Reorg render current scene. Let renderer applies gpu resources and manage relevant gpu resource.
     void HRenderManager::RenderCurrentScene(
         HScene& scene)
     {
         SceneRenderInfo renderInfo = scene.GetSceneRenderInfo();
 
-        // TODO: logical flaw: Switch renderer must recreates gpu memory resource.
-        if (renderInfo.m_reuse == false)
-        {
-            m_vertRendererGpuResource = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, sizeof(float) * 24);
-            m_idxRendererGpuResource  = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * 6);
+        m_vertRendererGpuResource = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, sizeof(float) * 24);
+        m_idxRendererGpuResource = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * 6);
 
-            void* mappedData = nullptr;
+        void* mappedData = nullptr;
 
-            VK_CHECK(vmaMapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_vertRendererGpuResource.m_pAlloc, &mappedData));
-            memcpy(mappedData, renderInfo.m_pVert, sizeof(float) * 24);
-            vmaUnmapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_vertRendererGpuResource.m_pAlloc);
+        // Send vertex and index data to gpu buffers
+        VK_CHECK(vmaMapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_vertRendererGpuResource.m_pAlloc, &mappedData));
+        memcpy(mappedData, renderInfo.m_pVert, sizeof(float) * 24);
+        vmaUnmapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_vertRendererGpuResource.m_pAlloc);
 
-            VK_CHECK(vmaMapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_idxRendererGpuResource.m_pAlloc, &mappedData));
-            memcpy(mappedData, renderInfo.m_pIdx, sizeof(uint32_t) * 6);
-            vmaUnmapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_idxRendererGpuResource.m_pAlloc);
-        }
+        VK_CHECK(vmaMapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_idxRendererGpuResource.m_pAlloc, &mappedData));
+        memcpy(mappedData, renderInfo.m_pIdx, sizeof(uint32_t) * 6);
+        vmaUnmapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_idxRendererGpuResource.m_pAlloc);
+
+        
 
         // Fill the command buffer
         VkCommandBufferBeginInfo beginInfo{};

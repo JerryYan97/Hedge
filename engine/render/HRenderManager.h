@@ -84,7 +84,8 @@ namespace Hedge
         uint32_t                     m_swapchainImgCnt;
         uint32_t                     m_acqSwapchainImgIdx;
 
-        // Renderers.
+        // Renderers -- shared GPU resources for different renderers.
+        // May need to be moved to the gui render manager since a game normally doesn't have a second renderer.
         std::vector<HRenderer*>   m_pRenderers;
         std::vector<VkImageView*> m_pRenderImgViews;
         std::vector<VkExtent2D>   m_renderImgsExtents;
