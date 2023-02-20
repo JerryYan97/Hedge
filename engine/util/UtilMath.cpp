@@ -4,6 +4,8 @@
 
 namespace Hedge
 {
+    // TODO: The calculation is incorrect. The pView is not equivalent to camera space's z.
+    // pView should be the -z direction of a camera space.
     void GenViewMatUpdateUp(
         float* const pView, 
         float* const pPos, 

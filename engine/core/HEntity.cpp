@@ -61,11 +61,20 @@ namespace Hedge
         AddComponent<TransformComponent>(pos, rot, scale);
 
         // pos1, pos2, pos3, col1, col2, col3
+        /*
         float* verts = new float[] {
                 -0.75f, -0.75f, 0.f, 1.f, 0.f, 0.f, // v0 - Top Left
                 0.75f, -0.75f, 0.f, 0.f, 1.f, 0.f, // v1 - Top Right
                 0.75f, 0.75f, 0.f, 0.f, 0.f, 1.f, // v2 - Bottom Right
                 -0.75f, 0.75f, 0.f, 1.f, 1.f, 0.f // v3 - Bottom Left
+        };
+        */
+
+        float* verts = new float[] {
+            -75.f, -75.f, 0.f, 1.f, 0.f, 0.f, // v0 - Top Left
+                75.f, -75.f, 0.f, 0.f, 1.f, 0.f, // v1 - Top Right
+                75.f, 75.f, 0.f, 0.f, 0.f, 1.f, // v2 - Bottom Right
+                -75.f, 75.f, 0.f, 1.f, 1.f, 0.f // v3 - Bottom Left
         };
 
         // CCW

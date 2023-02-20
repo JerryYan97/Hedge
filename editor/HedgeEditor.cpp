@@ -24,6 +24,7 @@ namespace Hedge
         m_activeScene = 0;
 
         m_pScenes[0]->SpawnEntity(new HCubeEntity());
+        m_pScenes[0]->SpawnEntity(new HCameraEntity());
     }
 
     // ================================================================================================================

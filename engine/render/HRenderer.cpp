@@ -595,6 +595,16 @@ namespace Hedge
         VkDeviceSize vbOffset = 0;
         vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertResource.m_pBuffer, &vbOffset);
         vkCmdBindIndexBuffer(cmdBuf, *idxResource.m_pBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdBindDescriptorSets(cmdBuf,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_pipelineLayout,
+            0,
+            1,
+            &m_uboDescriptorSets[frameIdx],
+            0,
+            nullptr);
+
         vkCmdDrawIndexed(cmdBuf, 6, 1, 0, 0, 0);
 
         vkCmdEndRendering(cmdBuf);
