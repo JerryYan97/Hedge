@@ -332,6 +332,18 @@ namespace Hedge
         return gpuRes;
     }
 
+    // ================================================================================================================
+    void HGpuRsrcManager::SendDataToBuffer(
+        const GpuResource& gpuRsrc,
+        void* pData,
+        uint32_t bytes)
+    {
+        void* mapped = nullptr;
+        VK_CHECK(vmaMapMemory(m_vmaAllocator, *gpuRsrc.m_pAlloc, &mapped));
+        memcpy(mapped, pData, bytes);
+        vmaUnmapMemory(m_vmaAllocator, *gpuRsrc.m_pAlloc);
+    }
+
 #ifndef NDEBUG
     // ================================================================================================================
     void HGpuRsrcManager::ValidateDebugExtAndValidationLayer()

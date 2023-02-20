@@ -1,5 +1,9 @@
 #version 440
 
+layout (binding = 0) uniform MyUBO {
+    mat4 mvpMat;
+} ubo;
+
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 

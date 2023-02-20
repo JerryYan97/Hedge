@@ -43,6 +43,8 @@ namespace Hedge
         // GPU resource manage functions
         GpuResource CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
 
+        void SendDataToBuffer(const GpuResource& gpuRsrc, void* pData, uint32_t bytes);
+
         void DestroyGpuResource(GpuResource rsrc);
 
     private:

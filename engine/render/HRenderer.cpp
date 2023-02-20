@@ -3,6 +3,7 @@
 #include "../logging/HLogger.h"
 #include "../scene/HScene.h"
 #include "Utils.h"
+#include "UtilMath.h"
 
 #include "g_prebuiltShaders.h"
 
@@ -479,16 +480,25 @@ namespace Hedge
     // ================================================================================================================
     VkImageView* HBasicRenderer::Render(
         VkCommandBuffer& cmdBuf,
-        GpuResource idxResource, 
+        GpuResource idxResource,
         GpuResource vertResource,
         VkExtent2D renderExtent,
-        uint32_t   frameIdx)
+        uint32_t   frameIdx,
+        const SceneRenderInfo& sceneInfo)
     {
         if (NeedResize(renderExtent, frameIdx))
         {
             RecreateResource(renderExtent, frameIdx);
         }
 
+        // Calculate the mvp matrix
+        float mvpMat[16] = {};
+        MatrixMul4x4(sceneInfo.m_vpMat, sceneInfo.m_modelMat, mvpMat);
+
+        // Transfer mvp matrix data to ubo
+        m_pGpuRsrcManager->SendDataToBuffer(m_uboBuffers[frameIdx], mvpMat, sizeof(mvpMat));
+
+        // Add a barrier to wait for image format transition and ubo data transfer.
         // Transfer the scene rendering image format from undefined or shader read to shader output.
         VkImageSubresourceRange subResRange{};
         {
@@ -509,11 +519,29 @@ namespace Hedge
             sceneImgAsOutputLayoutTransitionBarrier.subresourceRange = subResRange;
         }
 
+        // UBO mvp matrix data transfer barrier
+        VkMemoryBarrier uboDataTransBarrier{};
+        {
+            uboDataTransBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+            uboDataTransBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+            uboDataTransBarrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
+        }
+
+        vkCmdPipelineBarrier(cmdBuf,
+            VK_PIPELINE_STAGE_HOST_BIT,
+            VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+            0,
+            1, &uboDataTransBarrier,
+            0, nullptr,
+            0, nullptr);
+
         vkCmdPipelineBarrier(cmdBuf,
             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            0, 0, nullptr, 0, nullptr,
-            1, &sceneImgAsOutputLayoutTransitionBarrier);
+            0, 
+            0, nullptr, 
+            0, nullptr,
+            1, &sceneImgAsOutputLayoutTransitionBarrier);    
 
         // Draw the scene
         VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };

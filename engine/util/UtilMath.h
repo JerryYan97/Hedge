@@ -4,7 +4,7 @@
 namespace Hedge
 {
     template<typename T>
-    inline void MatrixMul4x4(T mat1[16], T mat2[16], T* resMat)
+    inline void MatrixMul4x4(const T mat1[16], const T mat2[16], T* resMat)
     {
         for (uint32_t row = 0; row < 4; row++)
         {

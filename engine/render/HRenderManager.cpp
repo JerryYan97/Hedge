@@ -235,7 +235,8 @@ namespace Hedge
                                                   m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx], 
                                                   m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
                                                   renderImgExtent,
-                                                  m_curSwapchainFrameIdx);
+                                                  m_curSwapchainFrameIdx,
+                                                  renderInfo);
         m_renderImgsExtents[m_curSwapchainFrameIdx] = renderImgExtent;
     }
 

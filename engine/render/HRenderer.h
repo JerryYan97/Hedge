@@ -28,7 +28,8 @@ namespace Hedge
                                           GpuResource idxResource, 
                                           GpuResource vertResource, 
                                           VkExtent2D renderExtent,
-                                          uint32_t frameIdx) = 0;
+                                          uint32_t frameIdx,
+                                    const SceneRenderInfo& sceneInfo) = 0;
 
     protected:
         void CreateShaderModule(VkShaderModule* pShaderModule, uint32_t* pShaderScript, uint32_t scriptByteCnt);
@@ -58,7 +59,8 @@ namespace Hedge
                             GpuResource idxResource, 
                             GpuResource vertResource,
                             VkExtent2D renderExtent,
-                            uint32_t   frameIdx) override;
+                            uint32_t   frameIdx,
+                            const SceneRenderInfo& sceneInfo) override;
 
     private:
         void InitResource();
