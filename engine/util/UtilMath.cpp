@@ -12,21 +12,25 @@ namespace Hedge
         float* pUp, 
         float* pResMat)
     {
-        float right[3];
-        CrossProductVec3(pView, pUp, right);
+        float z[3] = {};
+        memcpy(z, pView, 3 * sizeof(float));
+        ScalarMul(-1.f, z, 3);
+
+        float right[3] = {};
+        CrossProductVec3(pUp, z, right);
         NormalizeVec(right, 3);
 
-        CrossProductVec3(right, pView, pUp);
+        CrossProductVec3(z, right, pUp);
         NormalizeVec(pUp, 3);
 
         float e03 = -DotProduct(pPos, right,  3);
         float e13 = -DotProduct(pPos, pUp, 3);
-        float e23 = -DotProduct(pPos, pView,  3);
+        float e23 = -DotProduct(pPos, z,  3);
 
         memset(pResMat,     0,      16 * sizeof(float));
         memcpy(pResMat,     right,  sizeof(right));
         memcpy(&pResMat[4], pUp,    3 * sizeof(float));
-        memcpy(&pResMat[8], pView,  3 * sizeof(float));
+        memcpy(&pResMat[8], z,  3 * sizeof(float));
         
         pResMat[3]  = e03;
         pResMat[7]  = e13;

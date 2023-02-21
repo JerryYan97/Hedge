@@ -67,6 +67,29 @@ namespace Hedge
         return res;
     }
 
+    template<typename T>
+    inline void ScalarMul(T scalar, T* vec, uint32_t dim)
+    {
+        for (uint32_t i = 0; i < dim; i++)
+        {
+            vec[i] *= scalar;
+        }
+    }
+
+    template<typename T>
+    inline void MatMulVec(const T* mat, T* vec, uint32_t dim, T* res)
+    {
+        for (uint32_t row = 0; row < dim; row++)
+        {
+            T ele = 0;
+            for (uint32_t col = 0; col < dim; col++)
+            {
+                ele += (mat[row * dim + col] * vec[col]);
+            }
+            res[row] = ele;
+        }
+    }
+
     // Generate 4x4 matrices
     // Realtime rendering -- P67
     void GenViewMatUpdateUp(float* const pView, float* const pPos, float* pUp, float* pResMat);
