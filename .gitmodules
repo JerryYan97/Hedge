@@ -22,3 +22,6 @@
 [submodule "external/EnTT"]
 	path = external/EnTT
 	url = https://github.com/skypjack/entt
+[submodule "external/tinyObj"]
+	path = external/tinyObj
+	url = https://github.com/tinyobjloader/tinyobjloader.git

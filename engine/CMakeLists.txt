@@ -5,7 +5,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils/CMakeUtil.cmake)
 
 CheckVulkanSDK()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw 
+                 ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw)
 
 add_library(HedgeEngine STATIC)
 
@@ -37,7 +38,8 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${DearImGUIPath}/backends
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/VMA/include
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/EnTT/single_include/entt
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../shaders)
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../shaders
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/tinyObj)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)
