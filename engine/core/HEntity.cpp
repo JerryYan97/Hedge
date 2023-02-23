@@ -2,6 +2,7 @@
 #include "../scene/HScene.h"
 #include "../render/HRenderManager.h"
 #include "HComponent.h"
+#include "Utils.h"
 #include <sstream>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -55,29 +56,59 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    uint32_t TinyObjToVertBufAndIdxBuf(
+        const std::vector<tinyobj::shape_t>& inshapes, 
+        const tinyobj::attrib_t& inattrib, 
+        float** ppVertBuffer,
+        uint32_t** ppIdxBuffer)
+    {
+        // TODO: We should be able to rule out redundant vertices that use same (pos + norm + uv);
+        uint32_t vertNum = inshapes[0].mesh.indices.size();
+        float* vertBuf = new float[vertNum * VertFloatNum];
+        uint32_t* idxBuf = new uint32_t[vertNum];
+
+        float vertBufCheck[288];
+        uint32_t idxBufCheck[36];
+
+        for (uint32_t i = 0; i < vertNum; i++)
+        {
+            uint32_t tinyObjPosId = inshapes[0].mesh.indices[i].vertex_index;
+            uint32_t tinyObjUvId = inshapes[0].mesh.indices[i].texcoord_index;
+            uint32_t tinyObjNormalId = inshapes[0].mesh.indices[i].normal_index;
+
+            // Pos
+            vertBuf[VertFloatNum * i] = inattrib.vertices[tinyObjPosId * 3];
+            vertBuf[VertFloatNum * i + 1] = inattrib.vertices[tinyObjPosId * 3 + 1];
+            vertBuf[VertFloatNum * i + 2] = inattrib.vertices[tinyObjPosId * 3 + 2];
+
+            // Normal
+            vertBuf[VertFloatNum * i + 3] = inattrib.normals[tinyObjNormalId * 3];
+            vertBuf[VertFloatNum * i + 4] = inattrib.normals[tinyObjNormalId * 3 + 1];
+            vertBuf[VertFloatNum * i + 5] = inattrib.normals[tinyObjNormalId * 3 + 2];
+
+            // Uv
+            vertBuf[VertFloatNum * i + 6] = inattrib.texcoords[tinyObjUvId * 2];
+            vertBuf[VertFloatNum * i + 7] = inattrib.texcoords[tinyObjUvId * 2 + 1];
+
+            idxBuf[i] = i;
+        }
+
+        *ppVertBuffer = vertBuf;
+        *ppIdxBuffer = idxBuf;
+
+        memcpy(vertBufCheck, vertBuf, sizeof(vertBufCheck));
+        memcpy(idxBufCheck, idxBuf, sizeof(idxBufCheck));
+
+        return vertNum;
+    }
+
+    // ================================================================================================================
     void HCubeEntity::OnDefineEntity()
     {
         //
-        float pos[3] = {0.f, 0.f, 1.f};
-        float rot[4] = {0.f, 0.f, 0.f, 0.f};
+        float pos[3] = {0.f, 0.f, 2.f};
+        float rot[3] = {0.f, 0.f, 0.f};
         float scale[3] = {1.f, 1.f, 1.f};
-
-        AddComponent<TransformComponent>(pos, rot, scale);
-
-        // pos1, pos2, pos3, uv0, uv1, normal0, normal1, normal2
-        // pos1, pos2, pos3, col1, col2, col3
-        float* verts = new float[] {
-                -0.75f, -0.75f, 0.f, 1.f, 0.f, 0.f, // v0 - Top Left
-                0.75f, -0.75f, 0.f, 0.f, 1.f, 0.f, // v1 - Top Right
-                0.75f, 0.75f, 0.f, 0.f, 0.f, 1.f, // v2 - Bottom Right
-                -0.75f, 0.75f, 0.f, 1.f, 1.f, 0.f // v3 - Bottom Left
-        };
-
-        // CCW
-        // v0 - v1 - v2; v2 - v3 - v0;
-        uint32_t* vertIdx = new uint32_t[] {
-            0, 1, 2, 2, 3, 0
-        };
 
         std::string cubeObj("o Cube \n\
 v 1.000000 1.000000 -1.000000 \n\
@@ -122,10 +153,6 @@ f 2/9/4 4/5/4 8/10/4 \n\
 f 1/3/5 3/2/5 4/5/5 \n\
 f 5/12/6 1/3/6 2/9/6");
 
-        std::string cubeObj2("o Cube");
-
-        std::string s0("Initial string");
-
         std::vector<tinyobj::material_t> materials;
         std::map<std::string, uint32_t> textures;
         tinyobj::attrib_t inattrib;
@@ -136,9 +163,14 @@ f 5/12/6 1/3/6 2/9/6");
 
         tinyobj::LoadObj(&inattrib, &inshapes, &materials, &warn, &err, &istr);
 
-        AddComponent<StaticMeshComponent>(vertIdx,
-                                          verts,
-                                          6);
+        float* pVertBuffer;
+        uint32_t* pIdxBuffer;
+        uint32_t vertNum = TinyObjToVertBufAndIdxBuf(inshapes, inattrib, &pVertBuffer, &pIdxBuffer);
+
+        AddComponent<StaticMeshComponent>(pIdxBuffer,
+                                          pVertBuffer,
+                                          vertNum,
+                                          VertFloatNum * sizeof(float) * vertNum);
     }
 
     // ================================================================================================================
@@ -148,15 +180,15 @@ f 5/12/6 1/3/6 2/9/6");
     // ================================================================================================================
     void HCameraEntity::OnDefineEntity()
     {
-        float pos[3] = { 0.f, 0.f, -1.f };
+        float pos[3] = { 0.f, 2.f, -1.f };
         float rot[4] = { 0.f, 0.f, 0.f, 0.f };
         float scale[3] = { 1.f, 1.f, 1.f };
 
         AddComponent<TransformComponent>(pos, rot, scale);
 
-        float view[3] = { 0.f, 0.f, 1.f };
+        float view[3] = { 0.f, -2.f, 1.f };
         float up[3] = { 0.f, 1.f, 0.f };
-        float fov = 60.f * M_PI / 180.f;
+        float fov = 47.f * M_PI / 180.f; // vertical field of view.
         float aspect = 960.f / 680.f;
 
         AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 10.f);

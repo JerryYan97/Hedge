@@ -90,6 +90,27 @@ namespace Hedge
         }
     }
 
+    // NOTE: All matrix on the host are row-major but all matrix on GLSL are column-major.
+    // It means we need to do a matrix transpose before sending a matrix to the device/GLSL.
+    template<typename T>
+    inline void MatTranspose(T* mat, uint32_t dim)
+    {
+        for (uint32_t row = 0; row < dim; row++)
+        {
+            for (uint32_t col = row + 1; col < dim; col++)
+            {
+                uint32_t rowMajIdx = row * dim + col;
+                uint32_t colMajIdx = col * dim + row;
+                
+                T rowMajEle = mat[rowMajIdx];
+                T colMajEle = mat[colMajIdx];
+
+                mat[colMajIdx] = rowMajEle;
+                mat[rowMajIdx] = colMajEle;
+            }
+        }
+    }
+
     // Generate 4x4 matrices
     // Realtime rendering -- P67
     void GenViewMatUpdateUp(float* const pView, float* const pPos, float* pUp, float* pResMat);

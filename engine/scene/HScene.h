@@ -11,6 +11,7 @@ namespace Hedge
         uint32_t* m_pIdx;
         float*    m_pVert;
         uint32_t  m_vertCnt;
+        uint32_t  m_vertBufBytes;
         float m_modelMat[16];
         float m_vpMat[16];
     };

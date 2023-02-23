@@ -91,22 +91,27 @@ namespace Hedge
         VkVertexInputBindingDescription vertBindingDesc = {};
         {
             vertBindingDesc.binding = 0;
-            vertBindingDesc.stride = 6 * sizeof(float);
+            vertBindingDesc.stride = VertFloatNum * sizeof(float);
             vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         }
 
-        VkVertexInputAttributeDescription vertAttrDesc[2];
+        VkVertexInputAttributeDescription vertAttrDesc[3];
         {
             // Position
             vertAttrDesc[0].location = 0;
             vertAttrDesc[0].binding = 0;
             vertAttrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
             vertAttrDesc[0].offset = 0;
-            // Color
+            // Normal
             vertAttrDesc[1].location = 1;
             vertAttrDesc[1].binding = 0;
             vertAttrDesc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
             vertAttrDesc[1].offset = 3 * sizeof(float);
+            // Uv
+            vertAttrDesc[2].location = 2;
+            vertAttrDesc[2].binding = 0;
+            vertAttrDesc[2].format = VK_FORMAT_R32G32_SFLOAT;
+            vertAttrDesc[2].offset = 6 * sizeof(float);
         }
         VkPipelineVertexInputStateCreateInfo vertInputInfo{};
         {
@@ -114,7 +119,7 @@ namespace Hedge
             vertInputInfo.pNext = nullptr;
             vertInputInfo.vertexBindingDescriptionCount = 1;
             vertInputInfo.pVertexBindingDescriptions = &vertBindingDesc;
-            vertInputInfo.vertexAttributeDescriptionCount = 2;
+            vertInputInfo.vertexAttributeDescriptionCount = 3;
             vertInputInfo.pVertexAttributeDescriptions = vertAttrDesc;
         }
 
@@ -178,7 +183,7 @@ namespace Hedge
             depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
             depthStencilInfo.depthTestEnable = VK_TRUE;
             depthStencilInfo.depthWriteEnable = VK_TRUE;
-            depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+            depthStencilInfo.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL; // Reverse depth for higher precision. 
             depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
             depthStencilInfo.stencilTestEnable = VK_FALSE;
         }
@@ -495,6 +500,9 @@ namespace Hedge
         float mvpMat[16] = {};
         MatrixMul4x4(sceneInfo.m_vpMat, sceneInfo.m_modelMat, mvpMat);
 
+        // Transfer from row-major to col-major
+        MatTranspose(mvpMat, 4);
+
         // Transfer mvp matrix data to ubo
         m_pGpuRsrcManager->SendDataToBuffer(m_uboBuffers[frameIdx], mvpMat, sizeof(mvpMat));
 
@@ -605,7 +613,7 @@ namespace Hedge
             0,
             nullptr);
 
-        vkCmdDrawIndexed(cmdBuf, 6, 1, 0, 0, 0);
+        vkCmdDrawIndexed(cmdBuf, sceneInfo.m_vertCnt, 1, 0, 0, 0);
 
         vkCmdEndRendering(cmdBuf);
 

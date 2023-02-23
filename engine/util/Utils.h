@@ -2,17 +2,12 @@
 #include <vulkan/vulkan.h>
 #include <iostream>
 
-// Handling objects interreferences.
-class HandleTable
-{
-public:
-
-private:
-
-};
-
 void UtilPrint();
 
+namespace Hedge
+{
+    constexpr uint32_t VertFloatNum = 3 + 3 + 2;
+}
 
 #ifndef NDEBUG
 

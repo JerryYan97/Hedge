@@ -202,25 +202,18 @@ namespace Hedge
         }
         
         m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, sizeof(float) * 24);
+            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, renderInfo.m_vertBufBytes);
         m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * 6);
-
-        void* mappedData = nullptr;
+            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * renderInfo.m_vertCnt);
 
         // Send vertex and index data to gpu buffers
-        VK_CHECK(vmaMapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), 
-                              *m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc, 
-                              &mappedData));
-        memcpy(mappedData, renderInfo.m_pVert, sizeof(float) * 24);
-        vmaUnmapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), 
-                       *m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc);
+        m_pGpuRsrcManager->SendDataToBuffer(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
+                                            renderInfo.m_pVert,
+                                            renderInfo.m_vertBufBytes);
 
-        VK_CHECK(vmaMapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), 
-                              *m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc, 
-                              &mappedData));
-        memcpy(mappedData, renderInfo.m_pIdx, sizeof(uint32_t) * 6);
-        vmaUnmapMemory(*m_pGpuRsrcManager->GetVmaAllocator(), *m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc);
+        m_pGpuRsrcManager->SendDataToBuffer(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
+                                            renderInfo.m_pIdx,
+                                            renderInfo.m_vertCnt * sizeof(uint32_t));
 
         // Fill the command buffer
         VkCommandBufferBeginInfo beginInfo{};

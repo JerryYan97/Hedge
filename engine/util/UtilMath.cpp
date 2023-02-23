@@ -17,8 +17,9 @@ namespace Hedge
         ScalarMul(-1.f, z, 3);
 
         float right[3] = {};
-        CrossProductVec3(pUp, z, right);
+        CrossProductVec3(z, pUp, right);
         NormalizeVec(right, 3);
+        ScalarMul(-1.f, right, 3);
 
         CrossProductVec3(z, right, pUp);
         NormalizeVec(pUp, 3);
@@ -48,12 +49,11 @@ namespace Hedge
         memset(pResMat, 0, 16 * sizeof(float));
         
         float c = 1.f / tanf(fov / 2.f);
+        
         pResMat[0] = c / aspect;
-        pResMat[5] = c;
-
-        pResMat[10] = -(far + near) / (far - near);
-        pResMat[11] = -(2 * far * near) / (far - near);
-
+        pResMat[5] = -c;
+        pResMat[10] = near / (far - near);
+        pResMat[11] = near * far / (far - near);
         pResMat[14] = -1.f;
     }
 
