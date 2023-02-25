@@ -139,7 +139,16 @@ namespace Hedge
         vkResetCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 0);
 
         HandleResize();
+
         m_pGuiManager->StartNewFrame();
+    }
+
+    // ================================================================================================================
+    void HRenderManager::SendIOEvents(
+        HScene& scene,
+        HEventManager& eventManager)
+    {
+        m_pGuiManager->SendIOEvents(scene, eventManager);
     }
 
     // ================================================================================================================

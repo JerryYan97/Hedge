@@ -3,6 +3,11 @@
 
 namespace Hedge
 {
+    struct HFVec2
+    {
+        float ele[2];
+    };
+
     template<typename T>
     inline void MatrixMul4x4(const T mat1[16], const T mat2[16], T* resMat)
     {
@@ -120,4 +125,6 @@ namespace Hedge
 
     // Realtime rendering -- P70, P65. E = R (roll -- z) * R (pitch -- x) * R (head -- y)
     void GenModelMat(float* pPos, float roll, float pitch, float head, float* pScale, float* pResMat);
+
+    void GenRotationMat(float roll, float pitch, float head, float* pResMat);
 }

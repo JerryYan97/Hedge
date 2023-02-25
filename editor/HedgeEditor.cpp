@@ -1,5 +1,6 @@
 #include "HedgeEditor.h"
 #include "util/Utils.h"
+#include "UtilMath.h"
 #include "render/HRenderManager.h"
 #include "scene/HScene.h"
 #include "core/HEntity.h"
@@ -19,12 +20,13 @@ namespace Hedge
 {
     // ================================================================================================================
     HedgeEditor::HedgeEditor()
+        : HFrameListener()
     {
         m_pScenes.push_back(new HScene());
         m_activeScene = 0;
 
-        m_pScenes[0]->SpawnEntity(new HCubeEntity());
-        m_pScenes[0]->SpawnEntity(new HCameraEntity());
+        m_pScenes[0]->SpawnEntity(new HCubeEntity(), GetEventManager());
+        m_pScenes[0]->SpawnEntity(new HCameraEntity(), GetEventManager());
     }
 
     // ================================================================================================================
@@ -82,7 +84,7 @@ namespace Hedge
     {
         HedgeEditorGuiManager* pGuiManager = dynamic_cast<HedgeEditorGuiManager*>(m_pGuiManager);
         
-        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), GetCurrentRenderImgExtent(), m_activeRendererIdx);
+        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), GetCurrentRenderImgExtent(), GetCurSwapchainFrameIdx());
     }
 
     // ================================================================================================================
@@ -260,6 +262,33 @@ namespace Hedge
 
         ImGui::End();
         ImGui::PopStyleVar(1);
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::SendIOEvents(
+        HScene& scene,
+        HEventManager& eventManager)
+    {
+        std::hash<std::string> hashObj;
+
+        // Middle mouse event generation and passing
+        {
+            HEventArguments args;
+            bool isDown = ImGui::IsMouseDown(ImGuiPopupFlags_MouseButtonMiddle);
+            args[hashObj("IS_DOWN")] = isDown;
+
+            if (isDown)
+            {
+                HFVec2 pos;
+                ImVec2 imPos = ImGui::GetMousePos();
+                pos.ele[0] = imPos[0];
+                pos.ele[1] = imPos[1];
+                args[hashObj("POS")] = pos;
+            }
+            
+            HEvent mEvent(args, "MOUSE_MIDDLE_BUTTON");
+            eventManager.SendEvent(mEvent, &scene);
+        }
     }
 
     // ================================================================================================================

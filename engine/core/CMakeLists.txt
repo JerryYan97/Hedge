@@ -8,4 +8,6 @@ target_sources(
     HFrameListener.h
     HGpuRsrcManager.cpp
     HGpuRsrcManager.h
+    HEvent.h
+    HEvent.cpp
 )

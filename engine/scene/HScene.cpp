@@ -19,13 +19,15 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HScene::SpawnEntity(HEntity* pEntity)
+    void HScene::SpawnEntity(
+        HEntity* pEntity, 
+        HEventManager& eventManager)
     {
         entt::entity newEntity = m_registry.create();
         uint32_t entityHandle = static_cast<uint32_t>(newEntity);
         pEntity->CreateInSceneInternal(this, entityHandle);
 
-        pEntity->OnDefineEntity();
+        pEntity->OnDefineEntity(eventManager);
         
         m_entitiesHashTable.insert({ entityHandle, pEntity });
     }

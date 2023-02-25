@@ -62,7 +62,7 @@ static const std::string to_string(VkResult result)
     }
 }
 
-#define VK_CHECK(res) if(res){std::cout << "Error at line:" << __LINE__ << ", Error name:" << to_string(res) << ".\n"; exit(1);}
+#define VK_CHECK(res) if(res){std::cout << "Error at line:" << __LINE__ << " in " << __FILE__ << ", Error name:" << to_string(res) << ".\n"; exit(1);}
 #else
 
 // Release mode

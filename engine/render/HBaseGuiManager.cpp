@@ -32,6 +32,7 @@ namespace Hedge
         m_pVkDevice = pDevice;
         m_pDescriptorPool = pDescriptorPool;
         m_guiImgSamplers.resize(swapchainImgCnt);
+        m_swapchainImgCnt = swapchainImgCnt;
 
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();

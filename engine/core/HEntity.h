@@ -1,12 +1,15 @@
 #pragma once
 #include <vector>
 #include <string>
+#include "UtilMath.h"
 
 namespace Hedge
 {
     class HScene;
     class HComponent;
     class HRenderManager;
+    class HEvent;
+    class HEventManager;
 
     class HEntity
     {
@@ -20,9 +23,10 @@ namespace Hedge
         virtual void OnSpawn() {};
         virtual void PreRenderTick(float dt) {};
         virtual void PostRenderTick(float dt) {};
+        virtual bool OnEvent(HEvent& ievent) = 0;
 
         // Add components to entity to define an entity.
-        virtual void OnDefineEntity() = 0;
+        virtual void OnDefineEntity(HEventManager& eventManager) = 0;
 
     protected:
         template<typename Type, typename... Args>
@@ -30,6 +34,8 @@ namespace Hedge
 
         template<typename T>
         T& GetComponent();
+
+        uint32_t GetEntityHandle() { return m_entityHandle; }
 
     private:
         uint32_t m_entityHandle;
@@ -42,16 +48,27 @@ namespace Hedge
         HCubeEntity() {};
         ~HCubeEntity();
 
-        virtual void OnDefineEntity();
+        virtual void OnDefineEntity(HEventManager& eventManager);
+        virtual bool OnEvent(HEvent& ievent) { return true; }
         
     };
 
     class HCameraEntity : public HEntity
     {
     public:
-        HCameraEntity() {};
+        HCameraEntity()
+            : m_isHold(false)
+        {};
+
         ~HCameraEntity();
 
-        virtual void OnDefineEntity();
+        virtual void OnDefineEntity(HEventManager& eventManager);
+        virtual bool OnEvent(HEvent& ievent);
+
+    private:
+        HFVec2 m_holdStartPos;
+        float m_holdStartView[3];
+        float m_holdStartUp[3];
+        bool m_isHold;
     };
 }

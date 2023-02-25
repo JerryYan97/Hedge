@@ -20,6 +20,7 @@ namespace Hedge
     class HBaseGuiManager;
     class HScene;
     class HFrameListener;
+    class HEventManager;
 
     class HRenderManager
     {
@@ -28,6 +29,7 @@ namespace Hedge
         virtual ~HRenderManager();
 
         void BeginNewFrame();
+        void SendIOEvents(HScene& scene, HEventManager& eventManager);
         void RenderCurrentScene(HScene& scene);
         void FinalizeSceneAndSwapBuffers();
         virtual void DrawHud(HFrameListener* pFrameListener) = 0;
@@ -39,6 +41,8 @@ namespace Hedge
 
     protected:
         // GUI
+        uint32_t GetCurSwapchainFrameIdx() { return m_curSwapchainFrameIdx; }
+
         HBaseGuiManager* m_pGuiManager;
 
         // Render

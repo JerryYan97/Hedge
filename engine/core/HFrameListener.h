@@ -1,5 +1,6 @@
 #pragma once
 #include "../logging/HLogger.h"
+#include "HEvent.h"
 
 namespace Hedge
 {
@@ -15,7 +16,12 @@ namespace Hedge
         virtual void FrameEnded()   = 0;
         virtual HScene& GetActiveScene() = 0;
 
+        HEventManager& GetEventManager() { return m_eventManager; }
+
     protected:
         Hedge::HLogger m_logger;
+
+    private:
+        HEventManager m_eventManager;
     };
 }

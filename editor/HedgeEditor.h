@@ -15,6 +15,7 @@ namespace DearImGuiExt
 namespace Hedge
 {
     class HScene;
+    class HEventManager;
 
     class HedgeEditor : public HFrameListener
     {
@@ -59,6 +60,8 @@ namespace Hedge
         virtual VkExtent2D GetRenderExtent() override;
 
         DearImGuiExt::CustomLayout* CreateGuiLayout();
+
+        virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) override;
 
     private:
         static void SceneRenderWindow();

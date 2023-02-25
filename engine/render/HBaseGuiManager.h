@@ -3,6 +3,9 @@
 
 namespace Hedge
 {
+    class HScene;
+    class HEventManager;
+
     // The base gui renderer manages dear imgui context and render data.
     class HBaseGuiManager
     {
@@ -41,6 +44,8 @@ namespace Hedge
 
         virtual void GenerateImGuiData() = 0;
         virtual VkExtent2D GetRenderExtent() = 0;
+
+        virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) = 0;
 
     protected:
         std::vector<VkDescriptorSet> m_guiImgDescriptors;

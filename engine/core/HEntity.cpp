@@ -3,6 +3,7 @@
 #include "../render/HRenderManager.h"
 #include "HComponent.h"
 #include "Utils.h"
+#include "HEvent.h"
 #include <sstream>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -13,6 +14,9 @@
 
 namespace Hedge
 {
+    // TODO: We can delete m_pScene's pointer reference in the HEntity since it is only used in the AddComponent and
+    // GetComponent. GetComponent is not used and AddComponent is only used in OnDefineEntity(). This is only used in
+    // scene's spawn entity function. So, we can change the OnDefineEntity() to OnDefineEntity(pScene) function.
     // ================================================================================================================
     HEntity::HEntity()
         : m_pScene(nullptr),
@@ -102,13 +106,17 @@ namespace Hedge
         return vertNum;
     }
 
+    // TODO: Need to store the built-in geometry to real block of memory.
     // ================================================================================================================
-    void HCubeEntity::OnDefineEntity()
+    void HCubeEntity::OnDefineEntity(
+        HEventManager& eventManager)
     {
         //
         float pos[3] = {0.f, 0.f, 2.f};
         float rot[3] = {0.f, 0.f, 0.f};
         float scale[3] = {1.f, 1.f, 1.f};
+
+        AddComponent<TransformComponent>(pos, rot, scale);
 
         std::string cubeObj("o Cube \n\
 v 1.000000 1.000000 -1.000000 \n\
@@ -178,10 +186,11 @@ f 5/12/6 1/3/6 2/9/6");
     {}
 
     // ================================================================================================================
-    void HCameraEntity::OnDefineEntity()
+    void HCameraEntity::OnDefineEntity(
+        HEventManager& eventManager)
     {
         float pos[3] = { 0.f, 2.f, -1.f };
-        float rot[4] = { 0.f, 0.f, 0.f, 0.f };
+        float rot[3] = { 0.f, 0.f, 0.f};
         float scale[3] = { 1.f, 1.f, 1.f };
 
         AddComponent<TransformComponent>(pos, rot, scale);
@@ -192,5 +201,66 @@ f 5/12/6 1/3/6 2/9/6");
         float aspect = 960.f / 680.f;
 
         AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 10.f);
+
+        eventManager.RegisterListener("MOUSE_MIDDLE_BUTTON", GetEntityHandle());
+    }
+
+    // ================================================================================================================
+    bool HCameraEntity::OnEvent(
+        HEvent& ievent)
+    {
+        std::hash<std::string> hashObj;
+
+        if (ievent.GetEventType() == hashObj("MOUSE_MIDDLE_BUTTON"))
+        {
+            HEventArguments& args = ievent.GetArgs();
+            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
+            if (isDown)
+            {
+                if (m_isHold)
+                {
+                    // UP-Down -- Pitch; Left-Right -- Head;
+                    HFVec2 curPos = std::any_cast<HFVec2>(args[hashObj("POS")]);
+                    CameraComponent& cam = GetComponent<CameraComponent>();
+
+                    float xOffset = -(curPos.ele[0] - m_holdStartPos.ele[0]);
+                    float yOffset = curPos.ele[1] - m_holdStartPos.ele[1];
+
+                    std::cout << "offset: (" << xOffset << ", " << yOffset << ");" << std::endl;
+
+                    
+                    float rotMat[9] = {};
+                    GenRotationMat(0.f, yOffset * M_PI / 180.f, xOffset * M_PI / 180.f, rotMat);
+                    float newView[3];
+                    MatMulVec(rotMat, m_holdStartView, 3, newView);
+
+                    float newUp[3];
+                    MatMulVec(rotMat, m_holdStartUp, 3, newUp);
+
+                    memcpy(cam.m_view, newView, 3 * sizeof(float));
+                    memcpy(cam.m_up, newUp, 3 * sizeof(float));
+                }
+                else
+                {
+                    m_holdStartPos = std::any_cast<HFVec2>(args[hashObj("POS")]);
+                    CameraComponent& cam = GetComponent<CameraComponent>();
+                    memcpy(m_holdStartView, cam.m_view, 3 * sizeof(float));
+                    memcpy(m_holdStartUp, cam.m_up, 3 * sizeof(float));
+                }
+            }
+
+            m_isHold = isDown;
+        }
+
+        /*
+        switch (ievent.GetEventType())
+        {
+        case hashObj("MOUSE_CLICK"):
+            break;
+        default:
+            return false;
+        }
+        */
+        return true;
     }
 }

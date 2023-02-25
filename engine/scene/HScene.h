@@ -5,6 +5,7 @@
 namespace Hedge
 {
     class HEntity;
+    class HEventManager;
 
     struct SceneRenderInfo
     {
@@ -22,8 +23,12 @@ namespace Hedge
         HScene();
         ~HScene();
 
-        void SpawnEntity(HEntity* pEntity);
+        // Entity functions
+        void SpawnEntity(HEntity* pEntity, HEventManager& eventManager);
 
+        HEntity* GetEntity(uint32_t entityHandle) { return m_entitiesHashTable[entityHandle]; }
+
+        // Component functions
         template<typename Type, typename... Args>
         void EntityAddComponent(uint32_t entityHandle, Args &&...args) 
             { m_registry.emplace<Type>(static_cast<entt::entity>(entityHandle), std::forward<Args>(args)...); }

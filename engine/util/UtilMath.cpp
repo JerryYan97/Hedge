@@ -57,6 +57,25 @@ namespace Hedge
         pResMat[14] = -1.f;
     }
 
+    void GenRotationMat(
+        float roll, 
+        float pitch, 
+        float head, 
+        float* pResMat)
+    {
+        pResMat[0] = cosf(roll) * cosf(head) - sinf(roll) * sinf(pitch) * sinf(head);
+        pResMat[1] = -sinf(roll) * cosf(pitch);
+        pResMat[2] = cosf(roll) * sinf(head) + sinf(roll) * sinf(pitch) * cosf(head);
+
+        pResMat[3] = sinf(roll) * cosf(head) + cosf(roll) * sinf(pitch) * sinf(head);
+        pResMat[4] = cosf(roll) * cosf(pitch);
+        pResMat[5] = sinf(roll) * sinf(head) - cosf(roll) * sinf(pitch) * cosf(head);
+
+        pResMat[6] = -cosf(pitch) * sinf(head);
+        pResMat[7] = sinf(pitch);
+        pResMat[8] = cosf(pitch) * cosf(head);
+    }
+
     void GenModelMat(
         float* pPos, 
         float roll, 
@@ -66,21 +85,23 @@ namespace Hedge
         float* pResMat)
     {
         // Concatenation of translation matrix and rotation matrix.
-        float tRMat[16] = {};
+        float rMat[9] = {};
+        GenRotationMat(roll, pitch, head, rMat);
 
-        tRMat[0] = cosf(roll) * cosf(head) - sinf(roll) * sinf(pitch) * sinf(head);
-        tRMat[1] = - sinf(roll) * cosf(pitch);
-        tRMat[2] = cosf(roll) * sinf(head) + sinf(roll) * sinf(pitch) * cosf(head);
+        float tRMat[16] = {};
+        tRMat[0] = rMat[0];
+        tRMat[1] = rMat[1];
+        tRMat[2] = rMat[2];
         tRMat[3] = pPos[0];
 
-        tRMat[4] = sinf(roll) * cosf(head) + cosf(roll) * sinf(pitch) * sinf(head);
-        tRMat[5] = cosf(roll) * cosf(pitch);
-        tRMat[6] = sinf(roll) * sinf(head) - cosf(roll) * sinf(pitch) * cosf(head);
+        tRMat[4] = rMat[3];
+        tRMat[5] = rMat[4];
+        tRMat[6] = rMat[5];
         tRMat[7] = pPos[1];
 
-        tRMat[8] = - cosf(pitch) * sinf(head);
-        tRMat[9] = sinf(pitch);
-        tRMat[10] = cosf(pitch) * cosf(head);
+        tRMat[8] = rMat[6];
+        tRMat[9] = rMat[7];
+        tRMat[10] = rMat[8];
         tRMat[11] = pPos[2];
 
         tRMat[15] = 1.f;
