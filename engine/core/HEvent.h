@@ -12,7 +12,8 @@
 *  Some predefined events strings:
 *  IO category: MOUSE_MIDDLE_BUTTON, KEY_W, KEY_S
 * 
-*  MOUSE_MIDDLE_BUTTON: IS_DOWN (bool)
+*  MOUSE_MIDDLE_BUTTON: IS_DOWN (bool), POS (HFVec2)
+*  KEY_W: IS_DOWN (bool)
 */
 
 namespace Hedge

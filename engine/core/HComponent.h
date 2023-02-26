@@ -72,4 +72,15 @@ namespace Hedge
         float m_near;
         bool  m_active;
     };
+
+    struct PointLightComponent
+    {
+        PointLightComponent(
+            float* pColor)
+        {
+            memcpy(m_color, pColor, 3 * sizeof(float));
+        }
+
+        float m_color[3];
+    };
 }

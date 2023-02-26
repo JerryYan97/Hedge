@@ -200,9 +200,13 @@ f 5/12/6 1/3/6 2/9/6");
         float fov = 47.f * M_PI / 180.f; // vertical field of view.
         float aspect = 960.f / 680.f;
 
-        AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 10.f);
+        AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 100.f);
 
         eventManager.RegisterListener("MOUSE_MIDDLE_BUTTON", GetEntityHandle());
+        eventManager.RegisterListener("KEY_W", GetEntityHandle());
+        eventManager.RegisterListener("KEY_S", GetEntityHandle());
+        eventManager.RegisterListener("KEY_A", GetEntityHandle());
+        eventManager.RegisterListener("KEY_D", GetEntityHandle());
     }
 
     // ================================================================================================================
@@ -225,12 +229,9 @@ f 5/12/6 1/3/6 2/9/6");
 
                     float xOffset = -(curPos.ele[0] - m_holdStartPos.ele[0]);
                     float yOffset = curPos.ele[1] - m_holdStartPos.ele[1];
-
-                    std::cout << "offset: (" << xOffset << ", " << yOffset << ");" << std::endl;
-
                     
                     float rotMat[9] = {};
-                    GenRotationMat(0.f, yOffset * M_PI / 180.f, xOffset * M_PI / 180.f, rotMat);
+                    GenRotationMat(0.f, 0.5f * yOffset * M_PI / 180.f, 0.5f * xOffset * M_PI / 180.f, rotMat);
                     float newView[3];
                     MatMulVec(rotMat, m_holdStartView, 3, newView);
 
@@ -252,6 +253,76 @@ f 5/12/6 1/3/6 2/9/6");
             m_isHold = isDown;
         }
 
+        if (ievent.GetEventType() == hashObj("KEY_W"))
+        {
+            HEventArguments& args = ievent.GetArgs();
+            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
+            if (isDown)
+            {
+                TransformComponent& trans = GetComponent<TransformComponent>();
+                CameraComponent& cam = GetComponent<CameraComponent>();
+                float moveOffset[3] = {};
+                memcpy(moveOffset, cam.m_view, 3 * sizeof(float));
+                
+                ScalarMul(0.1f, moveOffset, 3);
+
+                VecAdd(moveOffset, trans.m_pos, 3, trans.m_pos);
+            }
+        }
+
+        if (ievent.GetEventType() == hashObj("KEY_S"))
+        {
+            HEventArguments& args = ievent.GetArgs();
+            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
+            if (isDown)
+            {
+                TransformComponent& trans = GetComponent<TransformComponent>();
+                CameraComponent& cam = GetComponent<CameraComponent>();
+                float moveOffset[3] = {};
+                memcpy(moveOffset, cam.m_view, 3 * sizeof(float));
+
+                ScalarMul(-0.1f, moveOffset, 3);
+
+                VecAdd(moveOffset, trans.m_pos, 3, trans.m_pos);
+            }
+        }
+
+        if (ievent.GetEventType() == hashObj("KEY_A"))
+        {
+            HEventArguments& args = ievent.GetArgs();
+            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
+            if (isDown)
+            {
+                TransformComponent& trans = GetComponent<TransformComponent>();
+                CameraComponent& cam = GetComponent<CameraComponent>();
+
+                float right[3] = {};
+                CrossProductVec3(cam.m_view, cam.m_up, right);
+
+                ScalarMul(-0.1f, right, 3);
+
+                VecAdd(right, trans.m_pos, 3, trans.m_pos);
+            }
+        }
+
+        if (ievent.GetEventType() == hashObj("KEY_D"))
+        {
+            HEventArguments& args = ievent.GetArgs();
+            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
+            if (isDown)
+            {
+                TransformComponent& trans = GetComponent<TransformComponent>();
+                CameraComponent& cam = GetComponent<CameraComponent>();
+
+                float right[3] = {};
+                CrossProductVec3(cam.m_view, cam.m_up, right);
+
+                ScalarMul(0.1f, right, 3);
+
+                VecAdd(right, trans.m_pos, 3, trans.m_pos);
+            }
+        }
+
         /*
         switch (ievent.GetEventType())
         {
@@ -262,5 +333,12 @@ f 5/12/6 1/3/6 2/9/6");
         }
         */
         return true;
+    }
+
+    // ================================================================================================================
+    void HPointLightEntity::OnDefineEntity(
+        HEventManager& eventManager)
+    {
+
     }
 }

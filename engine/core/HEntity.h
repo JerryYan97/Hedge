@@ -71,4 +71,16 @@ namespace Hedge
         float m_holdStartUp[3];
         bool m_isHold;
     };
+
+    class HPointLightEntity : public HEntity
+    {
+    public:
+        HPointLightEntity() {}
+        ~HPointLightEntity() {}
+
+        virtual void OnDefineEntity(HEventManager& eventManager);
+        virtual bool OnEvent(HEvent& ievent) { return true; }
+
+    private:
+    };
 }

@@ -95,6 +95,15 @@ namespace Hedge
         }
     }
 
+    template<typename T>
+    inline void VecAdd(const T* vec1, const T* vec2, uint32_t dim, T* res)
+    {
+        for (uint32_t i = 0; i < dim; i++)
+        {
+            res[i] = vec1[i] + vec2[i];
+        }
+    }
+
     // NOTE: All matrix on the host are row-major but all matrix on GLSL are column-major.
     // It means we need to do a matrix transpose before sending a matrix to the device/GLSL.
     template<typename T>

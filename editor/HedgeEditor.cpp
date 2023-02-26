@@ -289,6 +289,36 @@ namespace Hedge
             HEvent mEvent(args, "MOUSE_MIDDLE_BUTTON");
             eventManager.SendEvent(mEvent, &scene);
         }
+
+        // Key WASD event generation and passing
+        {
+            HEventArguments args;
+            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_W);
+
+            HEvent mEvent(args, "KEY_W");
+            eventManager.SendEvent(mEvent, &scene);
+        }
+        {
+            HEventArguments args;
+            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_S);
+
+            HEvent mEvent(args, "KEY_S");
+            eventManager.SendEvent(mEvent, &scene);
+        }
+        {
+            HEventArguments args;
+            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_A);
+
+            HEvent mEvent(args, "KEY_A");
+            eventManager.SendEvent(mEvent, &scene);
+        }
+        {
+            HEventArguments args;
+            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_D);
+
+            HEvent mEvent(args, "KEY_D");
+            eventManager.SendEvent(mEvent, &scene);
+        }
     }
 
     // ================================================================================================================
