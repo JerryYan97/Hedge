@@ -211,20 +211,31 @@ namespace Hedge
         }
         
         // Create a descriptor set layout for binding MVP matrix
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        VkDescriptorSetLayoutBinding uboMvpLayoutBinding{};
         {
-            uboLayoutBinding.binding = 0;
-            uboLayoutBinding.descriptorCount = 1;
-            uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            uboLayoutBinding.pImmutableSamplers = nullptr;
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            uboMvpLayoutBinding.binding = 0;
+            uboMvpLayoutBinding.descriptorCount = 1;
+            uboMvpLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboMvpLayoutBinding.pImmutableSamplers = nullptr;
+            uboMvpLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         }
 
+        // Create a descriptor set layout for binding light
+        VkDescriptorSetLayoutBinding uboLightLayoutBinding{};
+        {
+            uboLightLayoutBinding.binding = 1;
+            uboLightLayoutBinding.descriptorCount = 1;
+            uboLightLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboLightLayoutBinding.pImmutableSamplers = nullptr;
+            uboLightLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        }
+
+        VkDescriptorSetLayoutBinding bindingInfoArray[2] = { uboMvpLayoutBinding, uboLightLayoutBinding };
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         {
             layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            layoutInfo.bindingCount = 1;
-            layoutInfo.pBindings = &uboLayoutBinding;
+            layoutInfo.bindingCount = 2;
+            layoutInfo.pBindings = bindingInfoArray;
         }
 
         VK_CHECK(vkCreateDescriptorSetLayout(*m_pVkDevice, &layoutInfo, nullptr, &m_descriptorSetLayout));
@@ -293,7 +304,8 @@ namespace Hedge
             vkDestroyImageView(*m_pVkDevice, m_vkResultImgsViews[i], nullptr);
             vkDestroySampler(*m_pVkDevice, m_vkResultImgsSamplers[i], nullptr);
             vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[i], m_vmaResultImgsAllocations[i]);
-            m_pGpuRsrcManager->DestroyGpuResource(m_uboBuffers[i]);
+            m_pGpuRsrcManager->DestroyGpuResource(m_mvpUboBuffers[i]);
+            m_pGpuRsrcManager->DestroyGpuResource(m_lightUboBuffers[i]);
         }
 
         // Destroy Pipeline
@@ -345,7 +357,8 @@ namespace Hedge
         m_vkResultImgsViews.resize(m_onFlightResCnt);
         m_vkResultImgsSamplers.resize(m_onFlightResCnt);
         m_resultImgsExtents.resize(m_onFlightResCnt);
-        m_uboBuffers.resize(m_onFlightResCnt);
+        m_mvpUboBuffers.resize(m_onFlightResCnt);
+        m_lightUboBuffers.resize(m_onFlightResCnt);
 
         for (uint32_t i = 0; i < m_onFlightResCnt; i++)
         {
@@ -388,29 +401,52 @@ namespace Hedge
             VK_CHECK(vkCreateSampler(*m_pVkDevice, &sampler_info, nullptr, &m_vkResultImgsSamplers[i]));
 
             // Create ubo buffers
-            m_uboBuffers[i] = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                                 16 * sizeof(float));
+            m_mvpUboBuffers[i] = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                                    16 * sizeof(float));
 
-            // Update the descriptor to let it point to the ubo buffer.
-            VkDescriptorBufferInfo descriptorBufferInfo{};
+            m_lightUboBuffers[i] = m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                                      8 * sizeof(float));
+
+            // Write a descriptor to let it point to the mvp matrix buffer.
+            VkDescriptorBufferInfo mvpDescriptorBufferInfo{};
             {
-                descriptorBufferInfo.buffer = *m_uboBuffers[i].m_pBuffer;
-                descriptorBufferInfo.offset = 0;
-                descriptorBufferInfo.range = 16 * sizeof(float);
+                mvpDescriptorBufferInfo.buffer = *m_mvpUboBuffers[i].m_pBuffer;
+                mvpDescriptorBufferInfo.offset = 0;
+                mvpDescriptorBufferInfo.range = 16 * sizeof(float);
             }
 
-            VkWriteDescriptorSet descriptorWrite{};
+            // Write a descriptor to let it point to the ubo light buffer
+            VkDescriptorBufferInfo ptLightDescriptorBufferInfo{};
             {
-                descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrite.dstSet = m_uboDescriptorSets[i];
-                descriptorWrite.dstBinding = 0;
-                descriptorWrite.dstArrayElement = 0;
-                descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrite.descriptorCount = 1;
-                descriptorWrite.pBufferInfo = &descriptorBufferInfo;
+                ptLightDescriptorBufferInfo.buffer = *m_lightUboBuffers[i].m_pBuffer;
+                ptLightDescriptorBufferInfo.offset = 0;
+                ptLightDescriptorBufferInfo.range = 8 * sizeof(float);
             }
 
-            vkUpdateDescriptorSets(*m_pVkDevice, 1, &descriptorWrite, 0, nullptr);
+            VkWriteDescriptorSet mvpDescriptorWrite{};
+            {
+                mvpDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                mvpDescriptorWrite.dstSet = m_uboDescriptorSets[i];
+                mvpDescriptorWrite.dstBinding = 0;
+                mvpDescriptorWrite.dstArrayElement = 0;
+                mvpDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                mvpDescriptorWrite.descriptorCount = 1;
+                mvpDescriptorWrite.pBufferInfo = &mvpDescriptorBufferInfo;
+            }
+
+            VkWriteDescriptorSet lightDescriptorWrite{};
+            {
+                lightDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                lightDescriptorWrite.dstSet = m_uboDescriptorSets[i];
+                lightDescriptorWrite.dstBinding = 1;
+                lightDescriptorWrite.dstArrayElement = 0;
+                lightDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                lightDescriptorWrite.descriptorCount = 1;
+                lightDescriptorWrite.pBufferInfo = &ptLightDescriptorBufferInfo;
+            }
+
+            VkWriteDescriptorSet desWriteArray[2] = { mvpDescriptorWrite, lightDescriptorWrite };
+            vkUpdateDescriptorSets(*m_pVkDevice, 2, desWriteArray, 0, nullptr);
         }
     }
 
@@ -504,7 +540,14 @@ namespace Hedge
         MatTranspose(mvpMat, 4);
 
         // Transfer mvp matrix data to ubo
-        m_pGpuRsrcManager->SendDataToBuffer(m_uboBuffers[frameIdx], mvpMat, sizeof(mvpMat));
+        m_pGpuRsrcManager->SendDataToBuffer(m_mvpUboBuffers[frameIdx], mvpMat, sizeof(mvpMat));
+
+        // Transfer light data to ubo
+        float tmpLightData[8] = {
+            1.f, 0.f, 0.f, 0.f,
+            0.f, 1.f, 1.f, 0.f
+        };
+        m_pGpuRsrcManager->SendDataToBuffer(m_lightUboBuffers[frameIdx], tmpLightData, sizeof(tmpLightData));
 
         // Add a barrier to wait for image format transition and ubo data transfer.
         // Transfer the scene rendering image format from undefined or shader read to shader output.

@@ -80,7 +80,8 @@ namespace Hedge
         std::vector<VmaAllocation> m_vmaResultImgsAllocations;
         std::vector<VkExtent2D> m_resultImgsExtents;
         std::vector<VkDescriptorSet> m_uboDescriptorSets;
-        std::vector<GpuResource> m_uboBuffers;
+        std::vector<GpuResource> m_mvpUboBuffers;
+        std::vector<GpuResource> m_lightUboBuffers;
 
         uint32_t m_lastFrameIdx;
     };
