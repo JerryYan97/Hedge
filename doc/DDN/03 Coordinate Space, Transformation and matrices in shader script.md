@@ -34,6 +34,10 @@ In glsl, matrices are column major. It means we need to transpose the matrix bef
 
 In addition, the RenderDoc is a great tool to check what you passed to the shader. You can find relevant information by checking `drawCmd->Pipeline State->VS->Go button at the right of the buffer`. The RenderDoc can also help you check the input geometry and output geometry, which is really helpful.
 
+## MISC
+
+In order to have depth clipping, we may need to provide a depth buffer.
+
 ## Reference
 1. [The perspective projection matrix in Vulkan](https://vincent-p.github.io/posts/vulkan_perspective_matrix/)
 2. [Reverse Z](https://ajweeks.com/blog/2019/04/06/ReverseZ/)

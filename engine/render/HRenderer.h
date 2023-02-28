@@ -67,6 +67,10 @@ namespace Hedge
         void RecreateResource(VkExtent2D resultExtent, uint32_t frameIdx);
         inline bool NeedResize(VkExtent2D inExtent, uint32_t frameIdx);
 
+        // TODO: Cleanup image and image view code redundency.
+        void CreateColorDepthImgs();
+        void CreateColorDepthImgsViews();
+
         VkShaderModule        m_shaderVertModule;
         VkShaderModule        m_shaderFragModule;
         VkPipeline            m_pipeline;
@@ -74,11 +78,19 @@ namespace Hedge
         VkDescriptorSetLayout m_descriptorSetLayout;
         HGpuRsrcManager*      m_pGpuRsrcManager;
 
+        // Color attachment
         std::vector<VkImage> m_vkResultImgs;
         std::vector<VkImageView> m_vkResultImgsViews;
         std::vector<VkSampler> m_vkResultImgsSamplers;
         std::vector<VmaAllocation> m_vmaResultImgsAllocations;
         std::vector<VkExtent2D> m_resultImgsExtents;
+
+        // Depth attachment
+        std::vector<VkImage> m_depthImgs;
+        std::vector<VkImageView> m_depthImgsViews;
+        std::vector<VmaAllocation> m_depthImgsAllocations;
+        
+        // Shader UBO
         std::vector<VkDescriptorSet> m_uboDescriptorSets;
         std::vector<GpuResource> m_mvpUboBuffers;
         std::vector<GpuResource> m_lightUboBuffers;
