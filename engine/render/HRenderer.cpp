@@ -646,7 +646,7 @@ namespace Hedge
 
         // Transfer light data to ubo
         float tmpLightData[8] = {
-            1.f, 0.f, 0.f, 0.f,
+            1.f, 1.f, 1.f, 0.f,
             0.f, 3.f, 0.5f, 0.f
         };
         m_pGpuRsrcManager->SendDataToBuffer(m_lightUboBuffers[frameIdx], tmpLightData, sizeof(tmpLightData));

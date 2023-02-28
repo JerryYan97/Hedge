@@ -11,14 +11,14 @@ layout (location = 0) out vec4 outColor;
 
 void main() {
     // ambient
-    float ambientStrength = 0.1;
+    float ambientStrength = 0.01;
     vec3 ambient = ambientStrength * light.lightColor;
 
     // diffuse 
     vec3 norm = normalize(normal);
     vec3 lightDir = normalize(light.lightPos - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * light.lightPos;
+    vec3 diffuse = diff * light.lightColor;
 
     vec3 result = (diffuse + ambient) * vec3(1.0, 1.0, 1.0);
 
