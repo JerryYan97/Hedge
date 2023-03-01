@@ -67,9 +67,8 @@ namespace Hedge
         void RecreateResource(VkExtent2D resultExtent, uint32_t frameIdx);
         inline bool NeedResize(VkExtent2D inExtent, uint32_t frameIdx);
 
-        // TODO: Cleanup image and image view code redundency.
-        void CreateColorDepthImgs();
-        void CreateColorDepthImgsViews();
+        void CreateColorDepthImgs(VkExtent3D extent, uint32_t idx);
+        void CreateColorDepthImgsViews(uint32_t idx);
 
         VkShaderModule        m_shaderVertModule;
         VkShaderModule        m_shaderFragModule;

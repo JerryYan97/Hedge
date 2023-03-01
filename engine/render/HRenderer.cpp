@@ -348,36 +348,6 @@ namespace Hedge
             extent.height = 100;
             extent.depth = 1;
         }
-
-
-        // TODO: Code in the Init Resource and recreate resource can be merged and reused.
-        VkImageCreateInfo sceneImgsInfo{};
-        {
-            sceneImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-            sceneImgsInfo.imageType = VK_IMAGE_TYPE_2D;
-            sceneImgsInfo.format = m_renderSurfFormat;
-            sceneImgsInfo.extent = extent;
-            sceneImgsInfo.mipLevels = 1;
-            sceneImgsInfo.arrayLayers = 1;
-            sceneImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-            sceneImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-            sceneImgsInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            sceneImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        }
-
-        VkImageCreateInfo depthImgsInfo{};
-        {
-            depthImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-            depthImgsInfo.imageType = VK_IMAGE_TYPE_2D;
-            depthImgsInfo.format = VK_FORMAT_D16_UNORM;
-            depthImgsInfo.extent = extent;
-            depthImgsInfo.mipLevels = 1;
-            depthImgsInfo.arrayLayers = 1;
-            depthImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-            depthImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-            depthImgsInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-            depthImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        }
         
         m_vkResultImgs.resize(m_onFlightResCnt);
         m_vmaResultImgsAllocations.resize(m_onFlightResCnt);
@@ -394,49 +364,11 @@ namespace Hedge
 
         for (uint32_t i = 0; i < m_onFlightResCnt; i++)
         {
-            vmaCreateImage(*m_pVmaAllocator,
-                           &sceneImgsInfo,
-                           &sceneImgsAllocInfo,
-                           &m_vkResultImgs[i],
-                           &m_vmaResultImgsAllocations[i],
-                           nullptr);
-
-            vmaCreateImage(*m_pVmaAllocator, 
-                           &depthImgsInfo,
-                           &depthImgsAllocInfo,
-                           &m_depthImgs[i],
-                           &m_depthImgsAllocations[i],
-                           nullptr);
+            CreateColorDepthImgs(extent, i);
 
             m_resultImgsExtents[i] = VkExtent2D{ extent.width, extent.height };
 
-            // Create the render result color image View
-            VkImageViewCreateInfo colorImgViewInfo = {};
-            {
-                colorImgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-                colorImgViewInfo.image = m_vkResultImgs[i];
-                colorImgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                colorImgViewInfo.format = m_renderSurfFormat;
-                colorImgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                colorImgViewInfo.subresourceRange.levelCount = 1;
-                colorImgViewInfo.subresourceRange.layerCount = 1;
-            }
-
-            VK_CHECK(vkCreateImageView(*m_pVkDevice, &colorImgViewInfo, nullptr, &m_vkResultImgsViews[i]));
-
-            // Create the depth image view
-            VkImageViewCreateInfo depthImgViewInfo = {};
-            {
-                depthImgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-                depthImgViewInfo.image = m_depthImgs[i];
-                depthImgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                depthImgViewInfo.format = VK_FORMAT_D16_UNORM;
-                depthImgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-                depthImgViewInfo.subresourceRange.levelCount = 1;
-                depthImgViewInfo.subresourceRange.layerCount = 1;
-            }
-
-            VK_CHECK(vkCreateImageView(*m_pVkDevice, &depthImgViewInfo, nullptr, &m_depthImgsViews[i]));
+            CreateColorDepthImgsViews(i);
 
             VkSamplerCreateInfo sampler_info{};
             {
@@ -511,98 +443,21 @@ namespace Hedge
         vmaDestroyImage(*m_pVmaAllocator, m_vkResultImgs[frameIdx], m_vmaResultImgsAllocations[frameIdx]);
         vmaDestroyImage(*m_pVmaAllocator, m_depthImgs[frameIdx], m_depthImgsAllocations[frameIdx]);
 
-        VmaAllocationCreateInfo sceneImgsAllocInfo{};
-        {
-            sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-        }
-
-        VmaAllocationCreateInfo depthImgsAllocInfo{};
-        {
-            depthImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            depthImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-        }
-
         VkExtent3D extent{};
         {
             extent.width = resultExtent.width;
             extent.height = resultExtent.height;
             extent.depth = 1;
         }
-
-        VkImageCreateInfo sceneImgsInfo{};
-        {
-            sceneImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-            sceneImgsInfo.imageType = VK_IMAGE_TYPE_2D;
-            sceneImgsInfo.format = m_renderSurfFormat;
-            sceneImgsInfo.extent = extent;
-            sceneImgsInfo.mipLevels = 1;
-            sceneImgsInfo.arrayLayers = 1;
-            sceneImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-            sceneImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-            sceneImgsInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            sceneImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        }
-
-        VkImageCreateInfo depthImgsInfo{};
-        {
-            depthImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-            depthImgsInfo.imageType = VK_IMAGE_TYPE_2D;
-            depthImgsInfo.format = VK_FORMAT_D16_UNORM;
-            depthImgsInfo.extent = extent;
-            depthImgsInfo.mipLevels = 1;
-            depthImgsInfo.arrayLayers = 1;
-            depthImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-            depthImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-            depthImgsInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-            depthImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        }
-
-        vmaCreateImage(*m_pVmaAllocator,
-                       &sceneImgsInfo,
-                       &sceneImgsAllocInfo,
-                       &m_vkResultImgs[frameIdx],
-                       &m_vmaResultImgsAllocations[frameIdx],
-                       nullptr);
-
-        vmaCreateImage(*m_pVmaAllocator,
-                       &depthImgsInfo,
-                       &depthImgsAllocInfo,
-                       &m_depthImgs[frameIdx],
-                       &m_depthImgsAllocations[frameIdx],
-                       nullptr);
+        
+        CreateColorDepthImgs(extent, frameIdx);
 
         m_resultImgsExtents[frameIdx] = resultExtent;
 
         vkDestroyImageView(*m_pVkDevice, m_vkResultImgsViews[frameIdx], nullptr);
         vkDestroyImageView(*m_pVkDevice, m_depthImgsViews[frameIdx], nullptr);
 
-        // Create the Image View
-        VkImageViewCreateInfo colorImgViewInfo = {};
-        {
-            colorImgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            colorImgViewInfo.image = m_vkResultImgs[frameIdx];
-            colorImgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            colorImgViewInfo.format = m_renderSurfFormat;
-            colorImgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            colorImgViewInfo.subresourceRange.levelCount = 1;
-            colorImgViewInfo.subresourceRange.layerCount = 1;
-        }
-        VK_CHECK(vkCreateImageView(*m_pVkDevice, &colorImgViewInfo, nullptr, &m_vkResultImgsViews[frameIdx]));
-
-        // Create the depth image view
-        VkImageViewCreateInfo depthImgViewInfo = {};
-        {
-            depthImgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            depthImgViewInfo.image = m_depthImgs[frameIdx];
-            depthImgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            depthImgViewInfo.format = VK_FORMAT_D16_UNORM;
-            depthImgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            depthImgViewInfo.subresourceRange.levelCount = 1;
-            depthImgViewInfo.subresourceRange.layerCount = 1;
-        }
-
-        VK_CHECK(vkCreateImageView(*m_pVkDevice, &depthImgViewInfo, nullptr, &m_depthImgsViews[frameIdx]));
+        CreateColorDepthImgsViews(frameIdx);
     }
 
     // ================================================================================================================
@@ -796,5 +651,98 @@ namespace Hedge
             1, &sceneImgLayoutAsInputTransitionBarrier);
 
         return &m_vkResultImgsViews[frameIdx];
+    }
+
+    // ================================================================================================================
+    void HBasicRenderer::CreateColorDepthImgs(
+        VkExtent3D extent, 
+        uint32_t   idx)
+    {
+        VkImageCreateInfo sceneImgsInfo{};
+        {
+            sceneImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            sceneImgsInfo.imageType = VK_IMAGE_TYPE_2D;
+            sceneImgsInfo.format = m_renderSurfFormat;
+            sceneImgsInfo.extent = extent;
+            sceneImgsInfo.mipLevels = 1;
+            sceneImgsInfo.arrayLayers = 1;
+            sceneImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            sceneImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            sceneImgsInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            sceneImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        }
+
+        VkImageCreateInfo depthImgsInfo{};
+        {
+            depthImgsInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            depthImgsInfo.imageType = VK_IMAGE_TYPE_2D;
+            depthImgsInfo.format = VK_FORMAT_D16_UNORM;
+            depthImgsInfo.extent = extent;
+            depthImgsInfo.mipLevels = 1;
+            depthImgsInfo.arrayLayers = 1;
+            depthImgsInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            depthImgsInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            depthImgsInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            depthImgsInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        }
+
+        VmaAllocationCreateInfo sceneImgsAllocInfo{};
+        {
+            sceneImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            sceneImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
+        VmaAllocationCreateInfo depthImgsAllocInfo{};
+        {
+            depthImgsAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            depthImgsAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
+        vmaCreateImage(*m_pVmaAllocator,
+                       &sceneImgsInfo,
+                       &sceneImgsAllocInfo,
+                       &m_vkResultImgs[idx],
+                       &m_vmaResultImgsAllocations[idx],
+                       nullptr);
+
+        vmaCreateImage(*m_pVmaAllocator, 
+                       &depthImgsInfo,
+                       &depthImgsAllocInfo,
+                       &m_depthImgs[idx],
+                       &m_depthImgsAllocations[idx],
+                       nullptr);
+    }
+
+    // ================================================================================================================
+    void HBasicRenderer::CreateColorDepthImgsViews(
+        uint32_t idx)
+    {
+        // Create the render result color image View
+        VkImageViewCreateInfo colorImgViewInfo = {};
+        {
+            colorImgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            colorImgViewInfo.image = m_vkResultImgs[idx];
+            colorImgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            colorImgViewInfo.format = m_renderSurfFormat;
+            colorImgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            colorImgViewInfo.subresourceRange.levelCount = 1;
+            colorImgViewInfo.subresourceRange.layerCount = 1;
+        }
+
+        VK_CHECK(vkCreateImageView(*m_pVkDevice, &colorImgViewInfo, nullptr, &m_vkResultImgsViews[idx]));
+
+        // Create the depth image view
+        VkImageViewCreateInfo depthImgViewInfo = {};
+        {
+            depthImgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            depthImgViewInfo.image = m_depthImgs[idx];
+            depthImgViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            depthImgViewInfo.format = VK_FORMAT_D16_UNORM;
+            depthImgViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            depthImgViewInfo.subresourceRange.levelCount = 1;
+            depthImgViewInfo.subresourceRange.layerCount = 1;
+        }
+
+        VK_CHECK(vkCreateImageView(*m_pVkDevice, &depthImgViewInfo, nullptr, &m_depthImgsViews[idx]));
     }
 }
