@@ -213,7 +213,7 @@ namespace Hedge
         m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx] =
             m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, renderInfo.m_vertBufBytes);
         m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * renderInfo.m_vertCnt);
+            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * renderInfo.m_idxNum);
 
         // Send vertex and index data to gpu buffers
         m_pGpuRsrcManager->SendDataToBuffer(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
@@ -222,7 +222,7 @@ namespace Hedge
 
         m_pGpuRsrcManager->SendDataToBuffer(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
                                             renderInfo.m_pIdx,
-                                            renderInfo.m_vertCnt * sizeof(uint32_t));
+                                            renderInfo.m_idxNum * sizeof(uint32_t));
 
         // Fill the command buffer
         VkCommandBufferBeginInfo beginInfo{};

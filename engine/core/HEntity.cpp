@@ -4,10 +4,11 @@
 #include "HComponent.h"
 #include "Utils.h"
 #include "HEvent.h"
+#include "g_builtInModels.h"
 #include <sstream>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+// #define TINYOBJLOADER_IMPLEMENTATION
+// #include "tiny_obj_loader.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -60,6 +61,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    /*
     uint32_t TinyObjToVertBufAndIdxBuf(
         const std::vector<tinyobj::shape_t>& inshapes, 
         const tinyobj::attrib_t& inattrib, 
@@ -105,6 +107,7 @@ namespace Hedge
 
         return vertNum;
     }
+    */
 
     // TODO: Need to store the built-in geometry to real block of memory.
     // ================================================================================================================
@@ -118,6 +121,7 @@ namespace Hedge
 
         AddComponent<TransformComponent>(pos, rot, scale);
 
+        /*
         std::string cubeObj("o Cube \n\
 v 1.000000 1.000000 -1.000000 \n\
 v 1.000000 -1.000000 -1.000000 \n\
@@ -174,11 +178,12 @@ f 5/12/6 1/3/6 2/9/6");
         float* pVertBuffer;
         uint32_t* pIdxBuffer;
         uint32_t vertNum = TinyObjToVertBufAndIdxBuf(inshapes, inattrib, &pVertBuffer, &pIdxBuffer);
+        */
 
-        AddComponent<StaticMeshComponent>(pIdxBuffer,
-                                          pVertBuffer,
-                                          vertNum,
-                                          VertFloatNum * sizeof(float) * vertNum);
+        AddComponent<StaticMeshComponent>(CubeIdxData,
+                                          CubeVertBufData,
+                                          uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t)),
+                                          uint32_t(sizeof(CubeVertBufData)));
     }
 
     // ================================================================================================================

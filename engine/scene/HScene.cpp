@@ -45,7 +45,7 @@ namespace Hedge
 
             renderInfo.m_pIdx = meshComponent.m_pIdx;
             renderInfo.m_pVert = meshComponent.m_pVert;
-            renderInfo.m_vertCnt = meshComponent.m_vertCnt;
+            renderInfo.m_idxNum = meshComponent.m_idxCnt;
             renderInfo.m_vertBufBytes = meshComponent.m_vertBufBytes;
 
             GenModelMat(transComponent.m_pos,

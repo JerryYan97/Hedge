@@ -626,7 +626,7 @@ namespace Hedge
             0,
             nullptr);
 
-        vkCmdDrawIndexed(cmdBuf, sceneInfo.m_vertCnt, 1, 0, 0, 0);
+        vkCmdDrawIndexed(cmdBuf, sceneInfo.m_idxNum, 1, 0, 0, 0);
 
         vkCmdEndRendering(cmdBuf);
 

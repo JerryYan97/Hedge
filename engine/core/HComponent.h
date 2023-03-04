@@ -25,11 +25,11 @@ namespace Hedge
         StaticMeshComponent(
             uint32_t* pIdx,
             float*    pVert,
-            uint32_t  vertCnt,
+            uint32_t  idxCnt,
             uint32_t  vertBufBytes)
             : m_pIdx(pIdx),
               m_pVert(pVert),
-              m_vertCnt(vertCnt),
+              m_idxCnt(idxCnt),
               m_vertBufBytes(vertBufBytes)
         {}
 
@@ -42,7 +42,7 @@ namespace Hedge
         uint32_t* m_pIdx  = nullptr;
         float*    m_pVert = nullptr;
         uint32_t  m_vertBufBytes;
-        uint32_t  m_vertCnt;
+        uint32_t  m_idxCnt;
     };
 
     struct CameraComponent
