@@ -215,136 +215,146 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
+    void HCameraEntity::OnMouseMiddleButtonEvent(
+        HEvent& ievent)
+    {
+        HEventArguments& args = ievent.GetArgs();
+        bool isDown = std::any_cast<bool>(args[crc32("IS_DOWN")]);
+        if (isDown)
+        {
+            if (m_isHold)
+            {
+                // UP-Down -- Pitch; Left-Right -- Head;
+                HFVec2 curPos = std::any_cast<HFVec2>(args[crc32("POS")]);
+                CameraComponent& cam = GetComponent<CameraComponent>();
+
+                float xOffset = -(curPos.ele[0] - m_holdStartPos.ele[0]);
+                float yOffset = curPos.ele[1] - m_holdStartPos.ele[1];
+
+                float rotMat[9] = {};
+                GenRotationMat(0.f, 0.5f * yOffset * M_PI / 180.f, 0.5f * xOffset * M_PI / 180.f, rotMat);
+                float newView[3];
+                MatMulVec(rotMat, m_holdStartView, 3, newView);
+
+                float newUp[3];
+                MatMulVec(rotMat, m_holdStartUp, 3, newUp);
+
+                memcpy(cam.m_view, newView, 3 * sizeof(float));
+                memcpy(cam.m_up, newUp, 3 * sizeof(float));
+            }
+            else
+            {
+                m_holdStartPos = std::any_cast<HFVec2>(args[crc32("POS")]);
+                CameraComponent& cam = GetComponent<CameraComponent>();
+                memcpy(m_holdStartView, cam.m_view, 3 * sizeof(float));
+                memcpy(m_holdStartUp, cam.m_up, 3 * sizeof(float));
+            }
+        }
+
+        m_isHold = isDown;
+    }
+
+    // ================================================================================================================
+    void HCameraEntity::OnKeyWEvent(
+        HEvent& ievent)
+    {
+        HEventArguments& args = ievent.GetArgs();
+        bool isDown = std::any_cast<bool>(args[crc32("IS_DOWN")]);
+        if (isDown)
+        {
+            TransformComponent& trans = GetComponent<TransformComponent>();
+            CameraComponent& cam = GetComponent<CameraComponent>();
+            float moveOffset[3] = {};
+            memcpy(moveOffset, cam.m_view, 3 * sizeof(float));
+
+            ScalarMul(0.1f, moveOffset, 3);
+
+            VecAdd(moveOffset, trans.m_pos, 3, trans.m_pos);
+        }
+    }
+
+    // ================================================================================================================
+    void HCameraEntity::OnKeySEvent(
+        HEvent& ievent)
+    {
+        HEventArguments& args = ievent.GetArgs();
+        bool isDown = std::any_cast<bool>(args[crc32("IS_DOWN")]);
+        if (isDown)
+        {
+            TransformComponent& trans = GetComponent<TransformComponent>();
+            CameraComponent& cam = GetComponent<CameraComponent>();
+            float moveOffset[3] = {};
+            memcpy(moveOffset, cam.m_view, 3 * sizeof(float));
+
+            ScalarMul(-0.1f, moveOffset, 3);
+
+            VecAdd(moveOffset, trans.m_pos, 3, trans.m_pos);
+        }
+    }
+
+    // ================================================================================================================
+    void HCameraEntity::OnKeyAEvent(
+        HEvent& ievent)
+    {
+        HEventArguments& args = ievent.GetArgs();
+        bool isDown = std::any_cast<bool>(args[crc32("IS_DOWN")]);
+        if (isDown)
+        {
+            TransformComponent& trans = GetComponent<TransformComponent>();
+            CameraComponent& cam = GetComponent<CameraComponent>();
+
+            float right[3] = {};
+            CrossProductVec3(cam.m_view, cam.m_up, right);
+
+            ScalarMul(-0.1f, right, 3);
+
+            VecAdd(right, trans.m_pos, 3, trans.m_pos);
+        }
+    }
+
+    // ================================================================================================================
+    void HCameraEntity::OnKeyDEvent(
+        HEvent& ievent)
+    {
+        HEventArguments& args = ievent.GetArgs();
+        bool isDown = std::any_cast<bool>(args[crc32("IS_DOWN")]);
+        if (isDown)
+        {
+            TransformComponent& trans = GetComponent<TransformComponent>();
+            CameraComponent& cam = GetComponent<CameraComponent>();
+
+            float right[3] = {};
+            CrossProductVec3(cam.m_view, cam.m_up, right);
+
+            ScalarMul(0.1f, right, 3);
+
+            VecAdd(right, trans.m_pos, 3, trans.m_pos);
+        }
+    }
+
+    // ================================================================================================================
     bool HCameraEntity::OnEvent(
         HEvent& ievent)
     {
-        std::hash<std::string> hashObj;
-
         switch (ievent.GetEventType()) {
-        case crc32("Hello"):
-            std::cout << "hello" << std::endl;
+        case crc32("MOUSE_MIDDLE_BUTTON"):
+            OnMouseMiddleButtonEvent(ievent);
             break;
-        default:
-            std::cout << "Wrong" << std::endl;
-        }
-
-        if (ievent.GetEventType() == hashObj("MOUSE_MIDDLE_BUTTON"))
-        {
-            HEventArguments& args = ievent.GetArgs();
-            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
-            if (isDown)
-            {
-                if (m_isHold)
-                {
-                    // UP-Down -- Pitch; Left-Right -- Head;
-                    HFVec2 curPos = std::any_cast<HFVec2>(args[hashObj("POS")]);
-                    CameraComponent& cam = GetComponent<CameraComponent>();
-
-                    float xOffset = -(curPos.ele[0] - m_holdStartPos.ele[0]);
-                    float yOffset = curPos.ele[1] - m_holdStartPos.ele[1];
-                    
-                    float rotMat[9] = {};
-                    GenRotationMat(0.f, 0.5f * yOffset * M_PI / 180.f, 0.5f * xOffset * M_PI / 180.f, rotMat);
-                    float newView[3];
-                    MatMulVec(rotMat, m_holdStartView, 3, newView);
-
-                    float newUp[3];
-                    MatMulVec(rotMat, m_holdStartUp, 3, newUp);
-
-                    memcpy(cam.m_view, newView, 3 * sizeof(float));
-                    memcpy(cam.m_up, newUp, 3 * sizeof(float));
-                }
-                else
-                {
-                    m_holdStartPos = std::any_cast<HFVec2>(args[hashObj("POS")]);
-                    CameraComponent& cam = GetComponent<CameraComponent>();
-                    memcpy(m_holdStartView, cam.m_view, 3 * sizeof(float));
-                    memcpy(m_holdStartUp, cam.m_up, 3 * sizeof(float));
-                }
-            }
-
-            m_isHold = isDown;
-        }
-
-        if (ievent.GetEventType() == hashObj("KEY_W"))
-        {
-            HEventArguments& args = ievent.GetArgs();
-            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
-            if (isDown)
-            {
-                TransformComponent& trans = GetComponent<TransformComponent>();
-                CameraComponent& cam = GetComponent<CameraComponent>();
-                float moveOffset[3] = {};
-                memcpy(moveOffset, cam.m_view, 3 * sizeof(float));
-                
-                ScalarMul(0.1f, moveOffset, 3);
-
-                VecAdd(moveOffset, trans.m_pos, 3, trans.m_pos);
-            }
-        }
-
-        if (ievent.GetEventType() == hashObj("KEY_S"))
-        {
-            HEventArguments& args = ievent.GetArgs();
-            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
-            if (isDown)
-            {
-                TransformComponent& trans = GetComponent<TransformComponent>();
-                CameraComponent& cam = GetComponent<CameraComponent>();
-                float moveOffset[3] = {};
-                memcpy(moveOffset, cam.m_view, 3 * sizeof(float));
-
-                ScalarMul(-0.1f, moveOffset, 3);
-
-                VecAdd(moveOffset, trans.m_pos, 3, trans.m_pos);
-            }
-        }
-
-        if (ievent.GetEventType() == hashObj("KEY_A"))
-        {
-            HEventArguments& args = ievent.GetArgs();
-            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
-            if (isDown)
-            {
-                TransformComponent& trans = GetComponent<TransformComponent>();
-                CameraComponent& cam = GetComponent<CameraComponent>();
-
-                float right[3] = {};
-                CrossProductVec3(cam.m_view, cam.m_up, right);
-
-                ScalarMul(-0.1f, right, 3);
-
-                VecAdd(right, trans.m_pos, 3, trans.m_pos);
-            }
-        }
-
-        if (ievent.GetEventType() == hashObj("KEY_D"))
-        {
-            HEventArguments& args = ievent.GetArgs();
-            bool isDown = std::any_cast<bool>(args[hashObj("IS_DOWN")]);
-            if (isDown)
-            {
-                TransformComponent& trans = GetComponent<TransformComponent>();
-                CameraComponent& cam = GetComponent<CameraComponent>();
-
-                float right[3] = {};
-                CrossProductVec3(cam.m_view, cam.m_up, right);
-
-                ScalarMul(0.1f, right, 3);
-
-                VecAdd(right, trans.m_pos, 3, trans.m_pos);
-            }
-        }
-
-        /*
-        switch (ievent.GetEventType())
-        {
-        case hashObj("MOUSE_CLICK"):
+        case crc32("KEY_W"):
+            OnKeyWEvent(ievent);
+            break;
+        case crc32("KEY_S"):
+            OnKeySEvent(ievent);
+            break;
+        case crc32("KEY_A"):
+            OnKeyAEvent(ievent);
+            break;
+        case crc32("KEY_D"):
+            OnKeyDEvent(ievent);
             break;
         default:
             return false;
         }
-        */
         return true;
     }
 

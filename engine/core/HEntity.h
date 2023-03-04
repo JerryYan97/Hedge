@@ -66,6 +66,12 @@ namespace Hedge
         virtual bool OnEvent(HEvent& ievent);
 
     private:
+        void OnMouseMiddleButtonEvent(HEvent& ievent);
+        void OnKeyWEvent(HEvent& ievent);
+        void OnKeySEvent(HEvent& ievent);
+        void OnKeyAEvent(HEvent& ievent);
+        void OnKeyDEvent(HEvent& ievent);
+
         HFVec2 m_holdStartPos;
         float m_holdStartView[3];
         float m_holdStartUp[3];

@@ -20,6 +20,7 @@ namespace Hedge
         float m_scale[3];
     };
 
+    // NOTE: Static is not responsible for vertex or index delete.
     struct StaticMeshComponent
     {
         StaticMeshComponent(
@@ -34,10 +35,7 @@ namespace Hedge
         {}
 
         ~StaticMeshComponent()
-        {
-            delete m_pIdx;
-            delete m_pVert;
-        }
+        {}
 
         uint32_t* m_pIdx  = nullptr;
         float*    m_pVert = nullptr;

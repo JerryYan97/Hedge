@@ -1,6 +1,7 @@
 #include "HEvent.h"
 #include "../scene/HScene.h"
 #include "HEntity.h"
+#include "Utils.h"
 
 namespace Hedge
 {
@@ -10,8 +11,7 @@ namespace Hedge
         const std::string& type)
         : m_isHandled(false)
     {
-        std::hash<std::string> hashObj;
-        m_typeHash = hashObj(type);
+        m_typeHash = crc32(type.data());
         m_arg = arg;
     }
 
@@ -20,8 +20,7 @@ namespace Hedge
         const std::string& type, 
         const uint32_t     entity)
     {
-        std::hash<std::string> hashObj;
-        size_t typeHash = hashObj(type);
+        size_t typeHash = crc32(type.data());
 
         if (m_eventListenerMap.find(typeHash) != m_eventListenerMap.end())
         {

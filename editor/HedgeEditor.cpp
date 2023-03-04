@@ -269,16 +269,11 @@ namespace Hedge
         HScene& scene,
         HEventManager& eventManager)
     {
-        std::hash<std::string> hashObj;
-
-        uint32_t myHash = crc32("My Hash");
-        std::cout << "myHash:" << myHash << std::endl;
-
         // Middle mouse event generation and passing
         {
             HEventArguments args;
             bool isDown = ImGui::IsMouseDown(ImGuiPopupFlags_MouseButtonMiddle);
-            args[hashObj("IS_DOWN")] = isDown;
+            args[crc32("IS_DOWN")] = isDown;
 
             if (isDown)
             {
@@ -286,7 +281,7 @@ namespace Hedge
                 ImVec2 imPos = ImGui::GetMousePos();
                 pos.ele[0] = imPos[0];
                 pos.ele[1] = imPos[1];
-                args[hashObj("POS")] = pos;
+                args[crc32("POS")] = pos;
             }
             
             HEvent mEvent(args, "MOUSE_MIDDLE_BUTTON");
@@ -296,28 +291,28 @@ namespace Hedge
         // Key WASD event generation and passing
         {
             HEventArguments args;
-            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_W);
+            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_W);
 
             HEvent mEvent(args, "KEY_W");
             eventManager.SendEvent(mEvent, &scene);
         }
         {
             HEventArguments args;
-            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_S);
+            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_S);
 
             HEvent mEvent(args, "KEY_S");
             eventManager.SendEvent(mEvent, &scene);
         }
         {
             HEventArguments args;
-            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_A);
+            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_A);
 
             HEvent mEvent(args, "KEY_A");
             eventManager.SendEvent(mEvent, &scene);
         }
         {
             HEventArguments args;
-            args[hashObj("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_D);
+            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_D);
 
             HEvent mEvent(args, "KEY_D");
             eventManager.SendEvent(mEvent, &scene);
