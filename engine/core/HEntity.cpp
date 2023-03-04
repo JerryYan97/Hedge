@@ -220,6 +220,14 @@ f 5/12/6 1/3/6 2/9/6");
     {
         std::hash<std::string> hashObj;
 
+        switch (ievent.GetEventType()) {
+        case crc32("Hello"):
+            std::cout << "hello" << std::endl;
+            break;
+        default:
+            std::cout << "Wrong" << std::endl;
+        }
+
         if (ievent.GetEventType() == hashObj("MOUSE_MIDDLE_BUTTON"))
         {
             HEventArguments& args = ievent.GetArgs();

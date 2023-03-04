@@ -271,6 +271,9 @@ namespace Hedge
     {
         std::hash<std::string> hashObj;
 
+        uint32_t myHash = crc32("My Hash");
+        std::cout << "myHash:" << myHash << std::endl;
+
         // Middle mouse event generation and passing
         {
             HEventArguments args;
