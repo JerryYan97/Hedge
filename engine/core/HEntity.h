@@ -75,6 +75,7 @@ namespace Hedge
         HFVec2 m_holdStartPos;
         float m_holdStartView[3];
         float m_holdStartUp[3];
+        float m_holdRight[3];
         bool m_isHold;
     };
 

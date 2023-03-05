@@ -6,15 +6,18 @@ namespace Hedge
 {
     // TODO: The calculation is incorrect. The pView is not equivalent to camera space's z.
     // pView should be the -z direction of a camera space.
-    void GenViewMatUpdateUp(
+    void GenViewMat(
         float* const pView, 
         float* const pPos, 
-        float* pUp, 
+        float* const pWorldUp, 
         float* pResMat)
     {
         float z[3] = {};
         memcpy(z, pView, 3 * sizeof(float));
         ScalarMul(-1.f, z, 3);
+
+        float pUp[3] = {};
+        memcpy(pUp, pWorldUp, 3 * sizeof(float));
 
         float right[3] = {};
         CrossProductVec3(z, pUp, right);
@@ -116,5 +119,23 @@ namespace Hedge
         // Multiply TR and S matrix together to get the model matrix.
         memset(pResMat, 0, 16 * sizeof(float));
         MatrixMul4x4(tRMat, sMat, pResMat);
+    }
+
+    void GenRotationMatArb(
+        float* axis,
+        float radien,
+        float* pResMat)
+    {
+        pResMat[0] = cosf(radien) + (1.f - cosf(radien)) * axis[0] * axis[0];
+        pResMat[1] = (1.f - cosf(radien)) * axis[0] * axis[1] - axis[2] * sinf(radien);
+        pResMat[2] = (1.f - cosf(radien)) * axis[0] * axis[2] + axis[1] * sinf(radien);
+
+        pResMat[3] = (1.f - cosf(radien)) * axis[0] * axis[1] + axis[2] * sinf(radien);
+        pResMat[4] = cosf(radien) + (1.f - cosf(radien)) * axis[1] * axis[1];
+        pResMat[5] = (1.f - cosf(radien)) * axis[1] * axis[2] - axis[0] * sinf(radien);
+
+        pResMat[6] = (1.f - cosf(radien)) * axis[0] * axis[2] - axis[1] * sinf(radien);
+        pResMat[7] = (1.f - cosf(radien)) * axis[1] * axis[2] + axis[0] * sinf(radien);
+        pResMat[8] = cosf(radien) + (1.f - cosf(radien)) * axis[2] * axis[2];
     }
 }

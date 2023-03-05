@@ -64,7 +64,7 @@ namespace Hedge
 
             float viewMat[16] = {};
             float persMat[16] = {};
-            GenViewMatUpdateUp(camComponent.m_view, transComponent.m_pos, camComponent.m_up, viewMat);
+            GenViewMat(camComponent.m_view, transComponent.m_pos, camComponent.m_up, viewMat);
             GenPerspectiveProjMat(camComponent.m_near, camComponent.m_far, camComponent.m_fov, camComponent.m_aspect, persMat);
             MatrixMul4x4(persMat, viewMat, renderInfo.m_vpMat);
         }

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+// TODO: Dim can be put into template for optimization.
 namespace Hedge
 {
     struct HFVec2
@@ -20,6 +21,23 @@ namespace Hedge
                     mat1[4 * row + 1] * mat2[4 + col] +
                     mat1[4 * row + 2] * mat2[8 + col] +
                     mat1[4 * row + 3] * mat2[12 + col];
+            }
+        }
+    }
+
+    template<typename T>
+    inline void MatMulMat(T* mat1, T* mat2, T* resMat, uint32_t dim)
+    {
+        for (uint32_t row = 0; row < dim; row++)
+        {
+            for (uint32_t col = 0; col < dim; col++)
+            {
+                uint32_t idx = dim * row + col;
+                resMat[idx] = 0;
+                for (uint32_t ele = 0; ele < dim; ele++)
+                {
+                    resMat[idx] += (mat1[dim * row + ele] * mat2[dim * ele + col]);
+                }
             }
         }
     }
@@ -127,7 +145,7 @@ namespace Hedge
 
     // Generate 4x4 matrices
     // Realtime rendering -- P67
-    void GenViewMatUpdateUp(float* const pView, float* const pPos, float* pUp, float* pResMat);
+    void GenViewMat(float* const pView, float* const pPos, float* const pWorldUp, float* pResMat);
 
     // Realtime rendering -- P99. Far are near are posive, which correspond to f' and n'. And far > near.
     void GenPerspectiveProjMat(float near, float far, float fov, float aspect, float* pResMat);
@@ -136,4 +154,7 @@ namespace Hedge
     void GenModelMat(float* pPos, float roll, float pitch, float head, float* pScale, float* pResMat);
 
     void GenRotationMat(float roll, float pitch, float head, float* pResMat);
+
+    // Realtime rendering -- P75 -- Eqn(4.30)
+    void GenRotationMatArb(float* axis, float radien, float* pResMat);
 }

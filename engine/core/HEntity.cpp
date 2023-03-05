@@ -194,16 +194,23 @@ f 5/12/6 1/3/6 2/9/6");
     void HCameraEntity::OnDefineEntity(
         HEventManager& eventManager)
     {
-        float pos[3] = { 0.f, 2.f, -1.f };
+        float pos[3] = { 0.f, 0.f, -1.f };
         float rot[3] = { 0.f, 0.f, 0.f};
         float scale[3] = { 1.f, 1.f, 1.f };
 
         AddComponent<TransformComponent>(pos, rot, scale);
 
-        float view[3] = { 0.f, -2.f, 1.f };
+        float view[3] = { 0.f, 0.f, 1.f };
         float up[3] = { 0.f, 1.f, 0.f };
         float fov = 47.f * M_PI / 180.f; // vertical field of view.
         float aspect = 960.f / 680.f;
+
+        NormalizeVec(view, 3);
+        float right[3] = {};
+        CrossProductVec3(view, up, right);
+        NormalizeVec(right, 3);
+        CrossProductVec3(right, view, up);
+        NormalizeVec(up, 3);
 
         AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 100.f);
 
@@ -224,30 +231,50 @@ f 5/12/6 1/3/6 2/9/6");
         {
             if (m_isHold)
             {
+                // Continues holding:
                 // UP-Down -- Pitch; Left-Right -- Head;
                 HFVec2 curPos = std::any_cast<HFVec2>(args[crc32("POS")]);
                 CameraComponent& cam = GetComponent<CameraComponent>();
 
                 float xOffset = -(curPos.ele[0] - m_holdStartPos.ele[0]);
-                float yOffset = curPos.ele[1] - m_holdStartPos.ele[1];
+                float yOffset = -(curPos.ele[1] - m_holdStartPos.ele[1]);
+
+                float pitchRadien = 0.5f * yOffset * M_PI / 180.f;
+                float headRadien = 0.5f * xOffset * M_PI / 180.f;
+
+                // 1.3 model:
+                float pitchRotMat[9] = {};
+                GenRotationMatArb(m_holdRight, pitchRadien, pitchRotMat);
+
+                float headRotMat[9] = {};
+                float worldUp[3] = { 0.f, 1.f, 0.f };
+                GenRotationMatArb(worldUp, headRadien, headRotMat);
 
                 float rotMat[9] = {};
-                GenRotationMat(0.f, 0.5f * yOffset * M_PI / 180.f, 0.5f * xOffset * M_PI / 180.f, rotMat);
+                MatMulMat(headRotMat, pitchRotMat, rotMat, 3);
+
                 float newView[3];
                 MatMulVec(rotMat, m_holdStartView, 3, newView);
 
                 float newUp[3];
                 MatMulVec(rotMat, m_holdStartUp, 3, newUp);
 
+                NormalizeVec(newView, 3);
+                NormalizeVec(newUp, 3);
+
                 memcpy(cam.m_view, newView, 3 * sizeof(float));
                 memcpy(cam.m_up, newUp, 3 * sizeof(float));
             }
             else
             {
+                // First hold:
                 m_holdStartPos = std::any_cast<HFVec2>(args[crc32("POS")]);
                 CameraComponent& cam = GetComponent<CameraComponent>();
                 memcpy(m_holdStartView, cam.m_view, 3 * sizeof(float));
                 memcpy(m_holdStartUp, cam.m_up, 3 * sizeof(float));
+
+                CrossProductVec3(cam.m_view, cam.m_up, m_holdRight);
+                NormalizeVec(m_holdRight, 3);
             }
         }
 
