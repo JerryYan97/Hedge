@@ -53,6 +53,11 @@ namespace Hedge
     {}
 
     // ================================================================================================================
+    void HedgeEditor::AppStarts()
+    {
+    }
+
+    // ================================================================================================================
     void HedgeEditor::BuildGame(
         const char* pPathFileName)
     {
@@ -112,6 +117,49 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HedgeEditorGuiManager::PackageProject()
+    {
+        std::string path("C:\\JiaruiYan\\Projects\\VulkanProjects\\PackagedGames\\test1");
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::UpperMenuBar()
+    {
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Edit"))
+            {
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Build"))
+            {
+                if (ImGui::MenuItem("Package Project"))
+                {
+                    PackageProject();
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::BottomMenuBar()
+    {
+        if (DearImGuiExt::BeginBottomMainMenuBar())
+        {
+            ImGui::EndMainMenuBar();
+        }
+    }
+
+    // ================================================================================================================
+    // Also execute operations triggerred by GUI.
+    // NOTE: In the game template, we need to put ImGUI things into an GUI entity. 
+    // Due to an existing scene for game, we don't create another scene for the world editor to hold a GUI entity.
     void HedgeEditorGuiManager::GenerateImGuiData(
         VkImageView* pResultImgView,
         VkExtent2D resultImgExtent,
@@ -120,7 +168,11 @@ namespace Hedge
         m_frameIdx = frameIdx;
         m_pRenderResultImgView = pResultImgView;
         m_renderResultImgExtent = resultImgExtent;
+
+        // Editor GUI
+        UpperMenuBar();
         m_pLayout->BeginEndLayout();
+        BottomMenuBar();
     }
 
     // ================================================================================================================
@@ -147,6 +199,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    // TODO: Figure out the image four corners override the border problem. I may need to submit a fix
     void HedgeEditorGuiManager::SceneRenderWindow()
     {
         HedgeEditorGuiManager* pGui = raiiManager.GetHedgeEditorGuiManager();
@@ -156,7 +209,8 @@ namespace Hedge
                                         ImGuiWindowFlags_NoSavedSettings;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
-
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         VkDescriptorSet my_image_texture = 0;
 
         if (ImGui::Begin("Scene Render Window", nullptr, flags))
@@ -167,7 +221,8 @@ namespace Hedge
                                 static_cast<float>(pGui->m_renderResultImgExtent.height)));
         }
         ImGui::End();
-        ImGui::PopStyleVar(1);
+        ImGui::PopStyleVar(3);
+        // ImGui::PopStyleVar(2);
     }
 
     // ================================================================================================================
@@ -180,6 +235,7 @@ namespace Hedge
                                                     ImGuiWindowFlags_NoDecoration;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("AssetWindow", nullptr, TestWindowFlag);
 
         if (ImGui::TreeNode("Basic trees"))
@@ -198,7 +254,7 @@ namespace Hedge
         }
 
         ImGui::End();
-        ImGui::PopStyleVar(1);
+        ImGui::PopStyleVar(2);
     }
 
     // ================================================================================================================
@@ -211,6 +267,7 @@ namespace Hedge
                                                     ImGuiWindowFlags_NoDecoration;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("SceneObjectsListWindow", nullptr, TestWindowFlag);
 
         ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -230,7 +287,7 @@ namespace Hedge
         }
 
         ImGui::End();
-        ImGui::PopStyleVar(1);
+        ImGui::PopStyleVar(2);
     }
 
     // ================================================================================================================
@@ -243,6 +300,7 @@ namespace Hedge
                                                     ImGuiWindowFlags_NoDecoration;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("ObjectPropertiesWindow", nullptr, TestWindowFlag);
 
         if (ImGui::TreeNode("Basic trees"))
@@ -261,7 +319,7 @@ namespace Hedge
         }
 
         ImGui::End();
-        ImGui::PopStyleVar(1);
+        ImGui::PopStyleVar(2);
     }
 
     // ================================================================================================================

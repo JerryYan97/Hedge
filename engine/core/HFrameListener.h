@@ -15,6 +15,7 @@ namespace Hedge
         virtual void FrameStarted() = 0;
         virtual void FrameEnded()   = 0;
         virtual HScene& GetActiveScene() = 0;
+        virtual void AppStarts() = 0;
 
         HEventManager& GetEventManager() { return m_eventManager; }
 

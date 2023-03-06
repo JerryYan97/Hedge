@@ -31,6 +31,7 @@ namespace Hedge
 
         virtual void FrameStarted() override;
         virtual void FrameEnded() override;
+        virtual void AppStarts() override;
 
         virtual HScene& GetActiveScene() override;
 
@@ -68,6 +69,14 @@ namespace Hedge
         static void AssetWindow();
         static void SceneObjectsListWindow();
         static void ObjectPropertiesWindow();
+
+        // GUI
+        void UpperMenuBar();
+        void BottomMenuBar();
+
+        // Utility
+        void PackageProject(); // Build the project to a game.
+
 
         VkImageView*                m_pRenderResultImgView;
         VkExtent2D                  m_renderResultImgExtent;

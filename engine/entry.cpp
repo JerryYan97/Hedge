@@ -12,6 +12,8 @@ void main(int argc, char** argv)
 {
     std::cout << "Hello From Hedge Engine!" << std::endl;
 
+    g_pFrameListener->AppStarts();
+
     while (g_pRenderManager->WindowShouldClose() == false)
     {
         // Poll events, resize handling
