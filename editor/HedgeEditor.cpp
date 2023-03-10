@@ -120,6 +120,10 @@ namespace Hedge
     void HedgeEditorGuiManager::PackageProject()
     {
         std::string path("C:\\JiaruiYan\\Projects\\VulkanProjects\\PackagedGames\\test1");
+        printf("USERPROFILE = %s\n", getenv("USERPROFILE"));
+        printf("HOMEDRIVE   = %s\n", getenv("HOMEDRIVE"));
+        printf("HOMEPATH    = %s\n", getenv("HOMEPATH"));
+        printf("APPDATA     = %s\n", getenv("APPDATA")); // We will use the APPDATA as our temp project building folder.
     }
 
     // ================================================================================================================

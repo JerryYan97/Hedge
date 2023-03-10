@@ -14,7 +14,18 @@ This design doc describes the design of the Hedge game engine project organizati
 
 ## Game packaging and generation (WIP)
 
-* Template game file
+There is button in the menu bar of the world editor to trigger the packaging process. If it is a default project without project folder, then we would create a tmp project folder under the APPDATA on Windows. 
+
+Then, we would 
+
+Nope. Unreal must has a project before hand. So, we woundn't consider the case that we don't have a project.
+
+## MISC notes
+
+WindowsOS Directory path dialog:
+https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shbrowseforfoldera
+https://stackoverflow.com/questions/12034943/win32-select-directory-dialog-from-c-c
+https://www.codeproject.com/Articles/2604/Browse-Folder-dialog-search-folder-and-all-sub-fol
 
 ## Reference
 

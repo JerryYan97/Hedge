@@ -8,6 +8,15 @@ CheckVulkanSDK()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw 
                  ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/YamlCpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/build/yaml)
+
+set_target_properties(format PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp-parse PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp-read PROPERTIES FOLDER "YamlCpp")
+set_target_properties(yaml-cpp-sandbox PROPERTIES FOLDER "YamlCpp")
+
 add_library(HedgeEngine STATIC)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
@@ -48,4 +57,5 @@ target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
 target_compile_features(HedgeEngine PRIVATE cxx_std_17)
 
 target_link_libraries(HedgeEngine LINK_PUBLIC vulkan-1
-                                              glfw3)
+                                              glfw3
+                                              yaml-cpp)

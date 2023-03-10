@@ -25,3 +25,6 @@
 [submodule "external/tinyObj"]
 	path = external/tinyObj
 	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "external/YamlCpp"]
+	path = external/YamlCpp
+	url = https://github.com/jbeder/yaml-cpp.git
