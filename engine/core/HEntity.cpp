@@ -22,9 +22,13 @@ namespace Hedge
     // GetComponent. GetComponent is not used and AddComponent is only used in OnDefineEntity(). This is only used in
     // scene's spawn entity function. So, we can change the OnDefineEntity() to OnDefineEntity(pScene) function.
     // ================================================================================================================
-    HEntity::HEntity()
+    HEntity::HEntity(
+        const std::string& className, 
+        const std::string& instName)
         : m_pScene(nullptr),
-          m_entityHandle(0)
+          m_entityHandle(0),
+          m_entityClassNameHash(crc32(className.c_str())),
+          m_customName(instName)
     {}
 
     // ================================================================================================================
@@ -194,7 +198,10 @@ f 5/12/6 1/3/6 2/9/6");
         YAML::Emitter& emitter,
         Hedge::HEntity* pThis)
     {
-
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Object Name";
+        emitter << YAML::Value << pThis->GetEntityInstName();
+        emitter << YAML::EndMap;
     }
 
     // ================================================================================================================
@@ -401,7 +408,10 @@ f 5/12/6 1/3/6 2/9/6");
         YAML::Emitter& emitter,
         Hedge::HEntity* pThis)
     {
-
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Object Name";
+        emitter << YAML::Value << pThis->GetEntityInstName();
+        emitter << YAML::EndMap;
     }
 
     // ================================================================================================================
@@ -416,7 +426,10 @@ f 5/12/6 1/3/6 2/9/6");
         YAML::Emitter& emitter,
         Hedge::HEntity* pThis)
     {
-        
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Object Name";
+        emitter << YAML::Value << pThis->GetEntityInstName();
+        emitter << YAML::EndMap;
     }
 
     // ================================================================================================================

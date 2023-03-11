@@ -1,5 +1,6 @@
 #include "HSerializer.h"
 #include "../scene/HScene.h"
+#include "HEntity.h"
 #include <fstream>
 
 namespace Hedge
@@ -32,11 +33,22 @@ namespace Hedge
         std::ofstream sceneYmlFileHandle(yamlNamePath.c_str());
         YAML::Emitter sceneYmlEmitter(sceneYmlFileHandle);
         
+        sceneYmlEmitter << YAML::BeginMap;
+        sceneYmlEmitter << YAML::Key << "Scene Entities";
+        sceneYmlEmitter << YAML::Value;
+
+        sceneYmlEmitter << YAML::BeginSeq;
+
         std::unordered_map<uint32_t, HEntity*>& entitiesHashTbl = scene.GetEntityHashTable();
         for (auto& itr : entitiesHashTbl)
         {
-            
+            HEntity* pEntity = itr.second;
+            RegisterClassInfo info = m_dict[pEntity->GetClassNameHash()];
+            info.pfnSerialize(sceneYmlEmitter, pEntity);
         }
+
+        sceneYmlEmitter << YAML::EndSeq;
+        sceneYmlEmitter << YAML::EndMap;
     }
 
     // ================================================================================================================

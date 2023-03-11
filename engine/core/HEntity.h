@@ -20,7 +20,7 @@ namespace Hedge
     class HEntity
     {
     public:
-        HEntity();
+        HEntity(const std::string& className, const std::string& instName);
         ~HEntity();
 
         // Internal used funcs
@@ -34,6 +34,9 @@ namespace Hedge
         // Add components to entity to define an entity.
         virtual void OnDefineEntity(HEventManager& eventManager) = 0;
 
+        uint32_t GetClassNameHash() { return m_entityClassNameHash; }
+        std::string& GetEntityInstName() { return m_customName; }
+
     protected:
         template<typename Type, typename... Args>
         void AddComponent(Args &&...args);
@@ -44,14 +47,16 @@ namespace Hedge
         uint32_t GetEntityHandle() { return m_entityHandle; }
 
     private:
+        uint32_t m_entityClassNameHash;
         uint32_t m_entityHandle;
         HScene*  m_pScene;
+        std::string m_customName;
     };
 
     class HCubeEntity : public HEntity
     {
     public:
-        HCubeEntity() {};
+        HCubeEntity() : HEntity("HCubeEntity", "DefaultCubeInst") {};
         ~HCubeEntity();
 
         virtual void OnDefineEntity(HEventManager& eventManager);
@@ -65,7 +70,8 @@ namespace Hedge
     {
     public:
         HCameraEntity()
-            : m_isHold(false)
+            : HEntity("HCameraEntity", "DefaultCameraInst"),
+              m_isHold(false)
         {};
 
         ~HCameraEntity();
@@ -93,7 +99,7 @@ namespace Hedge
     class HPointLightEntity : public HEntity
     {
     public:
-        HPointLightEntity() {}
+        HPointLightEntity() : HEntity("HPointLightEntity", "DefaultPointLightInst") {}
         ~HPointLightEntity() {}
 
         virtual void OnDefineEntity(HEventManager& eventManager);
