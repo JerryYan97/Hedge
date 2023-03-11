@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
+#include <fstream>
 
 Hedge::GlobalVariablesRAIIManager raiiManager;
 
@@ -70,7 +71,25 @@ namespace Hedge
 
         // Save the project configuration:
         m_projFilePath = rootDir + "\\" + projName + ".yml";
-        
+        std::ofstream projConfigFileHandle(m_projFilePath.c_str());
+        YAML::Emitter ymlProjEmitter(projConfigFileHandle);
+
+        // MISC project config
+        ymlProjEmitter << YAML::BeginMap;
+
+        // Engine version
+        ymlProjEmitter << YAML::Key << "Engine Version Major";
+        ymlProjEmitter << YAML::Value << HEDGE_ENGINE_MAJOR_VERSION;
+        ymlProjEmitter << YAML::Key << "Engine Version Minor";
+        ymlProjEmitter << YAML::Value << HEDGE_ENGINE_MINOR_VERSION;
+
+        // Project name, packaged game name
+        ymlProjEmitter << YAML::Key << "Project Name";
+        ymlProjEmitter << YAML::Value << "Test Project";
+        ymlProjEmitter << YAML::Key << "Game Name";
+        ymlProjEmitter << YAML::Value << "TestGame";
+
+        ymlProjEmitter << YAML::EndMap;
 
         // Save the scene configuration:
         std::string scenePathName = rootDir + "\\scene\\testScene.yml";

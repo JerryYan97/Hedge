@@ -3,6 +3,9 @@
 #include "HSerializer.h"
 #include "HEvent.h"
 
+#define HEDGE_ENGINE_MAJOR_VERSION 0
+#define HEDGE_ENGINE_MINOR_VERSION 1
+
 namespace Hedge
 {
     class HScene;

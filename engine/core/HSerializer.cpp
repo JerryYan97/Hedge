@@ -1,4 +1,5 @@
 #include "HSerializer.h"
+#include <fstream>
 
 namespace Hedge
 {
@@ -23,7 +24,9 @@ namespace Hedge
     // ================================================================================================================
     void HSerializer::SerializeScene(std::string& yamlNamePath, HScene& scene)
     {
-
+        std::ofstream sceneYmlFileHandle(yamlNamePath.c_str());
+        YAML::Emitter sceneYmlEmitter(sceneYmlFileHandle);
+        
     }
 
     // ================================================================================================================
