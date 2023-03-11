@@ -1,4 +1,5 @@
 #include "HSerializer.h"
+#include "../scene/HScene.h"
 #include <fstream>
 
 namespace Hedge
@@ -16,17 +17,26 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HSerializer::RegisterAClass(uint32_t nameHash, PFN_CLASSREG pFunc)
+    void HSerializer::RegisterAClass(
+        uint32_t nameHash,
+        RegisterClassInfo regInfo)
     {
-        m_dict.insert({ nameHash, pFunc });
+        m_dict.insert({ nameHash, regInfo });
     }
 
     // ================================================================================================================
-    void HSerializer::SerializeScene(std::string& yamlNamePath, HScene& scene)
+    void HSerializer::SerializeScene(
+        std::string& yamlNamePath, 
+        HScene& scene)
     {
         std::ofstream sceneYmlFileHandle(yamlNamePath.c_str());
         YAML::Emitter sceneYmlEmitter(sceneYmlFileHandle);
         
+        std::unordered_map<uint32_t, HEntity*>& entitiesHashTbl = scene.GetEntityHashTable();
+        for (auto& itr : entitiesHashTbl)
+        {
+            
+        }
     }
 
     // ================================================================================================================

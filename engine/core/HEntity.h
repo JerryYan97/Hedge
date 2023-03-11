@@ -6,6 +6,7 @@
 namespace YAML
 {
     class Node;
+    class Emitter;
 }
 
 namespace Hedge
@@ -56,7 +57,8 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
         
-        static void Deseralize(YAML::Node& node);
+        static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
+        static void Deseralize(YAML::Node& node, Hedge::HEntity* pThis) {};
     };
 
     class HCameraEntity : public HEntity
@@ -71,7 +73,8 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent);
 
-        static void Deseralize(YAML::Node& node);
+        static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
+        static void Deseralize(YAML::Node& node, Hedge::HEntity* pThis) {};
 
     private:
         void OnMouseMiddleButtonEvent(HEvent& ievent);
@@ -96,7 +99,9 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
 
-        static void Deseralize(YAML::Node& node);
+        static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
+        static void Deseralize(YAML::Node& node, Hedge::HEntity* pThis);
+
     private:
     };
 }

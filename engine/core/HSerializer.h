@@ -12,9 +12,18 @@ namespace Hedge
         float* pFloatData;
         uint32_t floatDataCnt;
     };
+
+    class HEntity;
 }
 
-typedef void (*PFN_CLASSREG)(YAML::Node& node);
+typedef void (*PFN_SERIALIZE)(YAML::Emitter& emitter, Hedge::HEntity* pThis);
+typedef void (*PFN_DESERIALIZE)(YAML::Node& node, Hedge::HEntity* pThis);
+
+struct RegisterClassInfo
+{
+    PFN_SERIALIZE pfnSerialize;
+    PFN_DESERIALIZE pfnDeserialize;
+};
 
 namespace Hedge
 {
@@ -26,7 +35,7 @@ namespace Hedge
         HSerializer();
         ~HSerializer();
 
-        void RegisterAClass(uint32_t nameHash, PFN_CLASSREG pFunc);
+        void RegisterAClass(uint32_t nameHash, RegisterClassInfo regInfo);
         void SerializeScene(std::string& yamlNamePath, HScene& scene);
         void DeserializeYamlToScene(std::string& yamlNamePath, HScene& scene);
 
@@ -34,6 +43,6 @@ namespace Hedge
 
 
     private:
-        std::unordered_map<uint32_t, PFN_CLASSREG> m_dict; // Class name hash -- Class instance reg function.
+        std::unordered_map<uint32_t, RegisterClassInfo> m_dict; // Class name hash -- Class instance reg function.
     };
 }

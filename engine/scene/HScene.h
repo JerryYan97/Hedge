@@ -38,6 +38,8 @@ namespace Hedge
             { return m_registry.get<T>(static_cast<entt::entity>(entityHandle)); }
         
         SceneRenderInfo GetSceneRenderInfo();
+
+        std::unordered_map<uint32_t, HEntity*>& GetEntityHashTable() { return m_entitiesHashTable; }
         
     private:
         entt::registry m_registry;

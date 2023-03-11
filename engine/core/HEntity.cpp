@@ -190,7 +190,9 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
-    void HCubeEntity::Deseralize(YAML::Node& node)
+    void HCubeEntity::Seralize(
+        YAML::Emitter& emitter,
+        Hedge::HEntity* pThis)
     {
 
     }
@@ -395,7 +397,9 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
-    void HCameraEntity::Deseralize(YAML::Node& node)
+    void HCameraEntity::Seralize(
+        YAML::Emitter& emitter,
+        Hedge::HEntity* pThis)
     {
 
     }
@@ -408,7 +412,17 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
-    void HPointLightEntity::Deseralize(YAML::Node& node)
+    void HPointLightEntity::Seralize(
+        YAML::Emitter& emitter,
+        Hedge::HEntity* pThis)
+    {
+        
+    }
+
+    // ================================================================================================================
+    void HPointLightEntity::Deseralize(
+        YAML::Node& node,
+        Hedge::HEntity* pThis)
     {
 
     }
