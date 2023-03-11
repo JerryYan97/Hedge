@@ -4,7 +4,11 @@ project(HedgeEditor VERSION 0.1 LANGUAGES CXX)
 
 set(EDITOR_SRC_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditor.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditorGuiManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditorGuiManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditorRenderManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HedgeEditorRenderManager.h)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_SRC_LIST})
 
