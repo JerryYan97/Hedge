@@ -62,6 +62,22 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HedgeEditor::CreateGameProject(
+        const std::string& rootDir, 
+        const std::string& projName)
+    {
+        m_projName = projName;
+
+        // Save the project configuration:
+        m_projFilePath = rootDir + "\\" + projName + ".yml";
+        
+
+        // Save the scene configuration:
+        std::string scenePathName = rootDir + "\\scene\\testScene.yml";
+        GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
+    }
+
+    // ================================================================================================================
     HScene& HedgeEditor::GetActiveScene()
     {
         return *m_pScenes[m_activeScene];

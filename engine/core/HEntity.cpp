@@ -4,6 +4,9 @@
 #include "HComponent.h"
 #include "Utils.h"
 #include "HEvent.h"
+
+#include "yaml-cpp/yaml.h"
+
 #include "g_builtInModels.h"
 #include <sstream>
 
@@ -184,6 +187,12 @@ f 5/12/6 1/3/6 2/9/6");
                                           CubeVertBufData,
                                           uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t)),
                                           uint32_t(sizeof(CubeVertBufData)));
+    }
+
+    // ================================================================================================================
+    void HCubeEntity::Deseralize(YAML::Node& node)
+    {
+
     }
 
     // ================================================================================================================
@@ -386,8 +395,20 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
+    void HCameraEntity::Deseralize(YAML::Node& node)
+    {
+
+    }
+
+    // ================================================================================================================
     void HPointLightEntity::OnDefineEntity(
         HEventManager& eventManager)
+    {
+
+    }
+
+    // ================================================================================================================
+    void HPointLightEntity::Deseralize(YAML::Node& node)
     {
 
     }

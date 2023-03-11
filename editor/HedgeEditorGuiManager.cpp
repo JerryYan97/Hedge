@@ -52,6 +52,14 @@ namespace Hedge
         {
             if (ImGui::BeginMenu("File"))
             {
+                if (ImGui::MenuItem("Open Project..."))
+                {
+
+                }
+                if (ImGui::MenuItem("New Project..."))
+                {
+                    raiiManager.GetHedgeEditor()->CreateGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject", "TestProject");
+                }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Edit"))

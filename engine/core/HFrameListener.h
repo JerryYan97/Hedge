@@ -1,5 +1,6 @@
 #pragma once
 #include "../logging/HLogger.h"
+#include "HSerializer.h"
 #include "HEvent.h"
 
 namespace Hedge
@@ -20,6 +21,7 @@ namespace Hedge
         virtual void AppStarts() = 0;
 
         HEventManager& GetEventManager() { return m_eventManager; }
+        HSerializer& GetSerializer() { return m_serializer; }
 
     protected:
         // The app needs to registers all custom classes to the serializer if it wants to their instances into the
@@ -30,5 +32,6 @@ namespace Hedge
 
     private:
         HEventManager m_eventManager;
+        HSerializer   m_serializer;
     };
 }

@@ -19,7 +19,10 @@ namespace Hedge
 
         void BuildGame(const char* pPathFileName);
 
-        void CreateGameProject(const char* pPath) {};
+        // Put current scene into the target folder
+        void CreateGameProject(const std::string& rootDir, const std::string& projName);
+
+        void OpenGameProject(const std::string& pathName);
 
         void Run();
 
@@ -29,9 +32,15 @@ namespace Hedge
 
         virtual HScene& GetActiveScene() override;
 
+    protected:
+        virtual void RegisterCustomSerializeClass() override {};
+
     private:
         std::vector<HScene*> m_pScenes;
         uint32_t             m_activeScene;
+        std::string          m_projFilePath;
+        std::string          m_rootDir;
+        std::string          m_projName;
     };
 
     class GlobalVariablesRAIIManager

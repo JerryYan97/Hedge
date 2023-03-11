@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include "yaml-cpp/yaml.h"
 
 namespace Hedge
 {
@@ -13,7 +14,7 @@ namespace Hedge
     };
 }
 
-typedef void (*PFN_CLASSREG)(Hedge::HedgeSerializeData data);
+typedef void (*PFN_CLASSREG)(YAML::Node& node);
 
 namespace Hedge
 {
@@ -25,7 +26,7 @@ namespace Hedge
         HSerializer();
         ~HSerializer();
 
-        void RegisterClass(uint32_t nameHash, PFN_CLASSREG pFunc);
+        void RegisterAClass(uint32_t nameHash, PFN_CLASSREG pFunc);
         void SerializeScene(std::string& yamlNamePath, HScene& scene);
         void DeserializeYamlToScene(std::string& yamlNamePath, HScene& scene);
 

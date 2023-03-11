@@ -20,6 +20,8 @@ Then, we would
 
 Nope. Unreal must has a project before hand. So, we woundn't consider the case that we don't have a project.
 
+Project and scene configuration files use the yaml format and they are not same. The project configuration yaml file wouldn't be copied to the final packaged game and the scene configuration file would be copied to the final packaged game for deserializing/serializing scene information into the RAM.
+
 ## MISC notes
 
 WindowsOS Directory path dialog:
@@ -31,3 +33,4 @@ https://www.codeproject.com/Articles/2604/Browse-Folder-dialog-search-folder-and
 
 1. Computer Systems A Programmer's Perspective 3rd Edition Section 7
 2. [Hazel Game Engine Dev Log Videos](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT)
+3. [YAML CPP](https://github.com/jbeder/yaml-cpp)

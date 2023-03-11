@@ -3,6 +3,11 @@
 #include <string>
 #include "UtilMath.h"
 
+namespace YAML
+{
+    class Node;
+}
+
 namespace Hedge
 {
     class HScene;
@@ -51,6 +56,7 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
         
+        static void Deseralize(YAML::Node& node);
     };
 
     class HCameraEntity : public HEntity
@@ -64,6 +70,8 @@ namespace Hedge
 
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent);
+
+        static void Deseralize(YAML::Node& node);
 
     private:
         void OnMouseMiddleButtonEvent(HEvent& ievent);
@@ -88,6 +96,7 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
 
+        static void Deseralize(YAML::Node& node);
     private:
     };
 }
