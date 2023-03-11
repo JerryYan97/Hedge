@@ -13,6 +13,7 @@ void main(int argc, char** argv)
     std::cout << "Hello From Hedge Engine!" << std::endl;
 
     g_pFrameListener->AppStarts();
+    g_pFrameListener->RegisterSerializeClass();
 
     while (g_pRenderManager->WindowShouldClose() == false)
     {

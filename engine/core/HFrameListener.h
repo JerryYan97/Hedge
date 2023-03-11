@@ -12,6 +12,8 @@ namespace Hedge
         HFrameListener();
         virtual ~HFrameListener();
 
+        // All types of classes that can be stored into the scene need to be registered to a jump table.
+        void RegisterSerializeClass();
         virtual void FrameStarted() = 0;
         virtual void FrameEnded()   = 0;
         virtual HScene& GetActiveScene() = 0;
@@ -20,6 +22,10 @@ namespace Hedge
         HEventManager& GetEventManager() { return m_eventManager; }
 
     protected:
+        // The app needs to registers all custom classes to the serializer if it wants to their instances into the
+        // scene chunk file.
+        virtual void RegisterCustomSerializeClass() = 0;
+
         Hedge::HLogger m_logger;
 
     private:

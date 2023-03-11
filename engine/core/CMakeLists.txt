@@ -10,4 +10,6 @@ target_sources(
     HGpuRsrcManager.h
     HEvent.h
     HEvent.cpp
+    HSerializer.h
+    HSerializer.cpp
 )

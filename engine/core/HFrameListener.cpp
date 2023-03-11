@@ -10,4 +10,13 @@ namespace Hedge
     // ================================================================================================================
     HFrameListener::~HFrameListener()
     {}
+
+    // ================================================================================================================
+    void HFrameListener::RegisterSerializeClass()
+    {
+        // Register all engine classes
+
+        // Register custom classes
+        RegisterCustomSerializeClass();
+    }
 }
