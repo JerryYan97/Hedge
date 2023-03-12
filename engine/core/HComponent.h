@@ -40,23 +40,29 @@ namespace Hedge
             uint32_t* pIdx,
             float*    pVert,
             uint32_t  idxCnt,
-            uint32_t  vertBufBytes)
+            uint32_t  vertBufBytes,
+            std::string meshAssetPathName,
+            bool      preBuiltMesh)
             : m_pIdx(pIdx),
               m_pVert(pVert),
               m_idxCnt(idxCnt),
-              m_vertBufBytes(vertBufBytes)
+              m_vertBufBytes(vertBufBytes),
+              m_preBuiltMesh(preBuiltMesh),
+              m_meshAssetPathName(meshAssetPathName)
         {}
 
         ~StaticMeshComponent()
         {}
 
-        static void Seralize(YAML::Emitter& emitter);
-        static void Deseralize(YAML::Node& node) {};
+        void Seralize(YAML::Emitter& emitter);
+        void Deseralize(YAML::Node& node) {};
 
         uint32_t* m_pIdx  = nullptr;
         float*    m_pVert = nullptr;
         uint32_t  m_vertBufBytes;
         uint32_t  m_idxCnt;
+        bool      m_preBuiltMesh;
+        std::string m_meshAssetPathName;
     };
 
     class CameraComponent
@@ -79,8 +85,8 @@ namespace Hedge
             m_aspect = aspect;
         }
 
-        static void Seralize(YAML::Emitter& emitter);
-        static void Deseralize(YAML::Node& node) {};
+        void Seralize(YAML::Emitter& emitter);
+        void Deseralize(YAML::Node& node) {};
 
         float m_view[3];
         float m_up[3];
@@ -100,8 +106,8 @@ namespace Hedge
             memcpy(m_color, pColor, 3 * sizeof(float));
         }
 
-        static void Seralize(YAML::Emitter& emitter) {};
-        static void Deseralize(YAML::Node& node) {};
+        void Seralize(YAML::Emitter& emitter) {};
+        void Deseralize(YAML::Node& node) {};
 
         float m_color[3];
     };

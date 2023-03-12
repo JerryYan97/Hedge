@@ -190,7 +190,8 @@ f 5/12/6 1/3/6 2/9/6");
         AddComponent<StaticMeshComponent>(CubeIdxData,
                                           CubeVertBufData,
                                           uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t)),
-                                          uint32_t(sizeof(CubeVertBufData)));
+                                          uint32_t(sizeof(CubeVertBufData)),
+                                          "Cube", true);
     }
 
     // ================================================================================================================
@@ -216,6 +217,8 @@ f 5/12/6 1/3/6 2/9/6");
         transComponent.Seralize(emitter);
 
         // Static Mesh Component
+        StaticMeshComponent& meshComponent = pCubeEntity->GetComponent<StaticMeshComponent>();
+        meshComponent.Seralize(emitter);
 
         emitter << YAML::EndSeq;
         emitter << YAML::EndMap;

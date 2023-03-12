@@ -7,6 +7,10 @@ namespace Hedge
     void TransformComponent::Seralize(
         YAML::Emitter& emitter)
     {
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "TransformComponent";
+        emitter << YAML::Value;
+        emitter << YAML::BeginSeq;
 
         emitter << YAML::BeginMap;
         emitter << YAML::Key << "POS";
@@ -27,6 +31,9 @@ namespace Hedge
         emitter << YAML::Flow;
         emitter << YAML::BeginSeq << m_scale[0] << m_scale[1] << m_scale[2] << YAML::EndSeq;
         emitter << YAML::EndMap;
+
+        emitter << YAML::EndSeq;
+        emitter << YAML::EndMap;
     }
 
     // ================================================================================================================
@@ -34,6 +41,43 @@ namespace Hedge
         YAML::Emitter& emitter)
     {
         emitter << YAML::BeginMap;
+        emitter << YAML::Key << "StaticMeshComponent";
+        emitter << YAML::Value;
+        emitter << YAML::BeginSeq;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Is Prebuilt";
+        emitter << YAML::Value << m_preBuiltMesh;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::BeginMap;
+        if (m_preBuiltMesh)
+        {
+            emitter << YAML::Key << "Prebuilt Mesh Name";
+        }
+        else
+        {
+            emitter << YAML::Key << "Mesh Asset Name Path";
+        }
+        emitter << YAML::Value << m_meshAssetPathName;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::EndSeq;
+        emitter << YAML::EndMap;
+    }
+
+    // ================================================================================================================
+    void CameraComponent::Seralize(
+        YAML::Emitter& emitter)
+    {
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "CameraComponent";
+        emitter << YAML::Value;
+        emitter << YAML::BeginSeq;
+
+
+
+        emitter << YAML::EndSeq;
         emitter << YAML::EndMap;
     }
 }
