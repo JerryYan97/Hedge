@@ -106,12 +106,18 @@ namespace Hedge
 
         for (auto itr : m_idxRendererGpuRsrcs)
         {
-            m_pGpuRsrcManager->DestroyGpuResource(itr);
+            if (itr.m_pAlloc != nullptr && itr.m_pBuffer != nullptr)
+            {
+                m_pGpuRsrcManager->DestroyGpuResource(itr);
+            }
         }
         
         for (auto itr : m_vertRendererGpuRsrcs)
         {
-            m_pGpuRsrcManager->DestroyGpuResource(itr);
+            if (itr.m_pAlloc != nullptr && itr.m_pBuffer != nullptr)
+            {
+                m_pGpuRsrcManager->DestroyGpuResource(itr);
+            }
         }
 
         vkDestroyRenderPass(*pVkDevice, m_renderPass, nullptr);
@@ -198,32 +204,6 @@ namespace Hedge
     {
         SceneRenderInfo renderInfo = scene.GetSceneRenderInfo();
 
-        if (m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
-            m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
-        {
-            m_pGpuRsrcManager->DestroyGpuResource(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx]);
-        }
-
-        if (m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
-            m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
-        {
-            m_pGpuRsrcManager->DestroyGpuResource(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx]);
-        }
-        
-        m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, renderInfo.m_vertBufBytes);
-        m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-            m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * renderInfo.m_idxNum);
-
-        // Send vertex and index data to gpu buffers
-        m_pGpuRsrcManager->SendDataToBuffer(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                                            renderInfo.m_pVert,
-                                            renderInfo.m_vertBufBytes);
-
-        m_pGpuRsrcManager->SendDataToBuffer(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                                            renderInfo.m_pIdx,
-                                            renderInfo.m_idxNum * sizeof(uint32_t));
-
         // Fill the command buffer
         VkCommandBufferBeginInfo beginInfo{};
         {
@@ -231,15 +211,52 @@ namespace Hedge
         }
         VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
 
-        VkExtent2D renderImgExtent = m_pGuiManager->GetRenderExtent();
-        m_pRenderImgViews[m_curSwapchainFrameIdx] = m_pRenderers[m_activeRendererIdx]->Render(
-                                                  m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 
-                                                  m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx], 
-                                                  m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                                                  renderImgExtent,
-                                                  m_curSwapchainFrameIdx,
-                                                  renderInfo);
-        m_renderImgsExtents[m_curSwapchainFrameIdx] = renderImgExtent;
+        if (scene.IsEmpty() == false)
+        {
+            if (m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
+                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
+            {
+                m_pGpuRsrcManager->DestroyGpuResource(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx]);
+                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc = nullptr;
+                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer = nullptr;
+            }
+
+            if (m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
+                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
+            {
+                m_pGpuRsrcManager->DestroyGpuResource(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx]);
+                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc = nullptr;
+                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer = nullptr;
+            }
+
+            if (renderInfo.m_vertBufBytes != 0 && renderInfo.m_idxNum != 0)
+            {
+                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx] =
+                    m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, renderInfo.m_vertBufBytes);
+                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx] =
+                    m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * renderInfo.m_idxNum);
+
+
+                // Send vertex and index data to gpu buffers
+                m_pGpuRsrcManager->SendDataToBuffer(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
+                    renderInfo.m_pVert,
+                    renderInfo.m_vertBufBytes);
+
+                m_pGpuRsrcManager->SendDataToBuffer(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
+                    renderInfo.m_pIdx,
+                    renderInfo.m_idxNum * sizeof(uint32_t));
+
+                VkExtent2D renderImgExtent = m_pGuiManager->GetRenderExtent();
+                m_pRenderImgViews[m_curSwapchainFrameIdx] = m_pRenderers[m_activeRendererIdx]->Render(
+                    m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx],
+                    m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
+                    m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
+                    renderImgExtent,
+                    m_curSwapchainFrameIdx,
+                    renderInfo);
+                m_renderImgsExtents[m_curSwapchainFrameIdx] = renderImgExtent;
+            }
+        }
     }
 
     // ================================================================================================================

@@ -40,6 +40,8 @@ namespace Hedge
         SceneRenderInfo GetSceneRenderInfo();
 
         std::unordered_map<uint32_t, HEntity*>& GetEntityHashTable() { return m_entitiesHashTable; }
+
+        bool IsEmpty() { return m_entitiesHashTable.empty(); }
         
     private:
         entt::registry m_registry;
