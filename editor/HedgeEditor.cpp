@@ -97,6 +97,26 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HedgeEditor::OpenGameProject(
+        const std::string& pathName)
+    {
+        // Close the current project
+        for (auto itr : m_pScenes)
+        {
+            delete itr;
+        }
+        m_pScenes.clear();
+
+        // Deseriazlie the target project
+
+
+        // Load in the active scene
+        HScene* pTmpScene = new HScene();
+        GetSerializer().DeserializeYamlToScene(pathName, *pTmpScene, GetEventManager());
+        m_pScenes.push_back(pTmpScene);
+    }
+
+    // ================================================================================================================
     HScene& HedgeEditor::GetActiveScene()
     {
         return *m_pScenes[m_activeScene];

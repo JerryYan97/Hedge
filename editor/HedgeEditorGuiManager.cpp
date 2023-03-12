@@ -54,7 +54,7 @@ namespace Hedge
             {
                 if (ImGui::MenuItem("Open Project..."))
                 {
-
+                    raiiManager.GetHedgeEditor()->OpenGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject\\scene\\testScene.yml");
                 }
                 if (ImGui::MenuItem("New Project..."))
                 {

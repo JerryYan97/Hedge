@@ -17,7 +17,7 @@ namespace Hedge
 }
 
 typedef void (*PFN_SERIALIZE)(YAML::Emitter& emitter, Hedge::HEntity* pThis);
-typedef void (*PFN_DESERIALIZE)(YAML::Node& node, Hedge::HEntity* pThis);
+typedef Hedge::HEntity* (*PFN_DESERIALIZE)(YAML::Node& node, const std::string& name);
 
 struct RegisterClassInfo
 {
@@ -28,6 +28,7 @@ struct RegisterClassInfo
 namespace Hedge
 {
     class HScene;
+    class HEventManager;
 
     class HSerializer
     {
@@ -37,7 +38,7 @@ namespace Hedge
 
         void RegisterAClass(uint32_t nameHash, RegisterClassInfo regInfo);
         void SerializeScene(std::string& yamlNamePath, HScene& scene);
-        void DeserializeYamlToScene(std::string& yamlNamePath, HScene& scene);
+        void DeserializeYamlToScene(const std::string& yamlNamePath, HScene& scene, HEventManager& eventManager);
 
     protected:
 

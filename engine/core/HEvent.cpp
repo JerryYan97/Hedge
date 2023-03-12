@@ -45,7 +45,10 @@ namespace Hedge
             std::list<uint32_t>& list = m_eventListenerMap[hEvent.GetEventType()];
             for (auto& itr : list)
             {
-                pScene->GetEntity(itr)->OnEvent(hEvent);
+                if (pScene->GetEntity(itr))
+                {
+                    pScene->GetEntity(itr)->OnEvent(hEvent);
+                }
             }
         }
     }

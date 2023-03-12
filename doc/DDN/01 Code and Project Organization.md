@@ -22,6 +22,8 @@ Nope. Unreal must has a project before hand. So, we woundn't consider the case t
 
 Project and scene configuration files use the yaml format and they are not same. The project configuration yaml file wouldn't be copied to the final packaged game and the scene configuration file would be copied to the final packaged game for deserializing/serializing scene information into the RAM.
 
+NOTE: YAML's map is strictly same as the c++'s map concept, which can contain lots of entries instead of just one mapping. So, if the name matters, we need to use the map.
+
 ## MISC notes
 
 WindowsOS Directory path dialog:
