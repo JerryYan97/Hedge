@@ -1,11 +1,19 @@
 #pragma once
 #include <cstdint>
+#include <string>
+
+namespace YAML
+{
+    class Node;
+    class Emitter;
+}
 
 namespace Hedge
 {
     // x -- pitch, y -- head, z -- roll; m_rot[pitch, head, roll].
-    struct TransformComponent
+    class TransformComponent
     {
+    public:
         TransformComponent(
             float* pPos, 
             float* pRot, 
@@ -15,14 +23,19 @@ namespace Hedge
             memcpy(m_rot, pRot, 3 * sizeof(float));
             memcpy(m_scale, pScale, 3 * sizeof(float));
         }
+
+        void Seralize(YAML::Emitter& emitter);
+        static void Deseralize(YAML::Node& node) {};
+
         float m_pos[3];
         float m_rot[3];
         float m_scale[3];
     };
 
     // NOTE: Static is not responsible for vertex or index delete.
-    struct StaticMeshComponent
+    class StaticMeshComponent
     {
+    public:
         StaticMeshComponent(
             uint32_t* pIdx,
             float*    pVert,
@@ -37,14 +50,18 @@ namespace Hedge
         ~StaticMeshComponent()
         {}
 
+        static void Seralize(YAML::Emitter& emitter);
+        static void Deseralize(YAML::Node& node) {};
+
         uint32_t* m_pIdx  = nullptr;
         float*    m_pVert = nullptr;
         uint32_t  m_vertBufBytes;
         uint32_t  m_idxCnt;
     };
 
-    struct CameraComponent
+    class CameraComponent
     {
+    public:
         CameraComponent(
             float* pView,
             float* pUp,
@@ -62,6 +79,9 @@ namespace Hedge
             m_aspect = aspect;
         }
 
+        static void Seralize(YAML::Emitter& emitter);
+        static void Deseralize(YAML::Node& node) {};
+
         float m_view[3];
         float m_up[3];
         float m_fov;
@@ -71,13 +91,17 @@ namespace Hedge
         bool  m_active;
     };
 
-    struct PointLightComponent
+    class PointLightComponent
     {
+    public:
         PointLightComponent(
             float* pColor)
         {
             memcpy(m_color, pColor, 3 * sizeof(float));
         }
+
+        static void Seralize(YAML::Emitter& emitter) {};
+        static void Deseralize(YAML::Node& node) {};
 
         float m_color[3];
     };

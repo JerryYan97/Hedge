@@ -194,13 +194,30 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
+    // TODO: Component needs to be class and has its own serialize and deserialize operations.
     void HCubeEntity::Seralize(
         YAML::Emitter& emitter,
         Hedge::HEntity* pThis)
     {
+        HCubeEntity* pCubeEntity = dynamic_cast<HCubeEntity*>(pThis);
+
         emitter << YAML::BeginMap;
-        emitter << YAML::Key << "Object Name";
-        emitter << YAML::Value << pThis->GetEntityInstName();
+        emitter << YAML::Key << pCubeEntity->GetEntityInstName();
+        emitter << YAML::Value << YAML::BeginSeq;
+
+        // Entity Type
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Type";
+        emitter << YAML::Value << "HCubeEntity";
+        emitter << YAML::EndMap;
+
+        // Transform Component
+        TransformComponent& transComponent = pCubeEntity->GetComponent<TransformComponent>();
+        transComponent.Seralize(emitter);
+
+        // Static Mesh Component
+
+        emitter << YAML::EndSeq;
         emitter << YAML::EndMap;
     }
 
@@ -408,9 +425,25 @@ f 5/12/6 1/3/6 2/9/6");
         YAML::Emitter& emitter,
         Hedge::HEntity* pThis)
     {
+        HCameraEntity* pCameraEntity = dynamic_cast<HCameraEntity*>(pThis);
+
         emitter << YAML::BeginMap;
-        emitter << YAML::Key << "Object Name";
-        emitter << YAML::Value << pThis->GetEntityInstName();
+        emitter << YAML::Key << pCameraEntity->GetEntityInstName();
+        emitter << YAML::Value << YAML::BeginSeq;
+
+        // Entity Type
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Type";
+        emitter << YAML::Value << "HCameraEntity";
+        emitter << YAML::EndMap;
+
+        // Transform Component
+        TransformComponent& transComponent = pCameraEntity->GetComponent<TransformComponent>();
+        transComponent.Seralize(emitter);
+
+        // Camera Component
+
+        emitter << YAML::EndSeq;
         emitter << YAML::EndMap;
     }
 
@@ -426,9 +459,23 @@ f 5/12/6 1/3/6 2/9/6");
         YAML::Emitter& emitter,
         Hedge::HEntity* pThis)
     {
+        HPointLightEntity* pPtLightEntity = dynamic_cast<HPointLightEntity*>(pThis);
+
         emitter << YAML::BeginMap;
-        emitter << YAML::Key << "Object Name";
-        emitter << YAML::Value << pThis->GetEntityInstName();
+        emitter << YAML::Key << pPtLightEntity->GetEntityInstName();
+        emitter << YAML::Value << YAML::BeginSeq;
+
+        // Entity Type
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Type";
+        emitter << YAML::Value << "HPointLightEntity";
+        emitter << YAML::EndMap;
+
+        // Transform Component
+        TransformComponent& transComponent = pPtLightEntity->GetComponent<TransformComponent>();
+        transComponent.Seralize(emitter);
+
+        emitter << YAML::EndSeq;
         emitter << YAML::EndMap;
     }
 
