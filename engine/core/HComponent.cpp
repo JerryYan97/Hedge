@@ -75,7 +75,44 @@ namespace Hedge
         emitter << YAML::Value;
         emitter << YAML::BeginSeq;
 
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "View";
+        emitter << YAML::Value;
+        emitter << YAML::Flow;
+        emitter << YAML::BeginSeq << m_view[0] << m_view[1] << m_view[2] << YAML::EndSeq;
+        emitter << YAML::EndMap;
 
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Up";
+        emitter << YAML::Value;
+        emitter << YAML::Flow;
+        emitter << YAML::BeginSeq << m_up[0] << m_up[1] << m_up[2] << YAML::EndSeq;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "fov";
+        emitter << YAML::Value << m_fov;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "aspect";
+        emitter << YAML::Value << m_aspect;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "far";
+        emitter << YAML::Value << m_far;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "near";
+        emitter << YAML::Value << m_near;
+        emitter << YAML::EndMap;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "isActive";
+        emitter << YAML::Value << m_active;
+        emitter << YAML::EndMap;
 
         emitter << YAML::EndSeq;
         emitter << YAML::EndMap;

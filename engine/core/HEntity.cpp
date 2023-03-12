@@ -445,6 +445,8 @@ f 5/12/6 1/3/6 2/9/6");
         transComponent.Seralize(emitter);
 
         // Camera Component
+        CameraComponent& camComponent = pCameraEntity->GetComponent<CameraComponent>();
+        camComponent.Seralize(emitter);
 
         emitter << YAML::EndSeq;
         emitter << YAML::EndMap;
