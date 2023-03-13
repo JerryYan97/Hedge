@@ -40,6 +40,7 @@ namespace Hedge
         sceneYmlEmitter << YAML::BeginMap;
         sceneYmlEmitter << YAML::Key << "Scene Entities";
         sceneYmlEmitter << YAML::Value;
+        sceneYmlEmitter << YAML::BeginMap;
 
         std::unordered_map<uint32_t, HEntity*>& entitiesHashTbl = scene.GetEntityHashTable();
         for (auto& itr : entitiesHashTbl)
@@ -49,6 +50,7 @@ namespace Hedge
             info.pfnSerialize(sceneYmlEmitter, pEntity);
         }
 
+        sceneYmlEmitter << YAML::EndMap;
         sceneYmlEmitter << YAML::EndMap;
     }
 

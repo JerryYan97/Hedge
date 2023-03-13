@@ -202,7 +202,6 @@ f 5/12/6 1/3/6 2/9/6");
     {
         HCubeEntity* pCubeEntity = dynamic_cast<HCubeEntity*>(pThis);
 
-        emitter << YAML::BeginMap;
         emitter << YAML::Key << pCubeEntity->GetEntityInstName();
         emitter << YAML::Value;
 
@@ -212,9 +211,9 @@ f 5/12/6 1/3/6 2/9/6");
             emitter << YAML::Key << "Type";
             emitter << YAML::Value << "HCubeEntity";
             emitter << YAML::Key << "Components";
-            emitter << YAML::Value << YAML::BeginSeq;
-
+            emitter << YAML::Value;
             {
+                emitter << YAML::BeginMap;
                 // Transform Component
                 TransformComponent& transComponent = pCubeEntity->GetComponent<TransformComponent>();
                 transComponent.Seralize(emitter);
@@ -222,13 +221,10 @@ f 5/12/6 1/3/6 2/9/6");
                 // Static Mesh Component
                 StaticMeshComponent& meshComponent = pCubeEntity->GetComponent<StaticMeshComponent>();
                 meshComponent.Seralize(emitter);
+                emitter << YAML::EndMap;
             }
-
-            emitter << YAML::EndSeq;
             emitter << YAML::EndMap;
         }
-
-        emitter << YAML::EndMap;
     }
 
     // ================================================================================================================
@@ -236,7 +232,35 @@ f 5/12/6 1/3/6 2/9/6");
         YAML::Node& node,
         const std::string& name)
     {
-        return nullptr;
+        HCubeEntity* pReturnEntity = new HCubeEntity();
+
+        // Transform Component
+        YAML::Node& transComponent = node["TransformComponent"];
+        std::vector<float> pos = transComponent["POS"].as<std::vector<float>>();
+        std::vector<float> rot = transComponent["ROT"].as<std::vector<float>>();
+        std::vector<float> scale = transComponent["SCALE"].as<std::vector<float>>();
+
+        pReturnEntity->AddComponent<TransformComponent>(pos.data(), rot.data(), scale.data());
+
+        // Static Mesh Component
+        YAML::Node& meshComponent = node["StaticMeshComponent"];
+        bool isPrebuiltMesh = meshComponent["Is Prebuilt"].as<bool>();
+
+        if (isPrebuiltMesh)
+        {
+            // TODO: We may want to make a jump table for the prebuilt meshes.
+            std::string meshName = meshComponent["Prebuilt Mesh Name"].as<std::string>();
+            if (std::strcmp(meshName.c_str(), "Cube"))
+            {
+                pReturnEntity->AddComponent<StaticMeshComponent>(CubeIdxData,
+                    CubeVertBufData,
+                    uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t)),
+                    uint32_t(sizeof(CubeVertBufData)),
+                    "Cube", true);
+            }
+        }
+
+        return pReturnEntity;
     }
 
     // ================================================================================================================
@@ -444,8 +468,7 @@ f 5/12/6 1/3/6 2/9/6");
         Hedge::HEntity* pThis)
     {
         HCameraEntity* pCameraEntity = dynamic_cast<HCameraEntity*>(pThis);
-
-        emitter << YAML::BeginMap;
+        
         emitter << YAML::Key << pCameraEntity->GetEntityInstName();
         emitter << YAML::Value;
 
@@ -455,8 +478,9 @@ f 5/12/6 1/3/6 2/9/6");
             emitter << YAML::Key << "Type";
             emitter << YAML::Value << "HCameraEntity";
             emitter << YAML::Key << "Components";
-            emitter << YAML::Value << YAML::BeginSeq;
+            emitter << YAML::Value;
             {
+                emitter << YAML::BeginMap;
                 // Transform Component
                 TransformComponent& transComponent = pCameraEntity->GetComponent<TransformComponent>();
                 transComponent.Seralize(emitter);
@@ -464,12 +488,10 @@ f 5/12/6 1/3/6 2/9/6");
                 // Camera Component
                 CameraComponent& camComponent = pCameraEntity->GetComponent<CameraComponent>();
                 camComponent.Seralize(emitter);
+                emitter << YAML::EndMap;
             }
-            emitter << YAML::EndSeq;
             emitter << YAML::EndMap;
         }
-
-        emitter << YAML::EndMap;
     }
 
     // ================================================================================================================
@@ -494,23 +516,25 @@ f 5/12/6 1/3/6 2/9/6");
     {
         HPointLightEntity* pPtLightEntity = dynamic_cast<HPointLightEntity*>(pThis);
 
-        emitter << YAML::BeginMap;
         emitter << YAML::Key << pPtLightEntity->GetEntityInstName();
         emitter << YAML::Value;
 
-        // Entity Type
-        emitter << YAML::BeginMap;
-        emitter << YAML::Key << "Type";
-        emitter << YAML::Value << "HPointLightEntity";
-        emitter << YAML::Key << "Components";
-        emitter << YAML::Value << YAML::BeginSeq;
-        emitter << YAML::EndMap;
-
-        // Transform Component
-        TransformComponent& transComponent = pPtLightEntity->GetComponent<TransformComponent>();
-        transComponent.Seralize(emitter);
-
-        emitter << YAML::EndMap;
+        {
+            // Entity Type
+            emitter << YAML::BeginMap;
+            emitter << YAML::Key << "Type";
+            emitter << YAML::Value << "HPointLightEntity";
+            emitter << YAML::Key << "Components";
+            emitter << YAML::Value;
+            {
+                emitter << YAML::BeginMap;
+                // Transform Component
+                TransformComponent& transComponent = pPtLightEntity->GetComponent<TransformComponent>();
+                transComponent.Seralize(emitter);
+                emitter << YAML::EndMap;
+            }            
+            emitter << YAML::EndMap;
+        }
     }
 
     // ================================================================================================================
