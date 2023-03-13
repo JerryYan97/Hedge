@@ -17,12 +17,14 @@ namespace Hedge
 }
 
 typedef void (*PFN_SERIALIZE)(YAML::Emitter& emitter, Hedge::HEntity* pThis);
-typedef Hedge::HEntity* (*PFN_DESERIALIZE)(YAML::Node& node, const std::string& name);
+typedef void (*PFN_DESERIALIZE)(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
+typedef Hedge::HEntity* (*PFN_NEWENTITY)();
 
 struct RegisterClassInfo
 {
     PFN_SERIALIZE pfnSerialize;
     PFN_DESERIALIZE pfnDeserialize;
+    PFN_NEWENTITY pfnNewEntity;
 };
 
 namespace Hedge

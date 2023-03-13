@@ -17,7 +17,7 @@ namespace Hedge
     void HFrameListener::RegisterSerializeClass()
     {
         // Register all engine entity classes
-        m_serializer.RegisterAClass(crc32("HCubeEntity"), { HCubeEntity::Seralize, HCubeEntity::Deseralize });
+        m_serializer.RegisterAClass(crc32("HCubeEntity"), { HCubeEntity::Seralize, HCubeEntity::Deseralize, HCubeEntity::CreateEntity });
         m_serializer.RegisterAClass(crc32("HCameraEntity"), { HCameraEntity::Seralize, HCameraEntity::Deseralize });
         m_serializer.RegisterAClass(crc32("HPointLightEntity"),
                                     { HPointLightEntity::Seralize, HPointLightEntity::Deseralize });

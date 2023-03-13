@@ -62,8 +62,6 @@ namespace Hedge
     {
         YAML::Node config = YAML::LoadFile(yamlNamePath.c_str());
 
-        bool isMap = config["Scene Entities"].IsMap();
-
         std::map<std::string, YAML::Node> entities = config["Scene Entities"].as<std::map<std::string, YAML::Node>>();
 
         for (auto itr : entities)

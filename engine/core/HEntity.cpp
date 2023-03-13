@@ -228,11 +228,12 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
-    HEntity* HCubeEntity::Deseralize(
+    void HCubeEntity::Deseralize(
         YAML::Node& node,
-        const std::string& name)
+        const std::string& name,
+        Hedge::HEntity* pThis)
     {
-        HCubeEntity* pReturnEntity = new HCubeEntity();
+
 
         // Transform Component
         YAML::Node& transComponent = node["TransformComponent"];

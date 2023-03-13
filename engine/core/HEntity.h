@@ -62,8 +62,10 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
         
+        // Seralization
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
-        static HEntity* Deseralize(YAML::Node& node, const std::string& name);
+        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
+        static HEntity* CreateEntity() { return new HCubeEntity(); };
     };
 
     class HCameraEntity : public HEntity
@@ -79,8 +81,10 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent);
 
+        // Seralization
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
-        static HEntity* Deseralize(YAML::Node& node, const std::string& name);
+        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
+        static HEntity* CreateEntity() { return new HCameraEntity(); };
 
     private:
         void OnMouseMiddleButtonEvent(HEvent& ievent);
@@ -105,8 +109,10 @@ namespace Hedge
         virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
 
+        // Seralization
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
-        static HEntity* Deseralize(YAML::Node& node, const std::string& name);
+        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
+        static HEntity* CreateEntity() { return new HPointLightEntity(); };
 
     private:
     };
