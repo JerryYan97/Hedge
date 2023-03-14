@@ -56,10 +56,51 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    std::string HedgeEditor::GenGameCMakeFileStr()
+    {
+        std::string cmakeStr;
+
+
+
+        return cmakeStr;
+    }
+
+    // ================================================================================================================
     void HedgeEditor::BuildGame()
     {
         // std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
         // std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
+
+        // Save game config file
+        std::string gameConfigFileNamePath = m_rootDir + "\\gameConfig.yml";
+        std::ofstream gameConfigFileHandle(gameConfigFileNamePath.c_str());
+        YAML::Emitter ymlGameEmitter(gameConfigFileHandle);
+
+        ymlGameEmitter << YAML::BeginMap;
+        ymlGameEmitter << YAML::Key << "Game Name";
+        ymlGameEmitter << YAML::Value << m_gameName;
+        ymlGameEmitter << YAML::Key << "First Scene";
+        ymlGameEmitter << YAML::Value << "testScene.yml";
+        ymlGameEmitter << YAML::EndMap;
+
+        // Generate cmake file
+        std::string cmakeFileFolder = m_rootDir + "\\build";
+        CreateDirectoryA(cmakeFileFolder.c_str(), NULL);
+
+        std::string cmakeStr = GenGameCMakeFileStr();
+
+        std::string cmakeFilePathName = cmakeFileFolder + "\\CMakeLists.txt";
+        std::ofstream gameCMakeFileHandle(cmakeFilePathName);
+        
+
+        // Build game solution
+    }
+
+    // ================================================================================================================
+    void HedgeEditor::ReleaseGame(
+        const std::string& tarDir)
+    {
+
     }
 
     // ================================================================================================================
@@ -68,15 +109,15 @@ namespace Hedge
         const std::string& projName)
     {
         m_projName = projName;
-
-        // Save the project configuration:
         m_projFilePath = rootDir + "\\" + projName + ".yml";
-        std::ofstream projConfigFileHandle(m_projFilePath.c_str());
-        YAML::Emitter ymlProjEmitter(projConfigFileHandle);
 
         // Save the scene configuration:
         std::string scenePathName = rootDir + "\\scene\\testScene.yml";
         GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
+
+        // Save the project configuration:
+        std::ofstream projConfigFileHandle(m_projFilePath.c_str());
+        YAML::Emitter ymlProjEmitter(projConfigFileHandle);
 
         // MISC project config
         ymlProjEmitter << YAML::BeginMap;

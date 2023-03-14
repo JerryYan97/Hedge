@@ -26,7 +26,7 @@ namespace Hedge
         void BuildGame();
 
         // Copy and paste the game config file and game exe file to the target directory
-        void ReleaseGame(const std::string& tarDir) {}
+        void ReleaseGame(const std::string& tarDir);
 
         void Run();
 
@@ -40,6 +40,8 @@ namespace Hedge
         virtual void RegisterCustomSerializeClass() override {};
 
     private:
+        std::string GenGameCMakeFileStr();
+
         std::vector<HScene*> m_pScenes;
         uint32_t             m_activeScene;
         std::string          m_projFilePath;
