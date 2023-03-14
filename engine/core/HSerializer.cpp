@@ -70,8 +70,11 @@ namespace Hedge
             std::string entityType = itr.second["Type"].as<std::string>();
 
             RegisterClassInfo info = m_dict[crc32(entityType.c_str())];
-            HEntity* pEntity = info.pfnDeserialize(itr.second["Components"], entityName);
-            // scene.SpawnEntity(pEntity, eventManager);
+            HEntity* pEntity = info.pfnNewEntity();
+
+            scene.SpawnEntity(pEntity, eventManager);
+
+            info.pfnDeserialize(itr.second["Components"], entityName, pEntity);
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Hedge
         }
 
         void Seralize(YAML::Emitter& emitter);
-        static void Deseralize(YAML::Node& node) {};
+        void Deseralize(YAML::Node& node);
 
         float m_pos[3];
         float m_rot[3];
@@ -55,7 +55,7 @@ namespace Hedge
         {}
 
         void Seralize(YAML::Emitter& emitter);
-        void Deseralize(YAML::Node& node) {};
+        void Deseralize(YAML::Node& node);
 
         uint32_t* m_pIdx  = nullptr;
         float*    m_pVert = nullptr;
@@ -86,7 +86,7 @@ namespace Hedge
         }
 
         void Seralize(YAML::Emitter& emitter);
-        void Deseralize(YAML::Node& node) {};
+        void Deseralize(YAML::Node& node);
 
         float m_view[3];
         float m_up[3];

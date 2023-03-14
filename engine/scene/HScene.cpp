@@ -56,6 +56,7 @@ namespace Hedge
                         renderInfo.m_modelMat);
         }
 
+        // TODO: Need to have an active camera check.
         auto cameraEntityView = m_registry.view<CameraComponent>();
         for (auto entity : cameraEntityView)
         {

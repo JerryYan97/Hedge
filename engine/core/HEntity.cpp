@@ -233,35 +233,15 @@ f 5/12/6 1/3/6 2/9/6");
         const std::string& name,
         Hedge::HEntity* pThis)
     {
-
+        HCubeEntity* pCubeEntity = dynamic_cast<HCubeEntity*>(pThis);
 
         // Transform Component
-        YAML::Node& transComponent = node["TransformComponent"];
-        std::vector<float> pos = transComponent["POS"].as<std::vector<float>>();
-        std::vector<float> rot = transComponent["ROT"].as<std::vector<float>>();
-        std::vector<float> scale = transComponent["SCALE"].as<std::vector<float>>();
-
-        pReturnEntity->AddComponent<TransformComponent>(pos.data(), rot.data(), scale.data());
+        TransformComponent& transComponent = pCubeEntity->GetComponent<TransformComponent>();
+        transComponent.Deseralize(node["TransformComponent"]);
 
         // Static Mesh Component
-        YAML::Node& meshComponent = node["StaticMeshComponent"];
-        bool isPrebuiltMesh = meshComponent["Is Prebuilt"].as<bool>();
-
-        if (isPrebuiltMesh)
-        {
-            // TODO: We may want to make a jump table for the prebuilt meshes.
-            std::string meshName = meshComponent["Prebuilt Mesh Name"].as<std::string>();
-            if (std::strcmp(meshName.c_str(), "Cube"))
-            {
-                pReturnEntity->AddComponent<StaticMeshComponent>(CubeIdxData,
-                    CubeVertBufData,
-                    uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t)),
-                    uint32_t(sizeof(CubeVertBufData)),
-                    "Cube", true);
-            }
-        }
-
-        return pReturnEntity;
+        StaticMeshComponent& meshComponent = pCubeEntity->GetComponent<StaticMeshComponent>();
+        meshComponent.Deseralize(node["StaticMeshComponent"]);
     }
 
     // ================================================================================================================
@@ -496,11 +476,20 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
-    HEntity* HCameraEntity::Deseralize(
+    void HCameraEntity::Deseralize(
         YAML::Node& node,
-        const std::string& name)
+        const std::string& name,
+        Hedge::HEntity* pThis)
     {
-        return nullptr;
+        HCameraEntity* pCameraEntity = dynamic_cast<HCameraEntity*>(pThis);
+
+        // Transform Component
+        auto& transComponent = pCameraEntity->GetComponent<TransformComponent>();
+        transComponent.Deseralize(node["TransformComponent"]);
+
+        // Camera Component
+        auto& camComponent = pCameraEntity->GetComponent<CameraComponent>();
+        camComponent.Deseralize(node["CameraComponent"]);
     }
 
     // ================================================================================================================
@@ -539,10 +528,17 @@ f 5/12/6 1/3/6 2/9/6");
     }
 
     // ================================================================================================================
-    HEntity* HPointLightEntity::Deseralize(
+    void HPointLightEntity::Deseralize(
         YAML::Node& node,
-        const std::string& name)
+        const std::string& name,
+        Hedge::HEntity* pThis)
     {
-        return nullptr;
+        HPointLightEntity* pPtLightEntity = dynamic_cast<HPointLightEntity*>(pThis);
+
+        // Transform Component
+        auto& transComponent = pPtLightEntity->GetComponent<TransformComponent>();
+        transComponent.Deseralize(node["TransformComponent"]);
+
+        // Point light Component
     }
 }
