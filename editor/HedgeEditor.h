@@ -17,12 +17,16 @@ namespace Hedge
         HedgeEditor();
         virtual ~HedgeEditor();
 
-        void BuildGame(const char* pPathFileName);
-
         // Put current scene into the target folder
         void CreateGameProject(const std::string& rootDir, const std::string& projName);
 
         void OpenGameProject(const std::string& pathName);
+
+        // Generate cmake file, game config file and solution file
+        void BuildGame();
+
+        // Copy and paste the game config file and game exe file to the target directory
+        void ReleaseGame(const std::string& tarDir) {}
 
         void Run();
 
@@ -41,6 +45,7 @@ namespace Hedge
         std::string          m_projFilePath;
         std::string          m_rootDir;
         std::string          m_projName;
+        std::string          m_gameName;
     };
 
     class GlobalVariablesRAIIManager

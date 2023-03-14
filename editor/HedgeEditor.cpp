@@ -2,6 +2,7 @@
 #include "render/HRenderManager.h"
 #include "scene/HScene.h"
 #include "core/HEntity.h"
+#include "Utils.h"
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
@@ -55,11 +56,10 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HedgeEditor::BuildGame(
-        const char* pPathFileName)
+    void HedgeEditor::BuildGame()
     {
-        std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
-        std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
+        // std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
+        // std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
     }
 
     // ================================================================================================================
@@ -73,6 +73,10 @@ namespace Hedge
         m_projFilePath = rootDir + "\\" + projName + ".yml";
         std::ofstream projConfigFileHandle(m_projFilePath.c_str());
         YAML::Emitter ymlProjEmitter(projConfigFileHandle);
+
+        // Save the scene configuration:
+        std::string scenePathName = rootDir + "\\scene\\testScene.yml";
+        GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
 
         // MISC project config
         ymlProjEmitter << YAML::BeginMap;
@@ -89,11 +93,11 @@ namespace Hedge
         ymlProjEmitter << YAML::Key << "Game Name";
         ymlProjEmitter << YAML::Value << "TestGame";
 
-        ymlProjEmitter << YAML::EndMap;
+        // First scene
+        ymlProjEmitter << YAML::Key << "First Scene";
+        ymlProjEmitter << YAML::Value << "testScene.yml";
 
-        // Save the scene configuration:
-        std::string scenePathName = rootDir + "\\scene\\testScene.yml";
-        GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
+        ymlProjEmitter << YAML::EndMap;
     }
 
     // ================================================================================================================
@@ -107,12 +111,18 @@ namespace Hedge
         }
         m_pScenes.clear();
 
+        m_projFilePath = pathName;
+        m_rootDir = Hedge::GetFileDir(pathName);
+
         // Deseriazlie the target project
+        YAML::Node config = YAML::LoadFile(pathName.c_str());
+        m_projName = config["Project Name"].as<std::string>();
+        m_gameName = config["Game Name"].as<std::string>();
 
-
-        // Load in the active scene
+        // Load in the active scene aka first scene
+        std::string firstSceneName = config["First Scene"].as<std::string>();
         HScene* pTmpScene = new HScene();
-        GetSerializer().DeserializeYamlToScene(pathName, *pTmpScene, GetEventManager());
+        GetSerializer().DeserializeYamlToScene(m_rootDir + "\\scene\\" + firstSceneName, *pTmpScene, GetEventManager());
         m_pScenes.push_back(pTmpScene);
     }
 

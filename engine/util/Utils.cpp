@@ -1,7 +1,19 @@
 #include <iostream>
 #include "Utils.h"
 
-void UtilPrint()
+namespace Hedge
 {
-    std::cout << "Util Print Out." << std::endl;
+    std::string GetFileName(
+        const std::string& pathName)
+    {
+        size_t pos = pathName.rfind("\\");
+        return pathName.substr(pos + 1);
+    }
+
+    std::string GetFileDir(
+        const std::string& pathName)
+    {
+        size_t pos = pathName.rfind("\\");
+        return pathName.substr(0, pos);
+    }
 }

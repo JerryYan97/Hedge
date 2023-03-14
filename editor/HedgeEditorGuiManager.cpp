@@ -43,6 +43,10 @@ namespace Hedge
         printf("HOMEDRIVE   = %s\n", getenv("HOMEDRIVE"));
         printf("HOMEPATH    = %s\n", getenv("HOMEPATH"));
         printf("APPDATA     = %s\n", getenv("APPDATA")); // We will use the APPDATA as our temp project building folder.
+
+        // Write Game Configuration
+
+        // Build real game cmake and game exe.
     }
 
     // ================================================================================================================
@@ -54,9 +58,9 @@ namespace Hedge
             {
                 if (ImGui::MenuItem("Open Project..."))
                 {
-                    raiiManager.GetHedgeEditor()->OpenGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject\\scene\\testScene.yml");
+                    raiiManager.GetHedgeEditor()->OpenGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject\\TestProject.yml");
                 }
-                if (ImGui::MenuItem("New Project..."))
+                if (ImGui::MenuItem("Save Project As..."))
                 {
                     raiiManager.GetHedgeEditor()->CreateGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject", "TestProject");
                 }
@@ -68,10 +72,18 @@ namespace Hedge
             }
             if (ImGui::BeginMenu("Build"))
             {
-                if (ImGui::MenuItem("Package Project"))
+                if (ImGui::MenuItem("Package Debug Game"))
                 {
-                    PackageProject();
+                    // Put game.exe under the project folder for debug purpose.
+                    raiiManager.GetHedgeEditor()->BuildGame();
                 }
+
+                if (ImGui::MenuItem("Package Release Game..."))
+                {
+                    // Put game.exe under the target folder for shipping.
+                    raiiManager.GetHedgeEditor()->ReleaseGame("Hello");
+                }
+
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
