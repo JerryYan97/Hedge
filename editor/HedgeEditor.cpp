@@ -60,7 +60,18 @@ namespace Hedge
     {
         std::string cmakeStr;
 
+        cmakeStr += "cmake_minimum_required(VERSION 3.8)\n";
+        cmakeStr += "project(HedgeGame VERSION 0.1 LANGUAGES CXX)\n\n";
 
+        cmakeStr += "add_executable(HedgeGame)\n";
+        cmakeStr += "target_include_directories(HedgeGame PUBLIC $ENV{HEDGE_LIB}/headers)\n";
+        cmakeStr += "target_link_directories(HedgeGame PUBLIC $ENV{HEDGE_LIB})\n";
+        cmakeStr += "target_link_libraries(HedgeGame LINK_PUBLIC HedgeEngine\n";
+        cmakeStr += "                                            vulkan-1\n";
+        cmakeStr += "                                            glfw3\n";
+        cmakeStr += "                                            yaml-cppd)\n";
+        cmakeStr += "file(WRITE null.cpp "")\n";
+        cmakeStr += "target_sources(HedgeGame PRIVATE null.cpp)\n";
 
         return cmakeStr;
     }
@@ -91,7 +102,8 @@ namespace Hedge
 
         std::string cmakeFilePathName = cmakeFileFolder + "\\CMakeLists.txt";
         std::ofstream gameCMakeFileHandle(cmakeFilePathName);
-        
+        gameCMakeFileHandle << cmakeStr;
+        gameCMakeFileHandle.close();
 
         // Build game solution
     }

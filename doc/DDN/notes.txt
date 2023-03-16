@@ -7,3 +7,6 @@ https://stackoverflow.com/a/36522355
 
 FNV1a:
 https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+
+Make a dummy source file to build project only from the static library
+https://stackoverflow.com/questions/34234446/cmake-is-it-possible-to-build-an-executable-from-only-static-libraries-and-no-s
