@@ -28,8 +28,6 @@ namespace Hedge
         // Copy and paste the game config file and game exe file to the target directory
         void ReleaseGame(const std::string& tarDir);
 
-        void Run();
-
         virtual void FrameStarted() override;
         virtual void FrameEnded() override;
         virtual void AppStarts() override;

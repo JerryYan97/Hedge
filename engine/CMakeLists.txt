@@ -24,6 +24,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/logging)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/render)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/scene)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/util)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/game)
 
 set(DearImGUIPath ${CMAKE_CURRENT_SOURCE_DIR}/../external/DearImGUI)
 
