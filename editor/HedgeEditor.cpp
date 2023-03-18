@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <fstream>
 
+#include <filesystem>
+
 Hedge::GlobalVariablesRAIIManager raiiManager;
 
 Hedge::HFrameListener* g_pFrameListener = raiiManager.GetHedgeEditor();
@@ -57,15 +59,19 @@ namespace Hedge
         cmakeStr += "cmake_minimum_required(VERSION 3.8)\n";
         cmakeStr += "project(HedgeGame VERSION 0.1 LANGUAGES CXX)\n\n";
 
-        cmakeStr += "add_executable(HedgeGame)\n";
+        cmakeStr += "add_executable(HedgeGame)\n\n";
+
         cmakeStr += "target_include_directories(HedgeGame PUBLIC $ENV{HEDGE_LIB}/headers)\n";
         cmakeStr += "target_link_directories(HedgeGame PUBLIC $ENV{HEDGE_LIB})\n";
         cmakeStr += "target_link_libraries(HedgeGame LINK_PUBLIC HedgeEngine\n";
         cmakeStr += "                                            vulkan-1\n";
         cmakeStr += "                                            glfw3\n";
         cmakeStr += "                                            yaml-cppd)\n";
-        cmakeStr += "file(WRITE null.cpp "")\n";
+        cmakeStr += "file(WRITE null.cpp "")\n\n";
+
         cmakeStr += "target_sources(HedgeGame PRIVATE null.cpp)\n";
+        cmakeStr += "set_target_properties(HedgeGame PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/../)\n";
+        cmakeStr += "set_target_properties(HedgeGame PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/../)\n";
 
         return cmakeStr;
     }
@@ -73,9 +79,6 @@ namespace Hedge
     // ================================================================================================================
     void HedgeEditor::BuildGame()
     {
-        // std::system("cmake -BC:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -S C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/ -G Ninja");
-        // std::system("ninja -C C:/JiaruiYan/Projects/VulkanProjects/TestGameProject/build -j 6");
-
         // Save game config file
         std::string gameConfigFileNamePath = m_rootDir + "\\gameConfig.yml";
         std::ofstream gameConfigFileHandle(gameConfigFileNamePath.c_str());
@@ -99,7 +102,17 @@ namespace Hedge
         gameCMakeFileHandle << cmakeStr;
         gameCMakeFileHandle.close();
 
+        // Delete the game solution if it exists
+        std::filesystem::remove_all((cmakeFileFolder + "/build"));
+
         // Build game solution
+        std::string cmakeBuildSolCmd;
+        cmakeBuildSolCmd += "cmake -B";
+        cmakeBuildSolCmd += (cmakeFileFolder + "/build");
+        cmakeBuildSolCmd += " -S ";
+        cmakeBuildSolCmd += cmakeFileFolder;
+        cmakeBuildSolCmd += " -G \"Visual Studio 16 2019\"";
+        std::system(cmakeBuildSolCmd.c_str());
     }
 
     // ================================================================================================================
