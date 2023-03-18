@@ -25,10 +25,49 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/render)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/scene)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/util)
 
+add_dependencies(HedgeEngine glfw)
+
 if(NOT DEFINED EDITOR_BUILD)
+    # Build for game
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/game)
+    if(DEFINED ENV{HEDGE_LIB})
+        set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG $ENV{HEDGE_LIB})
+        set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE $ENV{HEDGE_LIB})
+
+        set_target_properties(glfw PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG $ENV{HEDGE_LIB})
+        set_target_properties(glfw PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE $ENV{HEDGE_LIB})
+
+        set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG $ENV{HEDGE_LIB})
+        set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE $ENV{HEDGE_LIB})
+        
+        set(ENGINE_LIB_DIR $ENV{HEDGE_LIB})
+    else()
+        set(ENGINE_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../build)
+
+        set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${ENGINE_LIB_DIR})
+        set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${ENGINE_LIB_DIR})
+
+        set_target_properties(glfw PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${ENGINE_LIB_DIR})
+        set_target_properties(glfw PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${ENGINE_LIB_DIR})
+
+        set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${ENGINE_LIB_DIR})
+        set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${ENGINE_LIB_DIR})
+    endif()
+else()
+    # Build from the editor and for the editor only (Exclude game templates)
+    set(ENGINE_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../build)
+
+    set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${ENGINE_LIB_DIR})
+    set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${ENGINE_LIB_DIR})
+
+    set_target_properties(glfw PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${ENGINE_LIB_DIR})
+    set_target_properties(glfw PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${ENGINE_LIB_DIR})
+
+    set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${ENGINE_LIB_DIR})
+    set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${ENGINE_LIB_DIR})
 endif()
 
+file(MAKE_DIRECTORY ${ENGINE_LIB_DIR})
 set(DearImGUIPath ${CMAKE_CURRENT_SOURCE_DIR}/../external/DearImGUI)
 
 target_sources(HedgeEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/entry.cpp
@@ -56,7 +95,7 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/tinyObj)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
-                                           ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw/src/Debug)
+                                           ${ENGINE_LIB_DIR})
 
 target_compile_features(HedgeEngine PRIVATE cxx_std_17)
 
