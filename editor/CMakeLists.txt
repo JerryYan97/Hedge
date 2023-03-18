@@ -12,6 +12,8 @@ set(EDITOR_SRC_LIST
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_SRC_LIST})
 
+set(EDITOR_BUILD ON)
+
 add_subdirectory(../engine/ ./build/engine)
 
 add_executable(${EDITOR_NAME} ${EDITOR_SRC_LIST})
