@@ -174,12 +174,12 @@ namespace Hedge
             instCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 #ifndef NDEBUG
             instCreateInfo.pNext = &debugCreateInfo;
+            instCreateInfo.ppEnabledLayerNames = &validationLayerName;
+            instCreateInfo.enabledLayerCount = 1;
 #endif
             instCreateInfo.pApplicationInfo = &appInfo;
             instCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
             instCreateInfo.ppEnabledExtensionNames = extensions.data();
-            instCreateInfo.enabledLayerCount = 1;
-            instCreateInfo.ppEnabledLayerNames = &validationLayerName;
         }
         VK_CHECK(vkCreateInstance(&instCreateInfo, nullptr, &m_vkInst));
 

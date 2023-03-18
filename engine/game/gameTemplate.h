@@ -15,11 +15,11 @@ namespace Hedge
         HGameTemplate();
         virtual ~HGameTemplate();
 
-        virtual void FrameStarted() override;
-        virtual void FrameEnded() override;
+        virtual void FrameStarted() override {};
+        virtual void FrameEnded() override {};
         virtual void AppStarts() override;
 
-        virtual HScene& GetActiveScene() override;
+        virtual HScene& GetActiveScene() override { return *m_pScene; };
 
     protected:
         virtual void RegisterCustomSerializeClass() override {};
@@ -32,7 +32,7 @@ namespace Hedge
     {
     public:
         HGameGuiManager();
-        virtual ~HGameGuiManager() {};
+        virtual ~HGameGuiManager();
 
         virtual void GenerateImGuiData() override;
         virtual VkExtent2D GetRenderExtent() override;

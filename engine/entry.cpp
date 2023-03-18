@@ -11,9 +11,9 @@ extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
 void main(int argc, char** argv)
 {
     std::cout << "Hello From Hedge Engine!" << std::endl;
-
-    g_pFrameListener->AppStarts();
+    
     g_pFrameListener->RegisterSerializeClass();
+    g_pFrameListener->AppStarts();
 
     while (g_pRenderManager->WindowShouldClose() == false)
     {

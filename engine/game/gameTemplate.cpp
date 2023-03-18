@@ -1,4 +1,12 @@
 #include "GameTemplate.h"
+#include "../scene/HScene.h"
+
+
+Hedge::GlobalVariablesRAIIManager raiiManager;
+
+Hedge::HFrameListener* g_pFrameListener = raiiManager.GetGame();
+Hedge::HRenderManager* g_pRenderManager = raiiManager.GetGameRenderManager();
+Hedge::HGpuRsrcManager* g_pGpuRsrcManager = raiiManager.GetGpuRsrcManager();
 
 namespace Hedge
 {
@@ -17,6 +25,13 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HGameTemplate::AppStarts()
+    {
+        // Read in the game settings
+        m_pScene = new HScene();
+    }
+
+    // ================================================================================================================
     HGameGuiManager::HGameGuiManager()
         : HBaseGuiManager()
     {}
@@ -31,7 +46,9 @@ namespace Hedge
 
     // ================================================================================================================
     VkExtent2D HGameGuiManager::GetRenderExtent()
-    {}
+    {
+        return VkExtent2D{0, 0};
+    }
 
     // ================================================================================================================
     void HGameGuiManager::SendIOEvents(
