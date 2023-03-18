@@ -10,3 +10,7 @@ https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 
 Make a dummy source file to build project only from the static library
 https://stackoverflow.com/questions/34234446/cmake-is-it-possible-to-build-an-executable-from-only-static-libraries-and-no-s
+
+cmake debug/release build:
+https://stackoverflow.com/questions/17183248/the-option-build-of-cmake
+https://stackoverflow.com/questions/7724569/debug-vs-release-in-cmake

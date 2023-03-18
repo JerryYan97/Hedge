@@ -36,20 +36,6 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HedgeEditorGuiManager::PackageProject()
-    {
-        std::string path("C:\\JiaruiYan\\Projects\\VulkanProjects\\PackagedGames\\test1");
-        printf("USERPROFILE = %s\n", getenv("USERPROFILE"));
-        printf("HOMEDRIVE   = %s\n", getenv("HOMEDRIVE"));
-        printf("HOMEPATH    = %s\n", getenv("HOMEPATH"));
-        printf("APPDATA     = %s\n", getenv("APPDATA")); // We will use the APPDATA as our temp project building folder.
-
-        // Write Game Configuration
-
-        // Build real game cmake and game exe.
-    }
-
-    // ================================================================================================================
     void HedgeEditorGuiManager::UpperMenuBar()
     {
         if (ImGui::BeginMainMenuBar())
@@ -75,13 +61,13 @@ namespace Hedge
                 if (ImGui::MenuItem("Package Debug Game"))
                 {
                     // Put game.exe under the project folder for debug purpose.
-                    raiiManager.GetHedgeEditor()->BuildGame();
+                    raiiManager.GetHedgeEditor()->BuildDebugGame();
                 }
 
                 if (ImGui::MenuItem("Package Release Game..."))
                 {
                     // Put game.exe under the target folder for shipping.
-                    raiiManager.GetHedgeEditor()->ReleaseGame("Hello");
+                    raiiManager.GetHedgeEditor()->BuildAndReleaseGame("C:\\JiaruiYan\\Projects\\VulkanProjects\\PackagedGames");
                 }
 
                 ImGui::EndMenu();

@@ -13,6 +13,7 @@ set(EDITOR_SRC_LIST
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_SRC_LIST})
 
 set(EDITOR_BUILD ON)
+set(EDITOR_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(../engine/ ./build/engine)
 

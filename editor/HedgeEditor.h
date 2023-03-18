@@ -23,10 +23,10 @@ namespace Hedge
         void OpenGameProject(const std::string& pathName);
 
         // Generate cmake file, game config file and solution file
-        void BuildGame();
+        void BuildDebugGame();
 
         // Copy and paste the game config file and game exe file to the target directory
-        void ReleaseGame(const std::string& tarDir);
+        void BuildAndReleaseGame(const std::string& tarDir);
 
         virtual void FrameStarted() override;
         virtual void FrameEnded() override;
@@ -38,7 +38,9 @@ namespace Hedge
         virtual void RegisterCustomSerializeClass() override {};
 
     private:
-        std::string GenGameCMakeFileStr();
+        std::string GenGameCMakeFileStr(bool isDebug);
+        void SaveGameConfig();
+        void GenCMakeFile(bool isDebug);
 
         std::vector<HScene*> m_pScenes;
         uint32_t             m_activeScene;

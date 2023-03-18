@@ -34,10 +34,6 @@ namespace Hedge
         void UpperMenuBar();
         void BottomMenuBar();
 
-        // Utility
-        void PackageProject(); // Build the project to a game.
-
-
         VkImageView* m_pRenderResultImgView;
         VkExtent2D                  m_renderResultImgExtent;
         uint32_t                    m_frameIdx;

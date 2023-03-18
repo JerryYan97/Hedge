@@ -5,11 +5,21 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils/CMakeUtil.cmake)
 
 CheckVulkanSDK()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw 
-                 ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw)
+if(NOT DEFINED EDITOR_BUILD)
+    # Build for game
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw 
+                     ${CMAKE_CURRENT_SOURCE_DIR}/build/glfw)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/YamlCpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/build/yaml)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/YamlCpp
+                     ${CMAKE_CURRENT_SOURCE_DIR}/build/yaml)
+else()
+    # Build for editor
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw 
+                     ${EDITOR_CMAKE_DIR}/build/build/engine/glfw)
+
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/YamlCpp
+                     ${EDITOR_CMAKE_DIR}/build/build/engine/yaml)
+endif()
 
 set_target_properties(format PROPERTIES FOLDER "YamlCpp")
 set_target_properties(yaml-cpp PROPERTIES FOLDER "YamlCpp")
@@ -39,7 +49,7 @@ if(NOT DEFINED EDITOR_BUILD)
 
         set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG $ENV{HEDGE_LIB})
         set_target_properties(HedgeEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE $ENV{HEDGE_LIB})
-        
+
         set(ENGINE_LIB_DIR $ENV{HEDGE_LIB})
     else()
         set(ENGINE_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../build)
