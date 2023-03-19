@@ -24,7 +24,7 @@ namespace Hedge
     protected:
         virtual void RegisterCustomSerializeClass() override {};
 
-    private:
+        std::string m_gameName;
         HScene* m_pScene;
     };
 
@@ -34,7 +34,9 @@ namespace Hedge
         HGameGuiManager();
         virtual ~HGameGuiManager();
 
-        virtual void GenerateImGuiData() override;
+        virtual void GenerateImGuiData() override {};
+        void GenerateImGuiData(VkImageView* resultImgView, VkExtent2D resultImgExtent, uint32_t frameIdx);
+
         virtual VkExtent2D GetRenderExtent() override;
         virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) override;
     };

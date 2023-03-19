@@ -1,6 +1,9 @@
 #include "GameTemplate.h"
 #include "../scene/HScene.h"
-
+#include "yaml-cpp/yaml.h"
+#include "Utils.h"
+#include "imgui.h"
+#include <map>
 
 Hedge::GlobalVariablesRAIIManager raiiManager;
 
@@ -12,7 +15,8 @@ namespace Hedge
 {
     // ================================================================================================================
     HGameTemplate::HGameTemplate()
-        : HFrameListener()
+        : HFrameListener(),
+          m_pScene(nullptr)
     {}
 
     // ================================================================================================================
@@ -27,8 +31,19 @@ namespace Hedge
     // ================================================================================================================
     void HGameTemplate::AppStarts()
     {
-        // Read in the game settings
         m_pScene = new HScene();
+
+        std::string exePathName = GetExePath();
+        std::string exePath = GetFileDir(exePathName);
+
+        // Read in the game settings
+        YAML::Node config = YAML::LoadFile(exePath + "/gameConfig.yml");
+        m_gameName = config["Game Name"].as<std::string>();
+        std::string firstSceneName = config["First Scene"].as<std::string>();
+
+        // Read in the first scene
+        std::string firstSceneNamePath = exePath + "/scene/" + firstSceneName;
+        GetSerializer().DeserializeYamlToScene(firstSceneNamePath, *m_pScene, GetEventManager());
     }
 
     // ================================================================================================================
@@ -41,13 +56,15 @@ namespace Hedge
     {}
 
     // ================================================================================================================
-    void HGameGuiManager::GenerateImGuiData()
-    {}
-
-    // ================================================================================================================
     VkExtent2D HGameGuiManager::GetRenderExtent()
     {
-        return VkExtent2D{0, 0};
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        uint32_t newWidth = std::max(static_cast<uint32_t>(viewport->WorkSize.x),
+            static_cast<uint32_t>(64));
+        uint32_t newHeight = std::max(static_cast<uint32_t>(viewport->WorkSize.y),
+            static_cast<uint32_t>(64));
+
+        return VkExtent2D{ newWidth, newHeight };
     }
 
     // ================================================================================================================
@@ -55,6 +72,36 @@ namespace Hedge
         HScene& scene,
         HEventManager& eventManager)
     {}
+
+    // ================================================================================================================
+    void HGameGuiManager::GenerateImGuiData(
+        VkImageView* resultImgView,
+        VkExtent2D resultImgExtent,
+        uint32_t frameIdx)
+    {
+        // Create a large image and window covers the whole screen
+        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
+                                        ImGuiWindowFlags_NoMove |
+                                        ImGuiWindowFlags_NoSavedSettings;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+        VkDescriptorSet my_image_texture = 0;
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+
+        if (ImGui::Begin("Game Render Window", nullptr, flags))
+        {
+            AddTextureToImGUI(&my_image_texture, resultImgView, frameIdx);
+            ImGui::Image((ImTextureID)my_image_texture,
+                         ImVec2(static_cast<float>(resultImgExtent.width),
+                                static_cast<float>(resultImgExtent.height)));
+        }
+        ImGui::End();
+        ImGui::PopStyleVar(2);
+    }
 
     // ================================================================================================================
     HGameRenderManager::HGameRenderManager(
@@ -70,7 +117,11 @@ namespace Hedge
     // ================================================================================================================
     void HGameRenderManager::DrawHud(
         HFrameListener* pFrameListener)
-    {}
+    {
+        HGameGuiManager* pGuiManager = dynamic_cast<HGameGuiManager*>(m_pGuiManager);
+
+        pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), GetCurrentRenderImgExtent(), GetCurSwapchainFrameIdx());
+    }
 
     // ================================================================================================================
     GlobalVariablesRAIIManager::GlobalVariablesRAIIManager()
@@ -95,7 +146,4 @@ namespace Hedge
         m_pGpuRsrcManager = new HGpuRsrcManager();
         m_pGameRenderManager = new HGameRenderManager(m_pGameGuiManager, m_pGpuRsrcManager);
     }
-
-    // ================================================================================================================
-    
 }
