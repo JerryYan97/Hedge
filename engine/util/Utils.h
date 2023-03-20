@@ -6,13 +6,16 @@ namespace Hedge
 {
     constexpr uint32_t VertFloatNum = 3 + 3 + 2;
 
+    std::string SelectFolderDialog();
+
+    std::string SelectYmlDialog();
+
     std::string GetExePath();
 
     // Stirng manipulations
     std::string GetFileName(const std::string& pathName);
 
     std::string GetFileDir(const std::string& pathName);
-
 }
 
 // https://stackoverflow.com/a/36522355

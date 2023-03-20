@@ -31,6 +31,11 @@ https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-s
 https://stackoverflow.com/questions/12034943/win32-select-directory-dialog-from-c-c
 https://www.codeproject.com/Articles/2604/Browse-Folder-dialog-search-folder-and-all-sub-fol
 
+WindowSDK path dialog example:
+https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Win7Samples/winui/shell/appplatform/commonfiledialog/CommonFileDialogApp.cpp
+
+It looks like I need to write some OS specific code to realize relevant functionalities.
+
 ## Reference
 
 1. Computer Systems A Programmer's Perspective 3rd Edition Section 7
