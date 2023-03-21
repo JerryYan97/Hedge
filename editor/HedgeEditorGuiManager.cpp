@@ -28,9 +28,9 @@ namespace Hedge
         m_pLayout->ResizeAll();
 
         uint32_t newWidth = std::max(static_cast<uint32_t>(m_pRenderWindowNode->GetDomainSize().x),
-            static_cast<uint32_t>(64));
+                                     static_cast<uint32_t>(64));
         uint32_t newHeight = std::max(static_cast<uint32_t>(m_pRenderWindowNode->GetDomainSize().y),
-            static_cast<uint32_t>(64));
+                                      static_cast<uint32_t>(64));
 
         return VkExtent2D{ newWidth, newHeight };
     }
@@ -44,16 +44,22 @@ namespace Hedge
             {
                 if (ImGui::MenuItem("Open Project..."))
                 {
-                    raiiManager.GetHedgeEditor()->OpenGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject\\TestProject.yml");
+                    std::string ymlNamePath = SelectYmlDialog();
+                    raiiManager.GetHedgeEditor()->OpenGameProject(ymlNamePath);
                 }
-                if (ImGui::MenuItem("Save Project As..."))
+                if (ImGui::MenuItem("Save Project to..."))
                 {
-                    raiiManager.GetHedgeEditor()->CreateGameProject("C:\\JiaruiYan\\Projects\\VulkanProjects\\TestGameProject", "TestProject");
+                    std::string projFolderStr = SaveToFolderDialog();
+                    raiiManager.GetHedgeEditor()->CreateGameProject(projFolderStr, "TestProject");
                 }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Edit"))
             {
+                if (ImGui::MenuItem("Edit Project Name"))
+                {
+
+                }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Build"))
@@ -67,7 +73,8 @@ namespace Hedge
                 if (ImGui::MenuItem("Package Release Game..."))
                 {
                     // Put game.exe under the target folder for shipping.
-                    raiiManager.GetHedgeEditor()->BuildAndReleaseGame("C:\\JiaruiYan\\Projects\\VulkanProjects\\PackagedGames");
+                    std::string projFolderStr = SaveToFolderDialog();
+                    raiiManager.GetHedgeEditor()->BuildAndReleaseGame(projFolderStr);
                 }
 
                 ImGui::EndMenu();

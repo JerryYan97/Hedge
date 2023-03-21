@@ -6,7 +6,7 @@ namespace Hedge
 {
     constexpr uint32_t VertFloatNum = 3 + 3 + 2;
 
-    std::string SelectFolderDialog();
+    std::string SaveToFolderDialog();
 
     std::string SelectYmlDialog();
 

@@ -36,6 +36,8 @@ namespace Hedge
 
         bool WindowShouldClose();
 
+        void SetWindowTitle(const std::string& titleStr);
+
         VkImageView* GetCurrentRenderImgView() { return m_pRenderImgViews[m_curSwapchainFrameIdx]; }
         VkExtent2D   GetCurrentRenderImgExtent() { return m_renderImgsExtents[m_curSwapchainFrameIdx]; }
 

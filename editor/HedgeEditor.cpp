@@ -183,8 +183,10 @@ namespace Hedge
     {
         m_projName = projName;
         m_projFilePath = rootDir + "\\" + projName + ".yml";
+        raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
 
         // Save the scene configuration:
+        std::filesystem::create_directory(rootDir + "\\scene");
         std::string scenePathName = rootDir + "\\scene\\testScene.yml";
         GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
 
@@ -232,6 +234,7 @@ namespace Hedge
         YAML::Node config = YAML::LoadFile(pathName.c_str());
         m_projName = config["Project Name"].as<std::string>();
         m_gameName = config["Game Name"].as<std::string>();
+        raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
 
         // Load in the active scene aka first scene
         std::string firstSceneName = config["First Scene"].as<std::string>();

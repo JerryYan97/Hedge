@@ -326,11 +326,18 @@ namespace Hedge
     {
         // Init glfw window.
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        m_pGlfwWindow = glfwCreateWindow(1280, 640, "Hedge Default Title", nullptr, nullptr);
+        m_pGlfwWindow = glfwCreateWindow(1280, 640, "Untitled -- No root directory", nullptr, nullptr);
         glfwSetFramebufferSizeCallback(m_pGlfwWindow, HRenderManager::GlfwFramebufferResizeCallback);
 
         // Create vulkan surface from the glfw window.
         VK_CHECK(glfwCreateWindowSurface(*m_pGpuRsrcManager->GetVkInstance(), m_pGlfwWindow, nullptr, &m_surface));
+    }
+
+    // ================================================================================================================
+    void HRenderManager::SetWindowTitle(
+        const std::string& titleStr)
+    {
+        glfwSetWindowTitle(m_pGlfwWindow, titleStr.c_str());
     }
 
     // ================================================================================================================
