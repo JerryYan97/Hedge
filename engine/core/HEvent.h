@@ -4,10 +4,6 @@
 #include <any>
 #include <list>
 
-// TODO: We may need a compile-time string hash system. The MSVC's std::hash<> cannot be used as the hash function 
-// during compile-time since it is not a constexpr function. We maybe able to limit the length of the string.
-// Ref: https://cp-algorithms.com/string/string-hashing.html
-
 /*
 *  Some predefined events strings:
 *  IO category: MOUSE_MIDDLE_BUTTON, KEY_W, KEY_S

@@ -300,7 +300,6 @@ f 5/12/6 1/3/6 2/9/6");
                 float pitchRadien = 0.5f * yOffset * M_PI / 180.f;
                 float headRadien = 0.5f * xOffset * M_PI / 180.f;
 
-                // 1.3 model:
                 float pitchRotMat[9] = {};
                 GenRotationMatArb(m_holdRight, pitchRadien, pitchRotMat);
 

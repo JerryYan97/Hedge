@@ -1,6 +1,6 @@
 # Space, Transformation and matrix in Hedge
 
-It is hard be believe that I spend so much time only on investigating how to project a point from model space to NDC properly. Here are some notes and design decisions to record these efforts.
+This document contains information relating to space and coordinates used in the Hedge.
 
 ## Space
 
@@ -10,9 +10,9 @@ Hedge uses a left-hand coordinate system. Y is up, x is right and z pointing tow
 
 ### Clip space and Normalized Device Coordinate
 
-In Vulkan or glsl, clip space is the space for coordinates in vertex shader that is not applied homogeneous division. In addition, according to [4], `gl_Position.w` cannot be negative since it would be used for determining whether a coordinate is in a clipping space. If you assign a negative value to all points, then all points would be culled before it sends for homogeneous division.
+In Vulkan or glsl, clip space is the space for coordinates in vertex shader that is not applied homogeneous division. In addition, according to [4], `gl_Position.w` cannot be negative since it would be used to determine whether a coordinate is in a clipping space. If you assign a negative value to all points' w coordinate, then all points would be culled before it sends for homogeneous division.
 
-As for the NDC, Vulkan is also different from OpenGL. OpenGL has (-1, -1, -1) as its NDC bottom left point and (1, 1, 1) as its top right point. But in Vulkan, NDC has (-1, 1, 0) as its bottom left point and (1, -1, 1) as its top right point. [1] has a clear figure comparing them.
+As for the NDC, Vulkan is also different from OpenGL. OpenGL has (-1, -1, -1) as its NDC bottom left point and (1, 1, 1) as its top right point. But in Vulkan, NDC has (-1, 1, 0) as its bottom left point and (1, -1, 1) as its top right point. ((0, 0) point is the center of the screen. x axis goes rightward and the y axis goes downward) [1] has a clear figure comparing them.
 
 ## Transformation and relevant matrices
 
@@ -22,9 +22,9 @@ The view matrix is written down in the [5] P67, which is usable.
 
 ### From the view space to the clip space
 
-It is so frustrated to derive a perspective matrix that is wrong. Basically, we use the matrix drived from [1]. Note that it also gives the inverse of the matrix, which is super cool. 
+As for the perspective matrix, we use the matrix drived from [1]. Note that it also gives the inverse of the matrix, which will be super useful. It is derived by mapping near plane view's (left, right), (up, down) to NDC's (-1, 1) and view's (near, far) to NDC's (1, 0). Besides, due to the fact that the vertex that we used to derive are not literaily in the view space. We need to find the formula that can map a vert in view space to view's near plane space for left-right and up-down in order to truly generate the perspective matrix.
 
-The perspective matrix in [5] is unusable since OpenGL has a quite different NDC layout and the book doesn't give the process of deriving the matrix, which is bad.
+The perspective matrix in [5] is unusable since OpenGL has a quite different NDC layout and the book doesn't give the process of deriving the matrix.
 
 Another thing that needs to be noted is that the perspective matrix used in the [1] uses the reverse z technique [2][3]. As a result, the near plane depth would be mapped to 1 and the far plane depth would be mapped to 0.  
 
