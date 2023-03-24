@@ -39,6 +39,9 @@ namespace Hedge
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
 
+        // Disable loading/saving of .ini file from disk.
+        io.IniFilename = NULL;
+
         // Setup Dear ImGui style
         ImGui::StyleColorsDark();
 
