@@ -189,6 +189,8 @@ namespace Hedge
     {
         m_projName = projName;
         m_projFilePath = rootDir + "\\" + projName + ".yml";
+        m_rootDir = rootDir;
+
         raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
 
         // Save the scene configuration:
