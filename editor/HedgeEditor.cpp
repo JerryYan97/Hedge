@@ -115,65 +115,71 @@ namespace Hedge
     // ================================================================================================================
     void HedgeEditor::BuildDebugGame()
     {
-        SaveGameConfig();
+        if (m_rootDir.empty() == false)
+        {
+            SaveGameConfig();
 
-        GenCMakeFile(true);
+            GenCMakeFile(true);
 
-        // Delete the game solution if it exists
-        std::string cmakeFileFolder = m_rootDir + "\\build";
-        std::filesystem::remove_all((cmakeFileFolder + "/build"));
+            // Delete the game solution if it exists
+            std::string cmakeFileFolder = m_rootDir + "\\build";
+            std::filesystem::remove_all((cmakeFileFolder + "/build"));
 
-        // Build game solution
-        std::string cmakeBuildSolCmd;
-        cmakeBuildSolCmd += "cmake -B";
-        cmakeBuildSolCmd += (cmakeFileFolder + "/build");
-        cmakeBuildSolCmd += " -S ";
-        cmakeBuildSolCmd += cmakeFileFolder;
-        cmakeBuildSolCmd += " -G \"Visual Studio 16 2019\"";
-        std::system(cmakeBuildSolCmd.c_str());
+            // Build game solution
+            std::string cmakeBuildSolCmd;
+            cmakeBuildSolCmd += "cmake -B";
+            cmakeBuildSolCmd += (cmakeFileFolder + "/build");
+            cmakeBuildSolCmd += " -S ";
+            cmakeBuildSolCmd += cmakeFileFolder;
+            cmakeBuildSolCmd += " -G \"Visual Studio 16 2019\"";
+            std::system(cmakeBuildSolCmd.c_str());
+        }
     }
 
     // ================================================================================================================
     void HedgeEditor::BuildAndReleaseGame(
         const std::string& tarDir)
     {
-        SaveGameConfig();
-
-        GenCMakeFile(false);
-
-        // Delete the game solution if it exists
-        std::string cmakeFileFolder = m_rootDir + "\\build";
-        std::filesystem::remove_all((cmakeFileFolder + "\\build"));
-
-        // Build game in release mode by ninja
-        std::string cmakeBuildNinjaCmd;
-        cmakeBuildNinjaCmd += "cmake -B";
-        cmakeBuildNinjaCmd += (cmakeFileFolder + "\\build");
-        cmakeBuildNinjaCmd += " -S " + cmakeFileFolder;
-        cmakeBuildNinjaCmd += " -G Ninja";
-        cmakeBuildNinjaCmd += " -DCMAKE_BUILD_TYPE=Release";
-        std::system(cmakeBuildNinjaCmd.c_str());
-
-        std::string cmakeCompileCmd;
-        cmakeCompileCmd += "ninja";
-        cmakeCompileCmd += (" -C " + cmakeFileFolder + "\\build");
-        cmakeCompileCmd += " -j 6";
-        std::system(cmakeCompileCmd.c_str());
-
-        // Copy game configuration file and executable file
-        std::filesystem::remove_all(tarDir + "\\gameConfig.yml");
-        std::filesystem::remove_all(tarDir + "\\HedgeGame.exe");
-        std::filesystem::copy(m_rootDir + "\\gameConfig.yml", tarDir + "\\gameConfig.yml");
-        std::filesystem::copy(m_rootDir + "\\HedgeGame.exe", tarDir + "\\HedgeGame.exe");
-
-        // Copy resource folders
-        const auto copyOptions = std::filesystem::copy_options::directories_only;
-        if (std::filesystem::exists(tarDir + "\\scene"))
+        if (m_rootDir.empty() == false)
         {
-            std::filesystem::remove_all(tarDir + "\\scene");
+            SaveGameConfig();
+
+            GenCMakeFile(false);
+
+            // Delete the game solution if it exists
+            std::string cmakeFileFolder = m_rootDir + "\\build";
+            std::filesystem::remove_all((cmakeFileFolder + "\\build"));
+
+            // Build game in release mode by ninja
+            std::string cmakeBuildNinjaCmd;
+            cmakeBuildNinjaCmd += "cmake -B";
+            cmakeBuildNinjaCmd += (cmakeFileFolder + "\\build");
+            cmakeBuildNinjaCmd += " -S " + cmakeFileFolder;
+            cmakeBuildNinjaCmd += " -G Ninja";
+            cmakeBuildNinjaCmd += " -DCMAKE_BUILD_TYPE=Release";
+            std::system(cmakeBuildNinjaCmd.c_str());
+
+            std::string cmakeCompileCmd;
+            cmakeCompileCmd += "ninja";
+            cmakeCompileCmd += (" -C " + cmakeFileFolder + "\\build");
+            cmakeCompileCmd += " -j 6";
+            std::system(cmakeCompileCmd.c_str());
+
+            // Copy game configuration file and executable file
+            std::filesystem::remove_all(tarDir + "\\gameConfig.yml");
+            std::filesystem::remove_all(tarDir + "\\HedgeGame.exe");
+            std::filesystem::copy(m_rootDir + "\\gameConfig.yml", tarDir + "\\gameConfig.yml");
+            std::filesystem::copy(m_rootDir + "\\HedgeGame.exe", tarDir + "\\HedgeGame.exe");
+
+            // Copy resource folders
+            const auto copyOptions = std::filesystem::copy_options::directories_only;
+            if (std::filesystem::exists(tarDir + "\\scene"))
+            {
+                std::filesystem::remove_all(tarDir + "\\scene");
+            }
+            std::filesystem::create_directory(tarDir + "\\scene");
+            std::filesystem::copy(m_rootDir + "\\scene", tarDir + "\\scene");
         }
-        std::filesystem::create_directory(tarDir + "\\scene");
-        std::filesystem::copy(m_rootDir + "\\scene", tarDir + "\\scene");
     }
 
     // ================================================================================================================

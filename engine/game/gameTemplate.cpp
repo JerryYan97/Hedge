@@ -40,6 +40,8 @@ namespace Hedge
         // Read in the game settings
         YAML::Node config = YAML::LoadFile(exePath + "/gameConfig.yml");
         m_gameName = config["Game Name"].as<std::string>();
+        raiiManager.GetGameRenderManager()->SetWindowTitle(m_gameName);
+
         std::string firstSceneName = config["First Scene"].as<std::string>();
 
         // Read in the first scene
