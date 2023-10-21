@@ -53,9 +53,9 @@ namespace Hedge
 
     // ================================================================================================================
     HBasicRenderer::HBasicRenderer(
-        uint32_t onFlightResCnt, 
-        VkDevice* pVkDevice, 
-        VkFormat surfFormat, 
+        uint32_t onFlightResCnt,
+        VkDevice* pVkDevice,
+        VkFormat surfFormat,
         VmaAllocator* pVmaAllocator,
         HGpuRsrcManager* pGpuRsrcManager)
         : HRenderer(onFlightResCnt, pVkDevice, surfFormat, pVmaAllocator),

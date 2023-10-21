@@ -13,7 +13,7 @@ The goal of this camera is to achieve the effect of unreal engine's camera.
 
 As for translation, this camera entity would listen to W, A, S and D to move along view vector direction or the right vector direction.
 
-As for rotation, this camera entity would listen to the middle mouse click/hold. When we first hold, we record the hold-view, hold-up and hold-right vectors. Besides, we would also record the mouse position on the scrren when we first hold.
+As for rotation, this camera entity would listen to the middle mouse click/hold. When we first hold, we record the hold-view, hold-up and hold-right vectors. Besides, we would also record the mouse position on the screen when we first hold.
 
 When we are holding, we constantly update the view and up camera parameters by using the recorded information above. 
 

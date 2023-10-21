@@ -44,3 +44,4 @@ In order to have depth clipping, we may need to provide a depth buffer.
 3. [Depth Precision Visualized](https://developer.nvidia.com/content/depth-precision-visualized)
 4. [Negative values for gl_Position.w?](https://stackoverflow.com/questions/47233771/negative-values-for-gl-position-w)
 5. Real-time Rendering 4th edition
+6. [Vulkan uniform buffer alignment](https://registry.khronos.org/vulkan/specs/1.3/html/vkspec.html#interfaces-resources)

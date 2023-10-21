@@ -2,7 +2,12 @@
 /*
 * The hedge render manager holds the gpu context, glfw window context and a set of renderer.
 * A renderer is an entity to construct a command buffer or a set of command buffers for rendering.
+* A renderer also holds a pipeline.
 */
+
+// TODO1: Pipeline should use HPipeline instead of the vkPipeline directly
+// TODO2: Render function should be renamed. It should be something like CmdRenderInsts(...).
+// TODO3: GpuResources should be renamed to HGpuBuffer. Add a HGpuImg struct. They all should be holded (by using a hashtable, controlling init and destroy, use a heap) by HGpuRsrcManager instead of being managed by Render or other things.
 
 #include <vulkan/vulkan.h>
 #include <iostream>
