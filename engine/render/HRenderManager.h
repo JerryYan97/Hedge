@@ -2,6 +2,7 @@
 /*
 * The hedge render manager holds the gpu context, glfw window context, swapchain and a set of renderer.
 * The manager also manages the sync between renderers for the final rendering result on the screen.
+* The render manager is responsible for everything that can be rendered on the screen, which also includes window's frame.
 * 
 * A renderer is an entity to construct a command buffer or a set of command buffers for a specific rendering result.
 * The specific rendering result would be collected by the render manager to build the final rendering result.

@@ -314,16 +314,20 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    GpuResource HGpuRsrcManager::CreateGpuBuffer(
-        VkBufferUsageFlags usage,
-        uint32_t           bytesNum)
+    HGpuBuffer* HGpuRsrcManager::CreateGpuBuffer(
+        VkBufferUsageFlags       usage,
+        VmaAllocationCreateFlags vmaFlags,
+        uint32_t                 bytesNum)
     {
         // Create Buffer and allocate memory for vertex buffer, index buffer and render target.
         VmaAllocationCreateInfo mappableBufCreateInfo = {};
         {
             mappableBufCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            mappableBufCreateInfo.flags = vmaFlags;
+            /*
             mappableBufCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                VMA_ALLOCATION_CREATE_MAPPED_BIT;
+                                          VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            */
         }
 
         // Create Vertex Buffer
@@ -334,30 +338,33 @@ namespace Hedge
             vertBufferInfo.usage = usage;
         }
 
-        GpuResource gpuRes{};
-        gpuRes.m_pBuffer = new VkBuffer;
-        gpuRes.m_pAlloc = new VmaAllocation;
+        HGpuBuffer* pGpuBuffer = new HGpuBuffer();
+        memset(pGpuBuffer, 0, sizeof(HGpuBuffer));
+
+        pGpuBuffer->byteCnt = bytesNum;
 
         VK_CHECK(vmaCreateBuffer(m_vmaAllocator,
-            &vertBufferInfo,
-            &mappableBufCreateInfo,
-            gpuRes.m_pBuffer,
-            gpuRes.m_pAlloc,
-            nullptr));
+                                 &vertBufferInfo,
+                                 &mappableBufCreateInfo,
+                                 &(pGpuBuffer->gpuBuffer),
+                                 &(pGpuBuffer->gpuBufferAlloc),
+                                 nullptr));
 
-        return gpuRes;
+        m_gpuBuffers.insert((void*)pGpuBuffer);
+
+        return pGpuBuffer;
     }
 
     // ================================================================================================================
     void HGpuRsrcManager::SendDataToBuffer(
-        const GpuResource& gpuRsrc,
-        void* pData,
-        uint32_t bytes)
+        const HGpuBuffer* const pGpuBuffer,
+        void*                   pData,
+        uint32_t                bytes)
     {
         void* mapped = nullptr;
-        VK_CHECK(vmaMapMemory(m_vmaAllocator, *gpuRsrc.m_pAlloc, &mapped));
+        VK_CHECK(vmaMapMemory(m_vmaAllocator, pGpuBuffer->gpuBufferAlloc, &mapped));
         memcpy(mapped, pData, bytes);
-        vmaUnmapMemory(m_vmaAllocator, *gpuRsrc.m_pAlloc);
+        vmaUnmapMemory(m_vmaAllocator, pGpuBuffer->gpuBufferAlloc);
     }
 
 #ifndef NDEBUG

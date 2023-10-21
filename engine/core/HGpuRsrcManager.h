@@ -10,8 +10,7 @@ namespace Hedge
     {
         VkBuffer      gpuBuffer;
         VmaAllocation gpuBufferAlloc;
-        uint32_t      byteCnt;
-
+        
         // The buffer data in the RAM. Optional.
         union
         {
@@ -19,6 +18,8 @@ namespace Hedge
             uint32_t* pUint32Data;
             float*    pFloatData;
         };
+
+        uint32_t byteCnt;
     };
 
     struct HGpuImg
@@ -61,12 +62,12 @@ namespace Hedge
         void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
 
         // GPU resource manage functions
-        HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
+        HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
         void DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
 
-        HGpuImg* CreateGpuImage();
-        void DestroyGpuImage();
+        HGpuImg* CreateGpuImage() {};
+        void DestroyGpuImage() {};
 
     private:
         // Vulkan core objects
