@@ -1,16 +1,36 @@
 #pragma once
 #include <vulkan/vulkan.h>
+#include <unordered_set>
 
 #include "vk_mem_alloc.h"
 
 namespace Hedge
 {
-    struct GpuResource
+    struct HGpuBuffer
     {
-        VkBuffer* m_pBuffer;
-        VmaAllocation* m_pAlloc;
+        VkBuffer      gpuBuffer;
+        VmaAllocation gpuBufferAlloc;
+        uint32_t      byteCnt;
+
+        // The buffer data in the RAM. Optional.
+        union
+        {
+            uint16_t* pUint16Data;
+            uint32_t* pUint32Data;
+            float*    pFloatData;
+        };
     };
 
+    struct HGpuImg
+    {
+        VkImage           gpuImg;
+        VmaAllocation     gpuImgAlloc;
+        VkImageCreateInfo imgInfo;
+        VkImageView       gpuImgView;
+        VkSampler         gpuImgSampler;
+    };
+
+    // The HGpuRsrcManager holds the vk instance, devices and hides the vma from other parts of the engine.
     class HGpuRsrcManager
     {
     public:
@@ -41,11 +61,12 @@ namespace Hedge
         void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
 
         // GPU resource manage functions
-        GpuResource CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
+        HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, uint32_t bytesNum);
+        void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
+        void DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
 
-        void SendDataToBuffer(const GpuResource& gpuRsrc, void* pData, uint32_t bytes);
-
-        void DestroyGpuResource(GpuResource rsrc);
+        HGpuImg* CreateGpuImage();
+        void DestroyGpuImage();
 
     private:
         // Vulkan core objects
@@ -65,6 +86,9 @@ namespace Hedge
         VkQueue  m_gfxQueue;
         VkQueue  m_computeQueue;
         VkQueue  m_presentQueue;
+
+        std::unordered_set<void*> m_gpuBuffers;
+        std::unordered_set<void*> m_gpuImgs;
 
 #ifndef NDEBUG
         // Debug mode

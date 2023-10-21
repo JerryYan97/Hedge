@@ -72,11 +72,27 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HGpuRsrcManager::DestroyGpuResource(GpuResource rsrc)
+    void HGpuRsrcManager::DestroyGpuBufferResource(
+        const HGpuBuffer* const pGpuBuffer)
     {
-        vmaDestroyBuffer(m_vmaAllocator, *rsrc.m_pBuffer, *rsrc.m_pAlloc);
-        delete rsrc.m_pBuffer;
-        delete rsrc.m_pAlloc;
+        // Check whether the pointer is valid.
+        if (pGpuBuffer != nullptr)
+        {
+            if (m_gpuBuffers.count((void*)pGpuBuffer) > 0)
+            {
+                vmaDestroyBuffer(m_vmaAllocator, pGpuBuffer->gpuBuffer, pGpuBuffer->gpuBufferAlloc);
+                m_gpuBuffers.erase((void*)pGpuBuffer);
+                delete pGpuBuffer;
+            }
+            else
+            {
+                assert(1, "The buffer doesn't exist in the gpu buffer set.");
+            }
+        }
+        else
+        {
+            assert(1, "The buffer cannot be nullptr");
+        }
     }
 
     // ================================================================================================================
