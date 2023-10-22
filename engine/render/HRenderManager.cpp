@@ -646,4 +646,75 @@ namespace Hedge
         CreateSwapchainImageViews();
         CreateSwapchainFramebuffer();
     }
+
+    // ================================================================================================================
+    HFrameGpuRenderRsrcControl::HFrameGpuRenderRsrcControl(
+        uint32_t         onFlightRsrcCnt,
+        HGpuRsrcManager* pGpuRsrcManager)
+        : m_pGpuRsrcManager(pGpuRsrcManager)
+    {
+        m_gpuRsrcFrameCtxs.resize(onFlightRsrcCnt);
+    }
+
+    // ================================================================================================================
+    HGpuBuffer* HFrameGpuRenderRsrcControl::CreateTmpGpuBuffer(
+        VkBufferUsageFlags       usage,
+        VmaAllocationCreateFlags vmaFlags,
+        uint32_t                 bytesNum)
+    {
+        HGpuBuffer* pBuffer = m_pGpuRsrcManager->CreateGpuBuffer(usage, vmaFlags, bytesNum);
+        HGpuRsrcFrameContext& ctx = m_gpuRsrcFrameCtxs[m_curFrameIdx];
+        ctx.m_pTmpGpuBuffers.push_back(pBuffer);
+        return pBuffer;
+    }
+
+    // ================================================================================================================
+    HGpuImg* HFrameGpuRenderRsrcControl::CreateTmpGpuImage()
+    {}
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::DestroyCtxBuffersImgs(
+        HGpuRsrcFrameContext& ctx)
+    {
+        for (HGpuBuffer* pTmpGpuBuffer : ctx.m_pTmpGpuBuffers)
+        {
+            if (pTmpGpuBuffer != nullptr)
+            {
+                m_pGpuRsrcManager->DestroyGpuBufferResource(pTmpGpuBuffer);
+            }
+        }
+
+        for (HGpuImg* pTmpGpuImg : ctx.m_pTmpGpuImgs)
+        {
+            if (pTmpGpuImg != nullptr)
+            {
+                m_pGpuRsrcManager->DestroyGpuImage(pTmpGpuImg);
+            }
+        }
+
+        ctx.m_pTmpGpuBuffers.clear();
+        ctx.m_pTmpGpuImgs.clear();
+    }
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::SwitchToFrame(
+        uint32_t frameIdx)
+    {
+        m_curFrameIdx = frameIdx;
+
+        // Cleanup the frame idx if there are resources.
+        HGpuRsrcFrameContext& ctx = m_gpuRsrcFrameCtxs[frameIdx];
+
+        DestroyCtxBuffersImgs(ctx);
+    }
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::CleanupRsrc()
+    {
+        for (auto& ctx : m_gpuRsrcFrameCtxs)
+        {
+            DestroyCtxBuffersImgs(ctx);
+        }
+        m_gpuRsrcFrameCtxs.clear();
+    }
 }

@@ -1,6 +1,6 @@
 #pragma once
 /*
-* The hedge render manager holds the gpu context, glfw window context, swapchain and a set of renderer.
+* The hedge render manager manages the gpu context for each frames, glfw window context, swapchain and a set of renderers.
 * The manager also manages the sync between renderers for the final rendering result on the screen.
 * The render manager is responsible for everything that can be rendered on the screen, which also includes window's frame.
 * 
@@ -9,6 +9,7 @@
 */
 
 #include <vulkan/vulkan.h>
+#include <unordered_set>
 #include <iostream>
 #include <vector>
 #include "../core/HGpuRsrcManager.h"
@@ -22,6 +23,41 @@ namespace Hedge
     class HScene;
     class HFrameListener;
     class HEventManager;
+
+    /*
+    * The renderer creates and accesses the temparory GPU resources through the HGpuRenderRsrcControl instead of the
+    * GpuRsrcManager, because the renderer is not aware of the frame or swapchain, but we need these temparory
+    * resources to exist until this frame doesn't need the corresponding resources (These rsrc are not needed anymore).
+    * 
+    * Q1: Will frequent create and destroy buffer affect the performance? Not so sure since the memory backend doesn't
+    * change. It looks like it is highly possible that the performance should be ok.
+    */
+    struct HGpuRsrcFrameContext
+    {
+        std::vector<HGpuBuffer*> m_pTmpGpuBuffers;
+        std::vector<HGpuImg*>    m_pTmpGpuImgs;
+    };
+
+    class HFrameGpuRenderRsrcControl
+    {
+    public:
+        HFrameGpuRenderRsrcControl(uint32_t onFlightRsrcCnt, HGpuRsrcManager* pGpuRsrcManager);
+        ~HFrameGpuRenderRsrcControl() {}
+
+        HGpuBuffer* CreateTmpGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
+        HGpuImg*    CreateTmpGpuImage();
+
+        void SwitchToFrame(uint32_t frameIdx);
+
+        void CleanupRsrc();
+
+    private:
+        void DestroyCtxBuffersImgs(HGpuRsrcFrameContext& ctx);
+
+        uint32_t                          m_curFrameIdx;
+        HGpuRsrcManager*                  m_pGpuRsrcManager;
+        std::vector<HGpuRsrcFrameContext> m_gpuRsrcFrameCtxs;
+    };
 
     class HRenderManager
     {

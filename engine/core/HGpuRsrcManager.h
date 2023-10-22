@@ -67,7 +67,7 @@ namespace Hedge
         void DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
 
         HGpuImg* CreateGpuImage() {};
-        void DestroyGpuImage() {};
+        void DestroyGpuImage(const HGpuImg* const pGpuImg) {};
 
     private:
         // Vulkan core objects
