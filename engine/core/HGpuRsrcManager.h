@@ -1,6 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include <unordered_set>
+#include <unordered_map>
 
 #include "vk_mem_alloc.h"
 
@@ -62,14 +62,22 @@ namespace Hedge
         void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
 
         // GPU resource manage functions
+        // Add one more refer counter of this buffer or image
+        void ReferGpuBufferImg(void* pGpuBufferImg);
+        // Decrease one refer counter of this buffer or image. Release the rsrc if nobody refers it.
+        void DereferGpuBuffer(HGpuBuffer* pGpuBuffer);
+        void DereferGpuImg(HGpuImg* pGpuImg) {}
+        
+        // Create a gpu buffer and add a refer counter of this buffer.
         HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
-        void DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
 
         HGpuImg* CreateGpuImage() {};
-        void DestroyGpuImage(const HGpuImg* const pGpuImg) {};
+        
 
     private:
+        void HGpuRsrcManager::DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
+
         // Vulkan core objects
         VkInstance       m_vkInst;
         VkPhysicalDevice m_vkPhyDevice;
@@ -88,8 +96,7 @@ namespace Hedge
         VkQueue  m_computeQueue;
         VkQueue  m_presentQueue;
 
-        std::unordered_set<void*> m_gpuBuffers;
-        std::unordered_set<void*> m_gpuImgs;
+        std::unordered_map<void*, uint32_t> m_gpuBuffersImgs;
 
 #ifndef NDEBUG
         // Debug mode

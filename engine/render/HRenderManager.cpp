@@ -71,10 +71,10 @@ namespace Hedge
                                                   m_pGpuRsrcManager));
         m_activeRendererIdx = 0;
 
-        m_pRenderImgViews.resize(m_swapchainImgCnt);
-        m_renderImgsExtents.resize(m_swapchainImgCnt);
-        m_idxRendererGpuRsrcs.resize(m_swapchainImgCnt);
-        m_vertRendererGpuRsrcs.resize(m_swapchainImgCnt);
+        m_frameColorRenderResults.resize(m_swapchainImgCnt);
+        // m_renderImgsExtents.resize(m_swapchainImgCnt);
+        // m_idxRendererGpuRsrcs.resize(m_swapchainImgCnt);
+        // m_vertRendererGpuRsrcs.resize(m_swapchainImgCnt);
     }
 
     // ================================================================================================================
@@ -104,22 +104,11 @@ namespace Hedge
             delete itr;
         }
 
-        for (auto itr : m_idxRendererGpuRsrcs)
+        for (auto itr : m_frameColorRenderResults)
         {
-            if (itr.m_pAlloc != nullptr && itr.m_pBuffer != nullptr)
-            {
-                m_pGpuRsrcManager->DestroyGpuResource(itr);
-            }
+            m_pGpuRsrcManager->DereferGpuImg(itr);
         }
         
-        for (auto itr : m_vertRendererGpuRsrcs)
-        {
-            if (itr.m_pAlloc != nullptr && itr.m_pBuffer != nullptr)
-            {
-                m_pGpuRsrcManager->DestroyGpuResource(itr);
-            }
-        }
-
         vkDestroyRenderPass(*pVkDevice, m_renderPass, nullptr);
 
         vkDestroySurfaceKHR(*m_pGpuRsrcManager->GetVkInstance(), m_surface, nullptr);
@@ -198,7 +187,6 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    // TODO: Reorg render current scene. Let renderer applies gpu resources and manage relevant gpu resource.
     void HRenderManager::RenderCurrentScene(
         HScene& scene)
     {
@@ -648,12 +636,32 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    HFrameGpuRenderRsrcControl::HFrameGpuRenderRsrcControl(
-        uint32_t         onFlightRsrcCnt,
+    VkImageView* HRenderManager::GetCurrentRenderImgView() 
+    { 
+        return &(m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView); 
+    }
+
+    // ================================================================================================================
+    VkExtent2D HRenderManager::GetCurrentRenderImgExtent()
+    {
+        return { m_frameColorRenderResults[m_curSwapchainFrameIdx]->imgInfo.extent.width,
+                 m_frameColorRenderResults[m_curSwapchainFrameIdx]->imgInfo.extent.height };
+    }
+
+    // ================================================================================================================
+    HFrameGpuRenderRsrcControl::HFrameGpuRenderRsrcControl()
+        : m_pGpuRsrcManager(nullptr),
+          m_curFrameIdx(0)
+    {
+    }
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::Init(
+        uint32_t onFlightRsrcCnt,
         HGpuRsrcManager* pGpuRsrcManager)
-        : m_pGpuRsrcManager(pGpuRsrcManager)
     {
         m_gpuRsrcFrameCtxs.resize(onFlightRsrcCnt);
+        m_pGpuRsrcManager = pGpuRsrcManager;
     }
 
     // ================================================================================================================
@@ -680,7 +688,7 @@ namespace Hedge
         {
             if (pTmpGpuBuffer != nullptr)
             {
-                m_pGpuRsrcManager->DestroyGpuBufferResource(pTmpGpuBuffer);
+                m_pGpuRsrcManager->DereferGpuBuffer(pTmpGpuBuffer);
             }
         }
 
@@ -688,7 +696,7 @@ namespace Hedge
         {
             if (pTmpGpuImg != nullptr)
             {
-                m_pGpuRsrcManager->DestroyGpuImage(pTmpGpuImg);
+                m_pGpuRsrcManager->DereferGpuImg(pTmpGpuImg);
             }
         }
 

@@ -29,6 +29,12 @@ namespace Hedge
     * GpuRsrcManager, because the renderer is not aware of the frame or swapchain, but we need these temparory
     * resources to exist until this frame doesn't need the corresponding resources (These rsrc are not needed anymore).
     * 
+    * As for long persistent gpu buffers like objects' mesh vert buffers and idx buffers. They are managed by render
+    * manager, scene logic and GpuRsrcManager. Vert buffers and idx buffers can be very big, so they cannot be created
+    * for every frames. However, it's also possible that the frame 0 needs these buffers but some objects are deleted
+    * immediately. So, these GPU memory cannot be released immediately. They can only be released after the frame 0
+    * finishes.
+    * 
     * Q1: Will frequent create and destroy buffer affect the performance? Not so sure since the memory backend doesn't
     * change. It looks like it is highly possible that the performance should be ok.
     */
@@ -41,8 +47,10 @@ namespace Hedge
     class HFrameGpuRenderRsrcControl
     {
     public:
-        HFrameGpuRenderRsrcControl(uint32_t onFlightRsrcCnt, HGpuRsrcManager* pGpuRsrcManager);
+        HFrameGpuRenderRsrcControl();
         ~HFrameGpuRenderRsrcControl() {}
+
+        void Init(uint32_t onFlightRsrcCnt, HGpuRsrcManager* pGpuRsrcManager);
 
         HGpuBuffer* CreateTmpGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
         HGpuImg*    CreateTmpGpuImage();
@@ -75,8 +83,8 @@ namespace Hedge
 
         void SetWindowTitle(const std::string& titleStr);
 
-        VkImageView* GetCurrentRenderImgView() { return m_pRenderImgViews[m_curSwapchainFrameIdx]; }
-        VkExtent2D   GetCurrentRenderImgExtent() { return m_renderImgsExtents[m_curSwapchainFrameIdx]; }
+        VkImageView* GetCurrentRenderImgView();
+        VkExtent2D   GetCurrentRenderImgExtent();
 
     protected:
         // GUI
@@ -129,10 +137,12 @@ namespace Hedge
 
         // Renderers -- shared GPU resources for different renderers.
         // May need to be moved to the gui render manager since a game normally doesn't have a second renderer.
-        std::vector<HRenderer*>   m_pRenderers;
-        std::vector<VkImageView*> m_pRenderImgViews;
-        std::vector<VkExtent2D>   m_renderImgsExtents;
-        std::vector<GpuResource>  m_idxRendererGpuRsrcs;
-        std::vector<GpuResource>  m_vertRendererGpuRsrcs;
+        std::vector<HRenderer*>    m_pRenderers;
+        HFrameGpuRenderRsrcControl m_frameGpuRenderRsrcController;
+        std::vector<HGpuImg*>       m_frameColorRenderResults;
+        // std::vector<VkImageView*> m_pRenderImgViews;
+        // std::vector<VkExtent2D>   m_renderImgsExtents;
+        // std::vector<GpuResource>  m_idxRendererGpuRsrcs;
+        // std::vector<GpuResource>  m_vertRendererGpuRsrcs;
     };
 }

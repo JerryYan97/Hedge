@@ -32,6 +32,18 @@ namespace Hedge
 {
     // ================================================================================================================
     HGpuRsrcManager::HGpuRsrcManager()
+        : m_vkInst(VK_NULL_HANDLE),
+          m_vkPhyDevice(VK_NULL_HANDLE),
+          m_vkDevice(VK_NULL_HANDLE),
+          m_gfxCmdPool(VK_NULL_HANDLE),
+          m_descriptorPool(VK_NULL_HANDLE),
+          m_vmaAllocator(VK_NULL_HANDLE),
+          m_gfxQueueFamilyIdx(0),
+          m_computeQueueFamilyIdx(0),
+          m_presentQueueFamilyIdx(0),
+          m_gfxQueue(VK_NULL_HANDLE),
+          m_computeQueue(VK_NULL_HANDLE),
+          m_presentQueue(VK_NULL_HANDLE)
     {}
 
     // ================================================================================================================
@@ -72,16 +84,48 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HGpuRsrcManager::ReferGpuBufferImg(
+        void* pGpuBufferImg)
+    {
+        if (m_gpuBuffersImgs.count(pGpuBufferImg) > 0)
+        {
+            m_gpuBuffersImgs[pGpuBufferImg] = m_gpuBuffersImgs[pGpuBufferImg] + 1;
+        }
+        else
+        {
+            assert(1, "The refered buffer isn't exist.");
+        }
+    }
+
+    // ================================================================================================================
+    void HGpuRsrcManager::DereferGpuBuffer(
+        HGpuBuffer* pGpuBuffer)
+    {
+        if (m_gpuBuffersImgs.count(pGpuBuffer) > 0)
+        {
+            m_gpuBuffersImgs[pGpuBuffer] = m_gpuBuffersImgs[pGpuBuffer] - 1;
+            if (m_gpuBuffersImgs[pGpuBuffer] == 0)
+            {
+                DestroyGpuBufferResource(pGpuBuffer);
+            }
+        }
+        else
+        {
+            assert(1, "The derefered buffer isn't exist.");
+        }
+    }
+
+    // ================================================================================================================
     void HGpuRsrcManager::DestroyGpuBufferResource(
         const HGpuBuffer* const pGpuBuffer)
     {
         // Check whether the pointer is valid.
         if (pGpuBuffer != nullptr)
         {
-            if (m_gpuBuffers.count((void*)pGpuBuffer) > 0)
+            if (m_gpuBuffersImgs.count((void*)pGpuBuffer) > 0)
             {
                 vmaDestroyBuffer(m_vmaAllocator, pGpuBuffer->gpuBuffer, pGpuBuffer->gpuBufferAlloc);
-                m_gpuBuffers.erase((void*)pGpuBuffer);
+                m_gpuBuffersImgs.erase((void*)pGpuBuffer);
                 delete pGpuBuffer;
             }
             else
@@ -350,7 +394,7 @@ namespace Hedge
                                  &(pGpuBuffer->gpuBufferAlloc),
                                  nullptr));
 
-        m_gpuBuffers.insert((void*)pGpuBuffer);
+        m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, 1 });
 
         return pGpuBuffer;
     }
