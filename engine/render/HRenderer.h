@@ -2,7 +2,6 @@
 /*
 * The hedge render manager holds the gpu context, glfw window context and a set of renderer.
 * A renderer is an entity to construct a command buffer or a set of command buffers for rendering.
-* A renderer also holds a pipeline.
 * What should be a renderer input and output? It's output must be an image. Should the renderer manages the output image? Not really.
 * Should a Renderer be aware of the swapchain? It doesn't make to much sense to me since a renderer should also be able to dump just one image or a cubemap.
 */
@@ -21,6 +20,9 @@
 // Ok... Then the renderer cannot directly use the GpuRsrcManager. It has to access the GpuRsrcManager through the render manager so the render manager can track all these resources and release them at the right time.
 // Maybe have a HGpuRenderRsrcControl class. So, we don't need to directly access GpuRsrcManager. The controller is a member variable of the manager. It controls UBO and lots of other things.
 // Vert in NDC -- <viewport transformation> --> Verts in Framebuffer-Space or Framebuffer Coordinates.
+// TODO9: Maybe I want to shield users from vulkan details for inheritance class as much as possible?
+// TODO10: Pipeline is controlled by the render manager. Pipeline is aware of the frames. Pipeline should control the descriptor sets.
+// TODO11: Renderer is more or less a boilerplate. It gets pipeline and all nesseary information and draw to the designated image. The base renderer should consider the case that a render needs mutiple pipelines.
 
 #include <vulkan/vulkan.h>
 #include <iostream>
@@ -40,20 +42,25 @@ namespace Hedge
     class HRenderer
     {
     public:
-        explicit HRenderer(VkDevice* pVkDevice, HGpuRsrcManager* pGpuRsrcManager);
+        explicit HRenderer(HFrameGpuRenderRsrcControl* pFrameGpuRsrcManager);
         virtual ~HRenderer();
 
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf) = 0;
 
-    protected:
-        VkDevice*               m_pVkDevice;
-        HGpuRsrcManager*        m_pGpuRsrcManager;
-        std::vector<HPipeline*> m_pPipelines;
-    private:
+        virtual void CleanupFrameReferences() = 0; // Cleanup the resources references vectors for one frame. E.g. Clean descriptor sets ref.
 
+        void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
+        void AddDescriptorSet(VkDescriptorSet* pDesSet) { m_pDescriptorSets.push_back(pDesSet); }
+
+    protected:
+        HFrameGpuRenderRsrcControl*   m_pFrameGpuRsrcManager;
+        std::vector<HPipeline*>       m_pPipelines;
+        std::vector<VkDescriptorSet*> m_pDescriptorSets;
+
+    private:
     };
 
-    // A lambertain renderer that uses idx buffer and vert buffer.
+    // A basic one pipeline renderer.
     class HBasicRenderer : public HRenderer
     {
     public:
@@ -96,8 +103,8 @@ namespace Hedge
         
         // Shader UBO
         std::vector<VkDescriptorSet> m_uboDescriptorSets;
-        std::vector<GpuResource> m_mvpUboBuffers;
-        std::vector<GpuResource> m_lightUboBuffers;
+        // std::vector<GpuResource> m_mvpUboBuffers;
+        // std::vector<GpuResource> m_lightUboBuffers;
 
         uint32_t m_lastFrameIdx;
     };

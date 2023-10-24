@@ -61,22 +61,24 @@ namespace Hedge
 
         void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
 
-        // GPU resource manage functions
+        // GPU resource manage functions. The users should derefer the buffer or image when it is not needed.
         // Add one more refer counter of this buffer or image
         void ReferGpuBufferImg(void* pGpuBufferImg);
+
         // Decrease one refer counter of this buffer or image. Release the rsrc if nobody refers it.
         void DereferGpuBuffer(HGpuBuffer* pGpuBuffer);
-        void DereferGpuImg(HGpuImg* pGpuImg) {}
+        void DereferGpuImg(HGpuImg* pGpuImg);
         
         // Create a gpu buffer and add a refer counter of this buffer.
         HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
 
-        HGpuImg* CreateGpuImage() {};
+        HGpuImg* CreateGpuImage(VkImageCreateInfo imgCreateInfo, VmaAllocationCreateFlags vmaFlags);
         
 
     private:
         void HGpuRsrcManager::DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
+        void HGpuRsrcManager::DestroyGpuImgResource(const HGpuImg* const pGpuImg);
 
         // Vulkan core objects
         VkInstance       m_vkInst;

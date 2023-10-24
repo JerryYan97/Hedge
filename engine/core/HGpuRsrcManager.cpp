@@ -364,10 +364,10 @@ namespace Hedge
         uint32_t                 bytesNum)
     {
         // Create Buffer and allocate memory for vertex buffer, index buffer and render target.
-        VmaAllocationCreateInfo mappableBufCreateInfo = {};
+        VmaAllocationCreateInfo bufAllocInfo = {};
         {
-            mappableBufCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            mappableBufCreateInfo.flags = vmaFlags;
+            bufAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            bufAllocInfo.flags = vmaFlags;
             /*
             mappableBufCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                                           VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -375,11 +375,11 @@ namespace Hedge
         }
 
         // Create Vertex Buffer
-        VkBufferCreateInfo vertBufferInfo = {};
+        VkBufferCreateInfo bufferInfo = {};
         {
-            vertBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            vertBufferInfo.size = bytesNum;
-            vertBufferInfo.usage = usage;
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = bytesNum;
+            bufferInfo.usage = usage;
         }
 
         HGpuBuffer* pGpuBuffer = new HGpuBuffer();
@@ -388,8 +388,8 @@ namespace Hedge
         pGpuBuffer->byteCnt = bytesNum;
 
         VK_CHECK(vmaCreateBuffer(m_vmaAllocator,
-                                 &vertBufferInfo,
-                                 &mappableBufCreateInfo,
+                                 &bufferInfo,
+                                 &bufAllocInfo,
                                  &(pGpuBuffer->gpuBuffer),
                                  &(pGpuBuffer->gpuBufferAlloc),
                                  nullptr));
@@ -409,6 +409,74 @@ namespace Hedge
         VK_CHECK(vmaMapMemory(m_vmaAllocator, pGpuBuffer->gpuBufferAlloc, &mapped));
         memcpy(mapped, pData, bytes);
         vmaUnmapMemory(m_vmaAllocator, pGpuBuffer->gpuBufferAlloc);
+    }
+
+    // ================================================================================================================
+    void HGpuRsrcManager::DereferGpuImg(
+        HGpuImg* pGpuImg)
+    {
+        if (m_gpuBuffersImgs.count(pGpuImg) > 0)
+        {
+            m_gpuBuffersImgs[pGpuImg] = m_gpuBuffersImgs[pGpuImg] - 1;
+            if (m_gpuBuffersImgs[pGpuImg] == 0)
+            {
+                DestroyGpuImgResource(pGpuImg);
+            }
+        }
+        else
+        {
+            assert(1, "The derefered image isn't exist.");
+        }
+    }
+
+    // ================================================================================================================
+    void HGpuRsrcManager::DestroyGpuImgResource(
+        const HGpuImg* const pGpuImg)
+    {
+        // Check whether the pointer is valid.
+        if (pGpuImg != nullptr)
+        {
+            if (m_gpuBuffersImgs.count((void*)pGpuImg) > 0)
+            {
+                vmaDestroyImage(m_vmaAllocator, pGpuImg->gpuImg, pGpuImg->gpuImgAlloc);
+                m_gpuBuffersImgs.erase((void*)pGpuImg);
+                delete pGpuImg;
+            }
+            else
+            {
+                assert(1, "The image doesn't exist in the gpu buffer image set.");
+            }
+        }
+        else
+        {
+            assert(1, "The image cannot be nullptr");
+        }
+    }
+
+    // ================================================================================================================
+    HGpuImg* HGpuRsrcManager::CreateGpuImage(
+        VkImageCreateInfo        imgCreateInfo,
+        VmaAllocationCreateFlags vmaFlags)
+    {
+        VmaAllocationCreateInfo imgAllocInfo = {};
+        {
+            imgAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            imgAllocInfo.flags = vmaFlags;
+        }
+
+        HGpuImg* pGpuImg = new HGpuImg();
+        memset(pGpuImg, 0, sizeof(HGpuImg));
+
+        VK_CHECK(vmaCreateImage(m_vmaAllocator,
+                                &imgCreateInfo,
+                                &imgAllocInfo,
+                                &(pGpuImg->gpuImg),
+                                &(pGpuImg->gpuImgAlloc),
+                                nullptr));
+
+        m_gpuBuffersImgs.insert({ (void*)pGpuImg, 1 });
+
+        return pGpuImg;
     }
 
 #ifndef NDEBUG

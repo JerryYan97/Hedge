@@ -12,4 +12,6 @@ target_sources(
     HEvent.cpp
     HSerializer.h
     HSerializer.cpp
+    HAssetRsrcManager.h
+    HAssetRsrcManager.cpp
 )

@@ -18,14 +18,8 @@ namespace Hedge
 {
     // ================================================================================================================
     HRenderer::HRenderer(
-        uint32_t onFlightResCnt, 
-        VkDevice* pVkDevice, 
-        VkFormat surfFormat, 
-        VmaAllocator* pVmaAllocator)
-        : m_onFlightResCnt(onFlightResCnt),
-          m_pVkDevice(pVkDevice),
-          m_renderSurfFormat(surfFormat),
-          m_pVmaAllocator(pVmaAllocator)
+        HFrameGpuRenderRsrcControl* pFrameGpuRsrcManager)
+        : m_pFrameGpuRsrcManager(pFrameGpuRsrcManager)
     {
 
     }
