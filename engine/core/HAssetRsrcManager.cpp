@@ -10,16 +10,6 @@ namespace Hedge
     // ================================================================================================================
     HAssetRsrcManager::HAssetRsrcManager()
     {
-        // Load built in meshes. Built in meshes are always in the RAM until the game ends.
-        // Cube:
-        {
-            uint64_t builtInCubeId = crc32(CubeStrId.c_str());
-            HStaticMeshAsset* pBuiltInCube = new HStaticMeshAsset(builtInCubeId, CubeStrId, "BUILT_IN");
-            AssetWrap builtInCubeWrap;
-            builtInCubeWrap.refCounter = 1;
-            builtInCubeWrap.pAsset = pBuiltInCube;
-            m_assetsMap.insert({ builtInCubeId, builtInCubeWrap });
-        }
     }
 
     // ================================================================================================================
@@ -39,8 +29,9 @@ namespace Hedge
         }
         else
         {
-            AssetWrap assetWrap;
-            assetWrap.refCounter = 1;
+            // TODO: Implement 
+            // AssetWrap assetWrap;
+            // assetWrap.refCounter = 1;
         }
 
         return guid;
@@ -105,7 +96,9 @@ namespace Hedge
         std::string assetPathName,
         std::string srcFile)
         : HAsset(guid, assetPathName, srcFile)
-    {}
+    {
+        // Load data from the src file.
+    }
 
     // ================================================================================================================
     HTextureAsset::HTextureAsset(

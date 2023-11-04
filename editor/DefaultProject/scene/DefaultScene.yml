@@ -1,0 +1,26 @@
+Scene Entities:
+  DefaultCubeInst:
+    Type: HCubeEntity
+    Components:
+      TransformComponent:
+        POS: [0, 0, 2]
+        ROT: [0, 0, 0]
+        SCALE: [1, 1, 1]
+      StaticMeshComponent:
+        Is Prebuilt: true
+        Prebuilt Mesh Name: Cube
+  DefaultCameraInst:
+    Type: HCameraEntity
+    Components:
+      TransformComponent:
+        POS: [5.03847122, 2.29094577, 3.53006411]
+        ROT: [0, 0, 0]
+        SCALE: [1, 1, 1]
+      CameraComponent:
+        View: [-0.919259131, -0.275637269, -0.281045794]
+        Up: [-0.263593137, 0.961261749, -0.0805885717]
+        fov: 0.820304751
+        aspect: 1.41176474
+        far: 100
+        near: 0.100000001
+        isActive: true

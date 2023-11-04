@@ -23,6 +23,7 @@ namespace Hedge
         const std::string m_sourceFile;
     };
 
+    // 
     class HStaticMeshAsset : public HAsset
     {
     public:
@@ -31,6 +32,8 @@ namespace Hedge
         ~HStaticMeshAsset() { }
 
     private:
+        std::string m_materialPathName;
+
         std::vector<uint16_t> m_idxData;
         std::vector<float>    m_vertData;
     };
