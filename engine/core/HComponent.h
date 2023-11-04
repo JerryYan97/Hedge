@@ -10,6 +10,8 @@ namespace YAML
 
 namespace Hedge
 {
+    // The component design should mimic the UE.
+
     // x -- pitch, y -- head, z -- roll; m_rot[pitch, head, roll].
     class TransformComponent
     {
@@ -32,7 +34,7 @@ namespace Hedge
         float m_scale[3];
     };
 
-    // NOTE: Static is not responsible for vertex or index delete.
+    // Static mesh component just provide a slot/reference to a static mesh asset.
     class StaticMeshComponent
     {
     public:

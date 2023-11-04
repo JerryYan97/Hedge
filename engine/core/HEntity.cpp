@@ -7,7 +7,6 @@
 
 #include "yaml-cpp/yaml.h"
 
-#include "g_builtInModels.h"
 #include <sstream>
 
 // #define TINYOBJLOADER_IMPLEMENTATION
