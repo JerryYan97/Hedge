@@ -1,10 +1,10 @@
 #include "HComponent.h"
 #include "yaml-cpp/yaml.h"
+#include "HAssetRsrcManager.h"
 
 namespace Hedge
 {
-    extern float CubeVertBufData[192];
-    extern uint32_t CubeIdxData[36];
+    extern HAssetRsrcManager* g_pAssetRsrcManager;
 
     // ================================================================================================================
     void TransformComponent::Seralize(
@@ -51,18 +51,10 @@ namespace Hedge
         emitter << YAML::Value;
 
         emitter << YAML::BeginMap;
-        emitter << YAML::Key << "Is Prebuilt";
-        emitter << YAML::Value << m_preBuiltMesh;
 
-        if (m_preBuiltMesh)
-        {
-            emitter << YAML::Key << "Prebuilt Mesh Name";
-        }
-        else
-        {
-            emitter << YAML::Key << "Mesh Asset Name Path";
-        }
+        emitter << YAML::Key << "Mesh Asset Name Path";
         emitter << YAML::Value << m_meshAssetPathName;
+
         emitter << YAML::EndMap;
     }
 
@@ -70,22 +62,8 @@ namespace Hedge
     void StaticMeshComponent::Deseralize(
         YAML::Node& node)
     {
-        bool isPrebuiltMesh = node["Is Prebuilt"].as<bool>();
-
-        if (isPrebuiltMesh)
-        {
-            // TODO: We may want to make a jump table for the prebuilt meshes.
-            std::string meshName = node["Prebuilt Mesh Name"].as<std::string>();
-            if (std::strcmp(meshName.c_str(), "Cube"))
-            {
-                m_pVert = CubeVertBufData;
-                m_pIdx = CubeIdxData;
-                m_idxCnt = uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t));
-                m_vertBufBytes = uint32_t(sizeof(CubeVertBufData));
-                m_meshAssetPathName = "Cube";
-                m_preBuiltMesh = true;
-            }
-        }
+        std::string assetNamePath = node["Mesh Asset Name Path"].as<std::string>();
+        m_meshAssetGuid = g_pAssetRsrcManager->LoadAsset(assetNamePath);
     }
 
     // ================================================================================================================

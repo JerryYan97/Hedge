@@ -8,6 +8,7 @@
 namespace Hedge
 {
     class HScene;
+    class HAssetRsrcManager;
 
     class HGameTemplate : public HFrameListener
     {
@@ -60,6 +61,7 @@ namespace Hedge
         HGameRenderManager* GetGameRenderManager() { return m_pGameRenderManager; }
         HGameGuiManager* GetGameGuiManager() { return m_pGameGuiManager; }
         HGpuRsrcManager* GetGpuRsrcManager() { return m_pGpuRsrcManager; }
+        HAssetRsrcManager* GetAssetRsrcManager() { return m_pAssetRsrcManager; }
 
     protected:
         virtual void CreateCustomGlobalVariables();
@@ -69,5 +71,6 @@ namespace Hedge
         HGameRenderManager* m_pGameRenderManager;
         HGameGuiManager* m_pGameGuiManager;
         HGpuRsrcManager* m_pGpuRsrcManager;
+        HAssetRsrcManager* m_pAssetRsrcManager;
     };
 }

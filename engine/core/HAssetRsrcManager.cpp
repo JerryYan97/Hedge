@@ -9,7 +9,18 @@ namespace Hedge
 {
     // ================================================================================================================
     HAssetRsrcManager::HAssetRsrcManager()
-    {}
+    {
+        // Load built in meshes. Built in meshes are always in the RAM until the game ends.
+        // Cube:
+        {
+            uint64_t builtInCubeId = crc32(CubeStrId.c_str());
+            HStaticMeshAsset* pBuiltInCube = new HStaticMeshAsset(builtInCubeId, CubeStrId, "BUILT_IN");
+            AssetWrap builtInCubeWrap;
+            builtInCubeWrap.refCounter = 1;
+            builtInCubeWrap.pAsset = pBuiltInCube;
+            m_assetsMap.insert({ builtInCubeId, builtInCubeWrap });
+        }
+    }
 
     // ================================================================================================================
     HAssetRsrcManager::~HAssetRsrcManager()
@@ -18,41 +29,18 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    uint64_t HAssetRsrcManager::LoadObjToMeshData(
+    uint64_t HAssetRsrcManager::LoadAsset(
         const std::string& objNamePath)
     {
         uint64_t guid = crc32(objNamePath.c_str());
         if (m_assetsMap.count(guid) > 0)
         {
-            
+            m_assetsMap[guid].refCounter++;
         }
         else
         {
-            
-        }
-
-        m_assetsMap[guid].refCounter++;
-        return guid;
-    }
-
-    // ================================================================================================================
-    uint64_t HAssetRsrcManager::LoadStaticCubeMesh()
-    {
-        const std::string staticCubeMeshStrId = "BuiltIn_Static_Cube_Mesh";
-        uint64_t guid = crc32(staticCubeMeshStrId.c_str());
-        
-        if (m_assetsMap.count(guid) == 0)
-        {
-            MeshData* pMeshData = new MeshData();
-            memset(pMeshData, 0, sizeof(MeshData));
-            memcpy(pMeshData->idxData.data(), CubeIdxData, sizeof(CubeIdxData));
-            memcpy(pMeshData->vertData.data(), CubeVertBufData, sizeof(CubeVertBufData));
-
             AssetWrap assetWrap;
-            assetWrap.pRes = pMeshData;
             assetWrap.refCounter = 1;
-
-            m_assetsMap.insert({ guid, assetWrap });
         }
 
         return guid;
@@ -61,11 +49,11 @@ namespace Hedge
     // ================================================================================================================
     bool HAssetRsrcManager::GetAssetPtr(
         uint64_t guid,
-        void**   pPtr)
+        HAsset** pPtr)
     {
         if (m_assetsMap.count(guid) > 0)
         {
-            *pPtr = m_assetsMap.at(guid).pRes;
+            *pPtr = m_assetsMap.at(guid).pAsset;
             return true;
         }
         else
@@ -73,22 +61,6 @@ namespace Hedge
             *pPtr = nullptr;
             return false;
         }
-    }
-
-    // ================================================================================================================
-    uint64_t HAssetRsrcManager::LoadImg(
-        const std::string& imgNamePath)
-    {
-        uint64_t guid = crc32(imgNamePath.c_str());
-        if (m_assetsMap.count(guid) > 0)
-        {
-            
-        }
-        else
-        {
-
-        }
-        return guid;
     }
 
     // ================================================================================================================
@@ -100,7 +72,7 @@ namespace Hedge
             m_assetsMap[guid].refCounter--;
             if (m_assetsMap[guid].refCounter == 0)
             {
-                void* ptr = m_assetsMap.at(guid).pRes;
+                void* ptr = m_assetsMap.at(guid).pAsset;
                 delete ptr;
                 m_assetsMap.erase(guid);
             }
@@ -108,26 +80,46 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    /*
-    void HAssetRsrcManager::UnloadAsset(
-        uint64_t guid)
-    {
-        if (m_assetsMap.count(guid) > 0)
-        {
-            void* ptr = m_assetsMap.at(guid).pRes;
-            delete ptr;
-            m_assetsMap.erase(guid);
-        }
-    }
-    */
-
-    // ================================================================================================================
     void HAssetRsrcManager::CleanAllAssets()
     {
         for (auto itr : m_assetsMap)
         {
-            delete itr.second.pRes;
+            delete itr.second.pAsset;
         }
         m_assetsMap.clear();
     }
+
+    // ================================================================================================================
+    HAsset::HAsset(
+        uint64_t    guid,
+        std::string assetPathName,
+        std::string srcFile)
+        : m_guid(guid),
+          m_assetPathName(assetPathName),
+          m_sourceFile(srcFile)
+    {}
+
+    // ================================================================================================================
+    HStaticMeshAsset::HStaticMeshAsset(
+        uint64_t    guid,
+        std::string assetPathName,
+        std::string srcFile)
+        : HAsset(guid, assetPathName, srcFile)
+    {}
+
+    // ================================================================================================================
+    HTextureAsset::HTextureAsset(
+        uint64_t    guid,
+        std::string assetPathName,
+        std::string srcFile)
+        : HAsset(guid, assetPathName, srcFile)
+    {}
+
+    // ================================================================================================================
+    // Material doesn't have a src file.
+    HMaterialAsset::HMaterialAsset(
+        uint64_t    guid,
+        std::string assetPathName)
+        : HAsset(guid, assetPathName, "None")
+    {}
 }

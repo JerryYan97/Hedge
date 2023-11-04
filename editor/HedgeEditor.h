@@ -10,6 +10,7 @@ namespace Hedge
 {
     class HScene;
     class HEventManager;
+    class HAssetRsrcManager;
 
     class HedgeEditor : public HFrameListener
     {
@@ -60,11 +61,13 @@ namespace Hedge
         HedgeEditorRenderManager* GetHedgeEditorRenderManager() { return m_pHedgeEditorRenderManager; }
         HedgeEditorGuiManager* GetHedgeEditorGuiManager() { return m_pHedgeEditorGuiManager; }
         HGpuRsrcManager* GetGpuRsrcManager() { return m_pGpuRsrcManager; }
+        HAssetRsrcManager* GetAssetRsrcManager() { return m_pAssetRsrcManager; }
 
     private:
         HedgeEditor*              m_pHedgeEditor;
         HedgeEditorGuiManager*    m_pHedgeEditorGuiManager;
         HedgeEditorRenderManager* m_pHedgeEditorRenderManager;
         HGpuRsrcManager*          m_pGpuRsrcManager;
+        HAssetRsrcManager*        m_pAssetRsrcManager;
     };
 }

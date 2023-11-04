@@ -11,6 +11,13 @@ namespace YAML
 namespace Hedge
 {
     // The component design should mimic the UE.
+    // Component is just an attachment for entities.
+    // Large data should be stored in asset and shared by different components.
+    //
+    // Cited from the Game Engine Architecture:
+    // A component provides a single, well-defined service.
+    // Some components correspond directly to a single engine subsystem, such as rendering, animation, collision, physics, audio, etc.
+    // E.g. StaticMeshComponent provide all information for renderer to render the triangles out.
 
     // x -- pitch, y -- head, z -- roll; m_rot[pitch, head, roll].
     class TransformComponent
@@ -38,19 +45,8 @@ namespace Hedge
     class StaticMeshComponent
     {
     public:
-        StaticMeshComponent(
-            uint32_t* pIdx,
-            float*    pVert,
-            uint32_t  idxCnt,
-            uint32_t  vertBufBytes,
-            std::string meshAssetPathName,
-            bool      preBuiltMesh)
-            : m_pIdx(pIdx),
-              m_pVert(pVert),
-              m_idxCnt(idxCnt),
-              m_vertBufBytes(vertBufBytes),
-              m_preBuiltMesh(preBuiltMesh),
-              m_meshAssetPathName(meshAssetPathName)
+        StaticMeshComponent()
+            : m_meshAssetGuid(0)
         {}
 
         ~StaticMeshComponent()
@@ -59,12 +55,8 @@ namespace Hedge
         void Seralize(YAML::Emitter& emitter);
         void Deseralize(YAML::Node& node);
 
-        uint32_t* m_pIdx  = nullptr;
-        float*    m_pVert = nullptr;
-        uint32_t  m_vertBufBytes;
-        uint32_t  m_idxCnt;
-        bool      m_preBuiltMesh;
         std::string m_meshAssetPathName;
+        uint64_t    m_meshAssetGuid;
     };
 
     class CameraComponent

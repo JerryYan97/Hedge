@@ -1,5 +1,6 @@
 #include "GameTemplate.h"
 #include "../scene/HScene.h"
+#include "../core/HAssetRsrcManager.h"
 #include "yaml-cpp/yaml.h"
 #include "Utils.h"
 #include "UtilMath.h"

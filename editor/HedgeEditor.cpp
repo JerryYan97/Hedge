@@ -2,6 +2,7 @@
 #include "render/HRenderManager.h"
 #include "scene/HScene.h"
 #include "core/HEntity.h"
+#include "core/HAssetRsrcManager.h"
 #include "Utils.h"
 #include <iostream>
 #include <cstdlib>
@@ -15,6 +16,7 @@ Hedge::GlobalVariablesRAIIManager raiiManager;
 Hedge::HFrameListener* g_pFrameListener = raiiManager.GetHedgeEditor();
 Hedge::HRenderManager* g_pRenderManager = raiiManager.GetHedgeEditorRenderManager();
 Hedge::HGpuRsrcManager* g_pGpuRsrcManager = raiiManager.GetGpuRsrcManager();
+Hedge::HAssetRsrcManager* g_pAssetRsrcManager = raiiManager.GetAssetRsrcManager();
 
 namespace Hedge
 {
@@ -264,6 +266,7 @@ namespace Hedge
         m_pHedgeEditorGuiManager    = new HedgeEditorGuiManager();
         m_pGpuRsrcManager           = new HGpuRsrcManager();
         m_pHedgeEditorRenderManager = new HedgeEditorRenderManager(m_pHedgeEditorGuiManager, m_pGpuRsrcManager);
+        m_pAssetRsrcManager         = new HAssetRsrcManager();
     }
 
     // ================================================================================================================
@@ -272,6 +275,7 @@ namespace Hedge
         delete m_pHedgeEditorGuiManager;
         delete m_pHedgeEditorRenderManager;
         delete m_pGpuRsrcManager;
-        delete m_pHedgeEditor;     
+        delete m_pHedgeEditor;
+        delete m_pAssetRsrcManager;
     }
 }
