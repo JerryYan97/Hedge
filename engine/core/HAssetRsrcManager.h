@@ -39,6 +39,7 @@ namespace Hedge
         std::vector<float>    m_vertData;
     };
 
+    // TODO: Need to check Cherno's material system for design idea.
     class HMaterialAsset : public HAsset
     {
     public:

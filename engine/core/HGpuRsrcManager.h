@@ -32,6 +32,7 @@ namespace Hedge
     };
 
     // The HGpuRsrcManager holds the vk instance, devices and hides the vma from other parts of the engine.
+    // TODO: We maybe able to say GPU resources include both GRAM resources and GPU compute resources.
     class HGpuRsrcManager
     {
     public:
