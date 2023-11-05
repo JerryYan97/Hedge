@@ -1,0 +1,3 @@
+asset type: HStaticMeshAsset
+src file: cube.obj
+material: ./M_Basic_Wall

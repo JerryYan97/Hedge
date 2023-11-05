@@ -8,6 +8,7 @@ namespace Hedge
     // All assets have their own path name in the game or in the game project.
     // They can be stored on the disk or load from the disk.
     // On the disk, all assets are in the 'assets' folder of the game or game project.
+    // On the disk, the asset should be put into a folder with the m_assetPathName and a same name yaml file.
     class HAsset
     {
     public:
@@ -15,7 +16,7 @@ namespace Hedge
         ~HAsset() {}
 
     protected:
-
+        virtual void LoadAssetFromDisk() = 0;
 
     private:
         const uint64_t    m_guid;

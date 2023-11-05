@@ -88,7 +88,9 @@ namespace Hedge
         : m_guid(guid),
           m_assetPathName(assetPathName),
           m_sourceFile(srcFile)
-    {}
+    {
+        LoadAssetFromDisk();
+    }
 
     // ================================================================================================================
     HStaticMeshAsset::HStaticMeshAsset(
