@@ -8,6 +8,8 @@ An asset consists of a yaml file as well as several other files. The yaml file s
 
 ## Static Mesh Asset
 
+The src file must contains positions, uv, normal and tangents.
+
 ### Full yaml format
 
 ```
@@ -19,12 +21,18 @@ material: <The name path of the used material>
 
 ## Material Asset
 
+Currently, we only support the PBR material.
+
 ### Full yaml format
 
 ```
 asset type: HMaterialAsset
 asset name: <The name of this asset>
 base color: <A pure color or the path name of a texture asset>
+albedo texture: <A path to the base color texture. Optional>
+normal texture: <A path to the normal texture. Optional. If the asset doesn't have a normal texture, we will use a pure blue texture.>
+roughness-metalic texture: <A path to the roughness-metalic texture. Optional. We will use full roughness and no metalic by default.>
+occlusion texture: <A path to the occlusion texture. Optional. We don't have any occlusion by default.>
 ...
 ```
 
