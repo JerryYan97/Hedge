@@ -6,4 +6,6 @@ target_sources(
     HRenderer.h
     HRenderManager.cpp
     HRenderManager.h
+    HPipeline.cpp
+    HPipeline.h
 )

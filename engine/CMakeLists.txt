@@ -112,3 +112,21 @@ target_compile_features(HedgeEngine PRIVATE cxx_std_17)
 target_link_libraries(HedgeEngine LINK_PUBLIC vulkan-1
                                               glfw3
                                               yaml-cpp)
+
+# Compile built in shaders
+# Deal with the building warning.
+set(DUMMY_FILE dummy)
+set_property(SOURCE DUMMY_FILE
+             PROPERTY SYMBOLIC True)
+
+add_custom_command(
+        OUTPUT
+            DUMMY_FILE
+        COMMAND python
+            ${CMAKE_CURRENT_SOURCE_DIR}/../tools/GenerateShaderHeader.py
+)
+
+add_custom_target(SHADER_COMPILE
+                  DEPENDS DUMMY_FILE)
+
+add_dependencies(HedgeEngine SHADER_COMPILE)

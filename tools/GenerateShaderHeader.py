@@ -3,6 +3,7 @@
 # Currently, the script only supports vertex shader and fragment shader.
 import os
 import subprocess
+import sys
 
 
 def GenerateShaderFormatedArray(hexStr, arrayName):
@@ -49,11 +50,30 @@ def GenerateHeader(shaderFoldersPathsNameList, shadersPath):
     generateHeaderHandle.close()
 
 
-def CompileShader(ShaderPathName, folderName, shaderType):
-    shaderFlag = "vs_6_0"
-    if shaderType == "Frag":
-        shaderFlag = "ps_6_0"
-    result = subprocess.run(["dxc.exe", "-spirv", "-T", shaderFlag, "-E", "main", ShaderPathName, "-Fo", ShaderPathName + ".spv"])
+def CompileShaderHlsl(shaderPathName, folderPath, shaderType):
+    shaderFlag = ""
+    if shaderType == "vert":
+        shaderFlag = "vs_6_1"
+    elif shaderType == "frag":
+        shaderFlag = "ps_6_1"
+    else:
+        sys.exit('Unrecogonized hlsl shader type.')
+    
+    subprocess.check_output([
+        "dxc.exe",
+        '-spirv',
+        '-T', shaderFlag,
+        '-E', 'main',
+        '-I', folderPath + "\\..\\shared",
+        '-fspv-target-env=vulkan1.3',
+        '-fspv-extension=SPV_KHR_ray_query',
+        '-fspv-extension=SPV_KHR_ray_tracing',
+        '-fspv-extension=SPV_KHR_multiview',
+        '-fspv-extension=SPV_KHR_shader_draw_parameters',
+        '-fspv-extension=SPV_EXT_descriptor_indexing',
+        shaderPathName,
+        '-Fo', shaderPathName + ".spv"
+    ])
 
 
 def CompileShaderGlsl(ShaderPathName, shaderType):
@@ -73,15 +93,20 @@ def CompileShadersInFolder(Path, FolderName):
     filenames = next(fileGenerator)
     for fileName in filenames[2]:
         if "Vert" in fileName and "glsl" in fileName:
-            # CompileShader(Path + "\\" + fileName, FolderName, "Vert")
             CompileShaderGlsl(Path + "\\" + fileName, "vert")
         elif "Frag" in fileName and "glsl" in fileName:
-            # CompileShader(Path + "\\" + fileName, FolderName, "Frag")
             CompileShaderGlsl(Path + "\\" + fileName, "frag")
+        elif "vert" in fileName and "hlsl" in fileName:
+            CompileShaderHlsl(Path + "\\" + fileName, Path, "vert")
+        elif "frag" in fileName and "hlsl" in fileName:
+            CompileShaderHlsl(Path + "\\" + fileName, Path, "frag")
 
 
 if __name__ == "__main__":
-    shadersPath = os.getcwd() + "\\..\\shaders"
+    file_path = os.path.realpath(__file__)
+    idx = max(file_path.rfind('/'), file_path.rfind('\\'))
+    folder_path = file_path[:idx]
+    shadersPath = folder_path + "\\..\\shaders"
     generator = os.walk(shadersPath)
 
     folders = next(generator)

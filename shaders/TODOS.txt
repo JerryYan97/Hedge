@@ -1,0 +1,12 @@
+We may want a dynamic shader-pipeline system.
+The shader input can be dynamic
+-- Whether it uses pure color or whether it uses IBL.
+-- Whether it has point lights.
+
+Now, in order to save development time, I just use a mono shader and feed dummy textures to the shader. Besides, this compromission won't affect future detailed design.
+
+E.g. 
+- Pure color textures to the base color textures.
+- Pure blue textures to the normal textures.
+- Pure black textures to the diffuse cubemap or prefilter environment cubemap textures.
+- Pure white textures to the occlusion texture.
