@@ -1,7 +1,8 @@
 #pragma once
+
 /*
-* The hedge render manager holds the gpu context, glfw window context and a set of renderer.
-* A renderer is an entity to construct a command buffer or a set of command buffers for rendering.
+* The hedge render manager holds the gpu context, glfw window context and a set of renderers.
+* A renderer is an entity to construct a command buffer or a set of command buffers for rendering. It has the knowledge and manage specific pipelines.
 * What should be a renderer input and output? It's output must be an image. Should the renderer manages the output image? Not really.
 * Should a Renderer be aware of the swapchain? It doesn't make to much sense to me since a renderer should also be able to dump just one image or a cubemap.
 */
@@ -27,85 +28,55 @@
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <vector>
-#include "vk_mem_alloc.h"
-
-struct GLFWwindow;
 
 namespace Hedge
 {
-    struct SceneRenderInfo;
-    struct HGpuBuffer;
-    class HRenderManager;
-    class HGpuRsrcManager;
     class HPipeline;
+
+    struct HRendererInfo
+    {
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+    };
+
+    struct HRenderContext
+    {
+        std::vector<VkDescriptorSet> descriptorSets;
+    };
 
     class HRenderer
     {
     public:
-        explicit HRenderer(HFrameGpuRenderRsrcControl* pFrameGpuRsrcManager);
+        explicit HRenderer(VkDevice device);
         virtual ~HRenderer();
 
+        virtual HRendererInfo GetRendererInfo() = 0;
+        virtual void SetRenderContext(const HRenderContext* const pRenderCtx) = 0;
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf) = 0;
 
-        virtual void CleanupFrameReferences() = 0; // Cleanup the resources references vectors for one frame. E.g. Clean descriptor sets ref.
-
         void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
-        void AddDescriptorSet(VkDescriptorSet* pDesSet) { m_pDescriptorSets.push_back(pDesSet); }
 
     protected:
-        HFrameGpuRenderRsrcControl*   m_pFrameGpuRsrcManager;
-        std::vector<HPipeline*>       m_pPipelines;
-        std::vector<VkDescriptorSet*> m_pDescriptorSets;
+        std::vector<HPipeline*> m_pPipelines;
+        VkDevice                m_device;
 
     private:
     };
 
     // A basic one pipeline renderer.
+    // TODO: Currently, the basic renderer is specific to the PBR pipeline.
+    //       In the future, we may want to make it a parent class so that PBR pipeline, cubemap rendering pipeline
+    //       IBL generation pipeline can derive from it.
     class HBasicRenderer : public HRenderer
     {
     public:
-        explicit HBasicRenderer(uint32_t      onFlightResCnt, 
-                                VkDevice*     pVkDevice, 
-                                VkFormat      surfFormat, 
-                                VmaAllocator* pVmaAllocator,
-                                HGpuRsrcManager* pGpuRsrcManager);
+        explicit HBasicRenderer(VkDevice device);
 
         virtual ~HBasicRenderer();
 
+        virtual HRendererInfo GetRendererInfo() override;
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf) override;
+        virtual void SetRenderContext(const HRenderContext* const pRenderCtx) override;
 
     private:
-        void InitResource();
-        void RecreateResource(VkExtent2D resultExtent, uint32_t frameIdx);
-        inline bool NeedResize(VkExtent2D inExtent, uint32_t frameIdx);
-
-        void CreateColorDepthImgs(VkExtent3D extent, uint32_t idx);
-        void CreateColorDepthImgsViews(uint32_t idx);
-
-        VkShaderModule        m_shaderVertModule;
-        VkShaderModule        m_shaderFragModule;
-        VkPipeline            m_pipeline;
-        VkPipelineLayout      m_pipelineLayout;
-        VkDescriptorSetLayout m_descriptorSetLayout;
-        HGpuRsrcManager*      m_pGpuRsrcManager;
-
-        // Color attachment
-        std::vector<VkImage> m_vkResultImgs;
-        std::vector<VkImageView> m_vkResultImgsViews;
-        std::vector<VkSampler> m_vkResultImgsSamplers;
-        std::vector<VmaAllocation> m_vmaResultImgsAllocations;
-        std::vector<VkExtent2D> m_resultImgsExtents;
-
-        // Depth attachment
-        std::vector<VkImage> m_depthImgs;
-        std::vector<VkImageView> m_depthImgsViews;
-        std::vector<VmaAllocation> m_depthImgsAllocations;
-        
-        // Shader UBO
-        std::vector<VkDescriptorSet> m_uboDescriptorSets;
-        // std::vector<GpuResource> m_mvpUboBuffers;
-        // std::vector<GpuResource> m_lightUboBuffers;
-
-        uint32_t m_lastFrameIdx;
     };
 }

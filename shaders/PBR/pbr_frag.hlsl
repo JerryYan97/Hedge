@@ -8,7 +8,7 @@ struct SceneInfoUbo
 {
     float3 cameraPos;
     float  maxMipLevel;
-    int    ptLightCnt;
+    uint   ptLightCnt;
 };
 
 [[vk::binding(0, 1)]] TextureCube i_diffuseCubeMapTexture;

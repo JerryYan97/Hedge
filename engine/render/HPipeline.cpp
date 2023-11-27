@@ -1,13 +1,13 @@
 #include "HPipeline.h"
 #include "Utils.h"
 #include <cassert>
+#include "g_prebuiltShaders.h"
 
 namespace Hedge
 {
+    // ================================================================================================================
     HPipeline::HPipeline() :
         m_pipeline(VK_NULL_HANDLE),
-        m_stgCnt(0),
-        m_pShaderStgInfos(nullptr),
         m_pNext(nullptr),
         m_pVertexInputInfo(nullptr),
         m_pInputAssembly(nullptr),
@@ -22,6 +22,7 @@ namespace Hedge
         m_pDepthStencilState(nullptr)
     {}
 
+    // ================================================================================================================
     HPipeline::~HPipeline()
     {
         if ((m_pVertexInputInfo != nullptr) && m_isVertexInputInfoDefault)
@@ -62,10 +63,22 @@ namespace Hedge
         // Destroy the pipeline
         if (m_device != VK_NULL_HANDLE)
         {
+            for (VkShaderModule shaderModule : m_shaderModules)
+            {
+                vkDestroyShaderModule(m_device, shaderModule, nullptr);
+            }
+
+            for (VkDescriptorSetLayout descriptorSetLayout : m_descriptorSetLayouts)
+            {
+                vkDestroyDescriptorSetLayout(m_device, descriptorSetLayout, nullptr);
+            }
+
+            vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
             vkDestroyPipeline(m_device, m_pipeline, nullptr);
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultVertexInputInfo()
     {
         m_pVertexInputInfo = new VkPipelineVertexInputStateCreateInfo();
@@ -78,6 +91,7 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultInputAssemblyInfo()
     {
         m_pInputAssembly = new VkPipelineInputAssemblyStateCreateInfo();
@@ -89,6 +103,7 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultViewportStateInfo()
     {
         m_pViewportState = new VkPipelineViewportStateCreateInfo();
@@ -100,6 +115,7 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultRasterizerInfo()
     {
         m_pRasterizer = new VkPipelineRasterizationStateCreateInfo();
@@ -119,6 +135,7 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultMultisamplingInfo()
     {
         m_pMultisampling = new VkPipelineMultisampleStateCreateInfo();
@@ -130,6 +147,7 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultColorBlendingInfo()
     {
         m_pColorBlending = new PipelineColorBlendInfo();
@@ -153,6 +171,7 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::SetDefaultDynamicStateInfo()
     {
         m_pDynamicState = new PipelineDynamicStatesInfo();
@@ -168,12 +187,13 @@ namespace Hedge
         }
     }
 
+    // ================================================================================================================
     void HPipeline::CreatePipeline(
         VkDevice device)
     {
-        assert(m_stgCnt != 0, "Pipeline must has shader modules!");
-
         m_device = device;
+
+        CreateSetCustomPipelineInfo();
 
         if (m_pVertexInputInfo == nullptr)
         {
@@ -214,8 +234,8 @@ namespace Hedge
         {
             pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
             pipelineInfo.pNext = m_pNext;
-            pipelineInfo.stageCount = m_stgCnt;
-            pipelineInfo.pStages = m_pShaderStgInfos;
+            pipelineInfo.stageCount = m_shaderStgInfos.size();
+            pipelineInfo.pStages = m_shaderStgInfos.data();
             pipelineInfo.pVertexInputState = m_pVertexInputInfo;
             pipelineInfo.pInputAssemblyState = m_pInputAssembly;
             pipelineInfo.pViewportState = m_pViewportState;
@@ -232,11 +252,377 @@ namespace Hedge
         VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
     }
 
-    void HPipeline::SetShaderStageInfo(
-        VkPipelineShaderStageCreateInfo* shaderStgInfo,
-        uint32_t                         cnt)
+    // ================================================================================================================
+    void HPipeline::AddShaderStageInfo(
+        VkPipelineShaderStageCreateInfo shaderStgInfo)
     {
-        m_stgCnt = cnt;
-        m_pShaderStgInfos = shaderStgInfo;
+        m_shaderStgInfos.push_back(shaderStgInfo);
+    }
+
+    // ================================================================================================================
+    VkShaderModule HPipeline::CreateShaderModule(
+        const uint32_t* pShaderScript,
+        uint32_t        bytesCnt)
+    {
+        VkShaderModuleCreateInfo shaderModuleCreateInfo{};
+        {
+            shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            shaderModuleCreateInfo.codeSize = bytesCnt;
+            shaderModuleCreateInfo.pCode = pShaderScript;
+        }
+        VkShaderModule shaderModule;
+        VK_CHECK(vkCreateShaderModule(m_device, &shaderModuleCreateInfo, nullptr, &shaderModule));
+
+        return shaderModule;
+    }
+
+    // ================================================================================================================
+    VkPipelineShaderStageCreateInfo HPipeline::CreateDefaultShaderStgCreateInfo(
+        const VkShaderModule& shaderModule,
+        const VkShaderStageFlagBits stg)
+    {
+        VkPipelineShaderStageCreateInfo info{};
+        {
+            info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            info.pNext = nullptr;
+            info.flags = 0;
+            info.stage = stg;
+            info.module = shaderModule;
+            info.pName = "main";
+            info.pSpecializationInfo = nullptr;
+        }
+        return info;
+    }
+
+    // ================================================================================================================
+    void HPipeline::CleanupHeapMemory()
+    {
+        for (void* pData : m_heapMem)
+        {
+            delete pData;
+        }
+
+        for (void* pArrayData : m_heapArrayMem)
+        {
+            delete[] pArrayData;
+        }
+    }
+
+    // ================================================================================================================
+    PBRPipeline::PBRPipeline() :
+        HPipeline()
+    {
+
+    }
+
+    // ================================================================================================================
+    PBRPipeline::~PBRPipeline()
+    {
+
+    }
+
+    // ================================================================================================================
+    void PBRPipeline::CreateSetDescriptorSetLayouts()
+    {
+        // Create pipeline's descriptors layout
+        // The Vulkan spec states: The VkDescriptorSetLayoutBinding::binding members of the elements of the pBindings array 
+        // must each have different values 
+        // (https://vulkan.lunarg.com/doc/view/1.3.236.0/windows/1.3-extensions/vkspec.html#VUID-VkDescriptorSetLayoutCreateInfo-binding-00279)
+
+        // Create pipeline binding and descriptor objects for the camera parameters
+
+        // Binding related to the scene info ubo
+        VkDescriptorSetLayoutBinding vpMatUboBinding{};
+        {
+            vpMatUboBinding.binding = 0;
+            vpMatUboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            vpMatUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            vpMatUboBinding.descriptorCount = 1;
+        }
+
+        // Bindings related to the IBL
+        std::vector<VkDescriptorSetLayoutBinding> backgroundTexBindings;
+        VkDescriptorSetLayoutBinding diffuseIrradianceBinding{};
+        {
+            diffuseIrradianceBinding.binding = 0;
+            diffuseIrradianceBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            diffuseIrradianceBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            diffuseIrradianceBinding.descriptorCount = 1;
+        }
+        backgroundTexBindings.push_back(diffuseIrradianceBinding);
+
+        VkDescriptorSetLayoutBinding prefilterEnvBinding{};
+        {
+            prefilterEnvBinding.binding = 1;
+            prefilterEnvBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            prefilterEnvBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            prefilterEnvBinding.descriptorCount = 1;
+        }
+        backgroundTexBindings.push_back(prefilterEnvBinding);
+
+        VkDescriptorSetLayoutBinding envBrdfBinding{};
+        {
+            envBrdfBinding.binding = 2;
+            envBrdfBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            envBrdfBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            envBrdfBinding.descriptorCount = 1;
+        }
+        backgroundTexBindings.push_back(envBrdfBinding);
+
+        // Bindings related to object's material
+        std::vector<VkDescriptorSetLayoutBinding> modelTexBindings;
+        VkDescriptorSetLayoutBinding baseColorBinding{};
+        {
+            baseColorBinding.binding = 0;
+            baseColorBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            baseColorBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            baseColorBinding.descriptorCount = 1;
+        }
+        modelTexBindings.push_back(baseColorBinding);
+
+        VkDescriptorSetLayoutBinding normalBinding{};
+        {
+            normalBinding.binding = 1;
+            normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            normalBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            normalBinding.descriptorCount = 1;
+        }
+        modelTexBindings.push_back(normalBinding);
+
+        VkDescriptorSetLayoutBinding metallicRoughnessBinding{};
+        {
+            metallicRoughnessBinding.binding = 2;
+            metallicRoughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            metallicRoughnessBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            metallicRoughnessBinding.descriptorCount = 1;
+        }
+        modelTexBindings.push_back(metallicRoughnessBinding);
+
+        VkDescriptorSetLayoutBinding occlusionBinding{};
+        {
+            occlusionBinding.binding = 3;
+            occlusionBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            occlusionBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            occlusionBinding.descriptorCount = 1;
+        }
+        modelTexBindings.push_back(occlusionBinding);
+
+        // Bindings related to point lights. We don't know how many lights in the scene at a specific frame, so we need
+        // to use the storage buffer.
+        std::vector<VkDescriptorSetLayoutBinding> ptLightsBindings;
+        VkDescriptorSetLayoutBinding ptLightsPosBinding{};
+        {
+            ptLightsPosBinding.binding = 0;
+            ptLightsPosBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            ptLightsPosBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            ptLightsPosBinding.descriptorCount = 1;
+        }
+        ptLightsBindings.push_back(ptLightsPosBinding);
+
+        VkDescriptorSetLayoutBinding ptLightRadianceBinding{};
+        {
+            ptLightRadianceBinding.binding = 1;
+            ptLightRadianceBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            ptLightRadianceBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            ptLightRadianceBinding.descriptorCount = 1;
+        }
+        ptLightsBindings.push_back(ptLightRadianceBinding);
+
+        // Create descriptor layouts create infos
+        VkDescriptorSetLayoutCreateInfo sceneUboDesSetLayoutInfo{};
+        {
+            sceneUboDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            sceneUboDesSetLayoutInfo.bindingCount = 1;
+            sceneUboDesSetLayoutInfo.pBindings = &vpMatUboBinding;
+        }
+
+        VkDescriptorSetLayoutCreateInfo backgroundTexDesSetLayoutInfo{};
+        {
+            backgroundTexDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            backgroundTexDesSetLayoutInfo.bindingCount = backgroundTexBindings.size();
+            backgroundTexDesSetLayoutInfo.pBindings = backgroundTexBindings.data();
+        }
+
+        VkDescriptorSetLayoutCreateInfo modelTexDesSetLayoutInfo{};
+        {
+            modelTexDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            modelTexDesSetLayoutInfo.bindingCount = modelTexBindings.size();
+            modelTexDesSetLayoutInfo.pBindings = modelTexBindings.data();
+        }
+
+        VkDescriptorSetLayoutCreateInfo lightsDesSetLayoutInfo{};
+        {
+            lightsDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            lightsDesSetLayoutInfo.bindingCount = ptLightsBindings.size();
+            lightsDesSetLayoutInfo.pBindings = ptLightsBindings.data();
+        }
+
+        // Create descriptor sets layouts
+        VkDescriptorSetLayout sceneUboDescriptorSetLayout;
+        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
+                                             &sceneUboDesSetLayoutInfo,
+                                             nullptr,
+                                             &sceneUboDescriptorSetLayout));
+
+        VkDescriptorSetLayout backgroundTexDescriptorSetLayout;
+        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
+                                             &backgroundTexDesSetLayoutInfo,
+                                             nullptr,
+                                             &backgroundTexDescriptorSetLayout));
+
+        VkDescriptorSetLayout modelTexDescriptorSetLayout;
+        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
+                                             &modelTexDesSetLayoutInfo,
+                                             nullptr,
+                                             &modelTexDescriptorSetLayout));
+
+        VkDescriptorSetLayout lightsStorageBufDescriptorSetLayout;
+        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
+                                             &lightsDesSetLayoutInfo,
+                                             nullptr,
+                                             &lightsStorageBufDescriptorSetLayout));
+
+        AddDescriptorSetLayout(sceneUboDescriptorSetLayout);
+        AddDescriptorSetLayout(backgroundTexDescriptorSetLayout);
+        AddDescriptorSetLayout(modelTexDescriptorSetLayout);
+        AddDescriptorSetLayout(lightsStorageBufDescriptorSetLayout);
+    }
+
+    // ================================================================================================================
+    void PBRPipeline::CreateSetPBRPipelineLayout()
+    {
+        VkPushConstantRange range = {};
+        {
+            range.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            range.offset = 0;
+            range.size = 4 * sizeof(float) + sizeof(uint32_t); // Camera pos, Max IBL mipmap and lights count.
+        }
+
+        // Create pipeline layout
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        {
+            pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            pipelineLayoutInfo.setLayoutCount = m_descriptorSetLayouts.size();
+            pipelineLayoutInfo.pSetLayouts = m_descriptorSetLayouts.data();
+            pipelineLayoutInfo.pushConstantRangeCount = 1;
+            pipelineLayoutInfo.pPushConstantRanges = &range;
+        }
+
+        VkPipelineLayout pbrPipelineLayout;
+        VK_CHECK(vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &pbrPipelineLayout));
+        SetPipelineLayout(pbrPipelineLayout);
+    }
+
+    // ================================================================================================================
+    void PBRPipeline::CreateSetCustomPipelineInfo()
+    {
+        VkPipelineRenderingCreateInfoKHR pipelineRenderCreateInfo{};
+        {
+            pipelineRenderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+            pipelineRenderCreateInfo.colorAttachmentCount = 1;
+            pipelineRenderCreateInfo.pColorAttachmentFormats = &m_colorAttachmentFormat;
+            pipelineRenderCreateInfo.depthAttachmentFormat = VK_FORMAT_D16_UNORM;
+        }
+
+        VkPipelineRenderingCreateInfoKHR* pPipelineRenderCreateInfo = new VkPipelineRenderingCreateInfoKHR();
+        memcpy(pPipelineRenderCreateInfo, &pipelineRenderCreateInfo, sizeof(VkPipelineRenderingCreateInfoKHR));
+        SetPNext(pPipelineRenderCreateInfo);
+
+        // Load shader scripts and create shader modules
+        VkShaderModule vertShaderModule = CreateShaderModule((uint32_t*)pbr_vertScript, sizeof(pbr_vertScript));
+        VkShaderModule fragShaderModule = CreateShaderModule((uint32_t*)pbr_fragScript, sizeof(pbr_fragScript));
+        
+        AddShaderStageInfo(CreateDefaultShaderStgCreateInfo(vertShaderModule, VK_SHADER_STAGE_VERTEX_BIT));
+        AddShaderStageInfo(CreateDefaultShaderStgCreateInfo(fragShaderModule, VK_SHADER_STAGE_FRAGMENT_BIT));
+
+        m_shaderModules.push_back(vertShaderModule);
+        m_shaderModules.push_back(fragShaderModule);
+
+        // Create descriptor set layouts
+        CreateSetDescriptorSetLayouts();
+        
+        // Create pipeline layout
+        CreateSetPBRPipelineLayout();
+
+        VkPipelineVertexInputStateCreateInfo vertInputInfo = CreatePipelineVertexInputInfo();
+        VkPipelineVertexInputStateCreateInfo* pVertInputInfo = new VkPipelineVertexInputStateCreateInfo();
+        memcpy(pVertInputInfo, &vertInputInfo, sizeof(vertInputInfo));
+        SetVertexInputInfo(pVertInputInfo);
+        m_heapMem.push_back(pVertInputInfo);
+
+        VkPipelineDepthStencilStateCreateInfo depthStencilInfo = CreateDepthStencilStateInfo();
+        VkPipelineDepthStencilStateCreateInfo* pDepthStencilInfo = new VkPipelineDepthStencilStateCreateInfo();
+        memcpy(pDepthStencilInfo, &depthStencilInfo, sizeof(depthStencilInfo));
+        SetDepthStencilStateInfo(pDepthStencilInfo);
+        m_heapMem.push_back(pDepthStencilInfo);
+    }
+
+    // ================================================================================================================
+    VkPipelineVertexInputStateCreateInfo PBRPipeline::CreatePipelineVertexInputInfo()
+    {
+        // Specifying all kinds of pipeline states
+        // Vertex input state
+        VkVertexInputBindingDescription* pVertBindingDesc = new VkVertexInputBindingDescription();
+        memset(pVertBindingDesc, 0, sizeof(VkVertexInputBindingDescription));
+        {
+            pVertBindingDesc->binding = 0;
+            pVertBindingDesc->stride = 12 * sizeof(float);
+            pVertBindingDesc->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        }
+        m_heapMem.push_back(pVertBindingDesc);
+
+        VkVertexInputAttributeDescription* pVertAttrDescs = new VkVertexInputAttributeDescription[4];
+        memset(pVertAttrDescs, 0, sizeof(VkVertexInputAttributeDescription) * 4);
+        {
+            // Position
+            pVertAttrDescs[0].location = 0;
+            pVertAttrDescs[0].binding = 0;
+            pVertAttrDescs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+            pVertAttrDescs[0].offset = 0;
+            // Normal
+            pVertAttrDescs[1].location = 1;
+            pVertAttrDescs[1].binding = 0;
+            pVertAttrDescs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+            pVertAttrDescs[1].offset = 3 * sizeof(float);
+            // Tangent
+            pVertAttrDescs[2].location = 2;
+            pVertAttrDescs[2].binding = 0;
+            pVertAttrDescs[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            pVertAttrDescs[2].offset = 6 * sizeof(float);
+            // Texcoord
+            pVertAttrDescs[3].location = 3;
+            pVertAttrDescs[3].binding = 0;
+            pVertAttrDescs[3].format = VK_FORMAT_R32G32_SFLOAT;
+            pVertAttrDescs[3].offset = 10 * sizeof(float);
+        }
+        m_heapArrayMem.push_back(pVertAttrDescs);
+
+        VkPipelineVertexInputStateCreateInfo vertInputInfo{};
+        {
+            vertInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            vertInputInfo.pNext = nullptr;
+            vertInputInfo.vertexBindingDescriptionCount = 1;
+            vertInputInfo.pVertexBindingDescriptions = pVertBindingDesc;
+            vertInputInfo.vertexAttributeDescriptionCount = 4;
+            vertInputInfo.pVertexAttributeDescriptions = pVertAttrDescs;
+        }
+
+        return vertInputInfo;
+    }
+
+    // ================================================================================================================
+    VkPipelineDepthStencilStateCreateInfo PBRPipeline::CreateDepthStencilStateInfo()
+    {
+        VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
+        {
+            depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            depthStencilInfo.depthTestEnable = VK_TRUE;
+            depthStencilInfo.depthWriteEnable = VK_TRUE;
+            depthStencilInfo.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL; // Reverse depth for higher precision. 
+            depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+            depthStencilInfo.stencilTestEnable = VK_FALSE;
+        }
+
+        return depthStencilInfo;
     }
 }

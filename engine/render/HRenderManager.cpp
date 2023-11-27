@@ -64,11 +64,9 @@ namespace Hedge
                             CheckVkResult);
 
         // TODO: Let image resource also create and destroy in the gpu rsrc manager instead of passing in the vma allocator.
-        m_pRenderers.push_back(new HBasicRenderer(m_swapchainImgCnt, 
-                                                  m_pGpuRsrcManager->GetLogicalDevice(), 
-                                                  m_surfaceFormat.format, 
-                                                  m_pGpuRsrcManager->GetVmaAllocator(),
-                                                  m_pGpuRsrcManager));
+        // Create a basic PBR renderer
+        HRenderer* pPbrRenderer = new HBasicRenderer(m_pGpuRsrcManager->GetLogicalDevice());
+        m_pRenderers.push_back(pPbrRenderer);
         m_activeRendererIdx = 0;
 
         m_frameColorRenderResults.resize(m_swapchainImgCnt);

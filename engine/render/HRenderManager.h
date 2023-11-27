@@ -137,8 +137,8 @@ namespace Hedge
 
         // Renderers -- shared GPU resources for different renderers.
         // May need to be moved to the gui render manager since a game normally doesn't have a second renderer.
-        std::vector<HRenderer*>    m_pRenderers;
-        HFrameGpuRenderRsrcControl m_frameGpuRenderRsrcController;
+        std::vector<HRenderer*>     m_pRenderers;
+        HFrameGpuRenderRsrcControl  m_frameGpuRenderRsrcController;
         std::vector<HGpuImg*>       m_frameColorRenderResults;
         // std::vector<VkImageView*> m_pRenderImgViews;
         // std::vector<VkExtent2D>   m_renderImgsExtents;

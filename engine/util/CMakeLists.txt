@@ -4,6 +4,4 @@ target_sources(
     UtilMath.h
     Utils.cpp
     Utils.h
-    HPipeline.h
-    HPipeline.cpp
 )

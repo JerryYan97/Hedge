@@ -28,10 +28,11 @@ namespace Hedge
         ~HPipeline();
 
         VkPipeline GetVkPipeline() { return m_pipeline; }
+        VkPipelineLayout GetVkPipelineLayout() { return m_pipelineLayout; }
 
-        void CreatePipeline(VkDevice device);
+         void CreatePipeline(VkDevice device);
 
-        void SetShaderStageInfo(VkPipelineShaderStageCreateInfo* shaderStgInfo, uint32_t cnt);
+        void AddShaderStageInfo(VkPipelineShaderStageCreateInfo shaderStgInfo);
         void SetPNext(void* pNext) { m_pNext = pNext; }
 
         void SetVertexInputInfo(VkPipelineVertexInputStateCreateInfo* pVertexInputInfo)
@@ -46,10 +47,23 @@ namespace Hedge
         }
 
     protected:
+        VkPipelineShaderStageCreateInfo CreateDefaultShaderStgCreateInfo(const VkShaderModule& shaderModule, const VkShaderStageFlagBits stg);
+        VkShaderModule CreateShaderModule(const uint32_t* pShaderScript, uint32_t bytesCnt);
+
+        virtual void CreateSetCustomPipelineInfo() = 0;
+
+        void AddDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout) { m_descriptorSetLayouts.push_back(descriptorSetLayout); }
+
+        void CleanupHeapMemory();
+
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
+        std::vector<VkShaderModule>        m_shaderModules;
+        VkDevice                           m_device;
+        std::vector<void*>                 m_heapMem;
+        std::vector<void*>                 m_heapArrayMem;
 
     private:
-        VkPipelineShaderStageCreateInfo* m_pShaderStgInfos;
-        uint32_t                         m_stgCnt;
+        std::vector<VkPipelineShaderStageCreateInfo> m_shaderStgInfos;
 
         void* m_pNext;
 
@@ -74,6 +88,24 @@ namespace Hedge
 
         VkPipeline       m_pipeline;
         VkPipelineLayout m_pipelineLayout;
-        VkDevice         m_device;
+    };
+
+    // The PBR pipeline is a fixed pipeline that only uses pbr_vertScript and pbr_fragScript in the g_prebuiltShaders.h.
+    class PBRPipeline : public HPipeline
+    {
+    public:
+        PBRPipeline();
+        ~PBRPipeline();
+
+    protected:
+        virtual void CreateSetCustomPipelineInfo() override;
+
+    private:
+        void CreateSetDescriptorSetLayouts();
+        void CreateSetPBRPipelineLayout();
+        VkPipelineVertexInputStateCreateInfo CreatePipelineVertexInputInfo();
+        VkPipelineDepthStencilStateCreateInfo CreateDepthStencilStateInfo();
+
+        static const VkFormat m_colorAttachmentFormat = VK_FORMAT_R8G8B8A8_SRGB;
     };
 }

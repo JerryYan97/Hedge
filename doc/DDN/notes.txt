@@ -14,3 +14,7 @@ https://stackoverflow.com/questions/34234446/cmake-is-it-possible-to-build-an-ex
 cmake debug/release build:
 https://stackoverflow.com/questions/17183248/the-option-build-of-cmake
 https://stackoverflow.com/questions/7724569/debug-vs-release-in-cmake
+
+
+Vulkan descriptor abstraction programming pattern. It looks like it maybe useful someday:
+https://vkguide.dev/docs/extra-chapter/abstracting_descriptors/
