@@ -32,6 +32,7 @@
 namespace Hedge
 {
     class HPipeline;
+    struct HGpuBuffer;
 
     struct HRendererInfo
     {
@@ -40,7 +41,13 @@ namespace Hedge
 
     struct HRenderContext
     {
+        HGpuBuffer idxBuffer;
+        HGpuBuffer vertBuffer;
+        HGpuBuffer uboBuffer;
         std::vector<VkDescriptorSet> descriptorSets;
+
+        void*    pPushConstantData;
+        uint32_t pushConstantDataBytesCnt;
     };
 
     class HRenderer
@@ -50,8 +57,7 @@ namespace Hedge
         virtual ~HRenderer();
 
         virtual HRendererInfo GetRendererInfo() = 0;
-        virtual void SetRenderContext(const HRenderContext* const pRenderCtx) = 0;
-        virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf) = 0;
+        virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) = 0;
 
         void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
 
@@ -74,8 +80,7 @@ namespace Hedge
         virtual ~HBasicRenderer();
 
         virtual HRendererInfo GetRendererInfo() override;
-        virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf) override;
-        virtual void SetRenderContext(const HRenderContext* const pRenderCtx) override;
+        virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) override;
 
     private:
     };

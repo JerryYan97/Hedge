@@ -65,7 +65,8 @@ namespace Hedge
 
         // TODO: Let image resource also create and destroy in the gpu rsrc manager instead of passing in the vma allocator.
         // Create a basic PBR renderer
-        HRenderer* pPbrRenderer = new HBasicRenderer(m_pGpuRsrcManager->GetLogicalDevice());
+        VkDevice* pDevice = m_pGpuRsrcManager->GetLogicalDevice();
+        HRenderer* pPbrRenderer = new HBasicRenderer(*pDevice);
         m_pRenderers.push_back(pPbrRenderer);
         m_activeRendererIdx = 0;
 
@@ -145,6 +146,9 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    // TODO: I am thinking the swapchain doesn't really need a m_curSwapchainFrameIdx.
+    //       We only need the m_acqSwapchainImgIdx. If the next image is ready, then all the other resources should
+    //       also be ready.
     void HRenderManager::HandleResize()
     {
         VkResult result = vkAcquireNextImageKHR(*m_pGpuRsrcManager->GetLogicalDevice(),
@@ -186,19 +190,30 @@ namespace Hedge
 
     // ================================================================================================================
     void HRenderManager::RenderCurrentScene(
-        HScene& scene)
+        const SceneRenderInfo& sceneRenderInfo)
     {
-        SceneRenderInfo renderInfo = scene.GetSceneRenderInfo();
-
         // Fill the command buffer
+        VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
+
         VkCommandBufferBeginInfo beginInfo{};
         {
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         }
-        VK_CHECK(vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], &beginInfo));
+        VK_CHECK(vkBeginCommandBuffer(curCmdBuffer, &beginInfo));
 
-        if (scene.IsEmpty() == false)
+        uint32_t objsCnt = sceneRenderInfo.modelMats.size();
+        if (objsCnt != 0)
         {
+            for (uint32_t objIdx = 0; objIdx < objsCnt; objIdx++)
+            {
+                HRenderContext renderCtx{};
+
+
+                m_pRenderers[m_activeRendererIdx]->SetRenderContext(&renderCtx);
+                m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer);
+            }
+            
+            /*
             if (m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
                 m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
             {
@@ -242,6 +257,7 @@ namespace Hedge
                     renderInfo);
                 m_renderImgsExtents[m_curSwapchainFrameIdx] = renderImgExtent;
             }
+            */
         }
     }
 

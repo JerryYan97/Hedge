@@ -32,6 +32,8 @@ namespace Hedge
     };
 
     // The HGpuRsrcManager holds the vk instance, devices and hides the vma from other parts of the engine.
+    // Vertex and idx buffer: refered and released by static mesh components and the render manager.
+    // Textures: refered and released by texture components, material components and the render manager.
     // TODO: We maybe able to say GPU resources include both GRAM resources and GPU compute resources.
     class HGpuRsrcManager
     {

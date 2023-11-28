@@ -1,20 +1,41 @@
 #pragma once
 #include <entt.hpp>
 #include <unordered_map>
+#include <vector>
 
 namespace Hedge
 {
     class HEntity;
     class HEventManager;
+    struct HGpuBuffer;
 
+    struct HMat4x4
+    {
+        float eles[16];
+    };
+
+    struct HVec3
+    {
+        float eles[3];
+    };
+
+    // TODO: We may need a large one batch vertex + idx buffer.
     struct SceneRenderInfo
     {
-        uint32_t* m_pIdx;
-        float*    m_pVert;
-        uint32_t  m_idxNum;
-        uint32_t  m_vertBufBytes;
-        float m_modelMat[16];
-        float m_vpMat[16];
+        std::vector<HGpuBuffer> objsIdxBuffers;
+        std::vector<uint32_t>   idxCounts;
+        
+        std::vector<HGpuBuffer> objsVertBuffers;
+        std::vector<uint32_t>   vertCounts;
+        
+        std::vector<uint64_t> objsMaterialsGuid;
+        
+        std::vector<HMat4x4> modelMats;
+
+        std::vector<HVec3> pointLightsPositions;
+        std::vector<HVec3> pointLightsRadiances;
+
+        HMat4x4 vpMat;
     };
 
     class HScene

@@ -52,13 +52,7 @@ namespace Hedge
 
     // ================================================================================================================
     void HBasicRenderer::CmdRenderInsts(
-        VkCommandBuffer& cmdBuf)
-    {
-
-    }
-
-    // ================================================================================================================
-    void HBasicRenderer::SetRenderContext(
+        VkCommandBuffer&            cmdBuf,
         const HRenderContext* const pRenderCtx)
     {
 

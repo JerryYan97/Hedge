@@ -23,6 +23,7 @@ namespace Hedge
     class HScene;
     class HFrameListener;
     class HEventManager;
+    struct SceneRenderInfo;
 
     /*
     * The renderer creates and accesses the temparory GPU resources through the HGpuRenderRsrcControl instead of the
@@ -75,7 +76,7 @@ namespace Hedge
 
         void BeginNewFrame();
         void SendIOEvents(HScene& scene, HEventManager& eventManager);
-        void RenderCurrentScene(HScene& scene);
+        void RenderCurrentScene(const SceneRenderInfo& sceneRenderInfo);
         void FinalizeSceneAndSwapBuffers();
         virtual void DrawHud(HFrameListener* pFrameListener) = 0;
 
