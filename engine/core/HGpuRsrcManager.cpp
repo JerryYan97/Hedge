@@ -439,6 +439,11 @@ namespace Hedge
             if (m_gpuBuffersImgs.count((void*)pGpuImg) > 0)
             {
                 vmaDestroyImage(m_vmaAllocator, pGpuImg->gpuImg, pGpuImg->gpuImgAlloc);
+
+                vkDestroyImageView(m_vkDevice, pGpuImg->gpuImgView, nullptr);
+
+                vkDestroySampler(m_vkDevice, pGpuImg->gpuImgSampler, nullptr);
+
                 m_gpuBuffersImgs.erase((void*)pGpuImg);
                 delete pGpuImg;
             }
@@ -455,24 +460,58 @@ namespace Hedge
 
     // ================================================================================================================
     HGpuImg* HGpuRsrcManager::CreateGpuImage(
-        VkImageCreateInfo        imgCreateInfo,
-        VmaAllocationCreateFlags vmaFlags)
+        HGpuImgCreateInfo createInfo)
     {
         VmaAllocationCreateInfo imgAllocInfo = {};
         {
             imgAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            imgAllocInfo.flags = vmaFlags;
+            imgAllocInfo.flags = createInfo.allocFlags;
         }
 
+        // Create VkImage
         HGpuImg* pGpuImg = new HGpuImg();
         memset(pGpuImg, 0, sizeof(HGpuImg));
 
+        VkImageCreateInfo imgInfo{};
+        {
+            imgInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imgInfo.imageType = VK_IMAGE_TYPE_2D;
+            imgInfo.format = createInfo.imgFormat;
+            imgInfo.extent = createInfo.imgExtent;
+            imgInfo.mipLevels = createInfo.imgSubresRange.levelCount;
+            imgInfo.arrayLayers = createInfo.imgSubresRange.layerCount;
+            imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            imgInfo.tiling = VK_IMAGE_TILING_LINEAR;
+            imgInfo.usage = createInfo.imgUsageFlags;
+            imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        }
+
         VK_CHECK(vmaCreateImage(m_vmaAllocator,
-                                &imgCreateInfo,
+                                &imgInfo,
                                 &imgAllocInfo,
                                 &(pGpuImg->gpuImg),
                                 &(pGpuImg->gpuImgAlloc),
                                 nullptr));
+
+        // Create VkImageView -- Currently, we only assume a 2D image. We may need a cubemap or a 3D image.
+        VkImageViewCreateInfo imgViewInfo{};
+        {
+            imgViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imgViewInfo.image = pGpuImg->gpuImg;
+            imgViewInfo.viewType = createInfo.imgViewType;
+            imgViewInfo.format = createInfo.imgFormat;
+            imgViewInfo.subresourceRange = createInfo.imgSubresRange;
+        }
+        
+        VK_CHECK(vkCreateImageView(m_vkDevice,
+                                   &imgViewInfo,
+                                   nullptr,
+                                   &(pGpuImg->gpuImgView)));
+
+        if (createInfo.hasSampler)
+        {
+            VK_CHECK(vkCreateSampler(m_vkDevice, &createInfo.samplerInfo, nullptr, &(pGpuImg->gpuImgSampler)));
+        }
 
         m_gpuBuffersImgs.insert({ (void*)pGpuImg, 1 });
 

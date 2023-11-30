@@ -25,7 +25,7 @@ namespace Hedge
     HRenderManager::HRenderManager(
         HBaseGuiManager* pGuiManager,
         HGpuRsrcManager* pGpuRsrcManager)
-        : m_curSwapchainFrameIdx(0),
+        : // m_curSwapchainFrameIdx(0),
           m_pGuiManager(pGuiManager),
           m_pGpuRsrcManager(pGpuRsrcManager)
     {
@@ -71,9 +71,8 @@ namespace Hedge
         m_activeRendererIdx = 0;
 
         m_frameColorRenderResults.resize(m_swapchainImgCnt);
-        // m_renderImgsExtents.resize(m_swapchainImgCnt);
-        // m_idxRendererGpuRsrcs.resize(m_swapchainImgCnt);
-        // m_vertRendererGpuRsrcs.resize(m_swapchainImgCnt);
+        m_frameDepthRenderResults.resize(m_swapchainImgCnt);
+        m_renderImgsExtents.resize(m_swapchainImgCnt);
     }
 
     // ================================================================================================================
@@ -82,6 +81,12 @@ namespace Hedge
         CleanupSwapchain();
 
         VkDevice* pVkDevice = m_pGpuRsrcManager->GetLogicalDevice();
+
+        for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
+        {
+            m_pGpuRsrcManager->DereferGpuImg(m_frameColorRenderResults[i]);
+            m_pGpuRsrcManager->DereferGpuImg(m_frameDepthRenderResults[i]);
+        }
 
         for (auto itr : m_swapchainImgAvailableSemaphores)
         {
@@ -168,6 +173,30 @@ namespace Hedge
             // Not success or usable.
             throw std::runtime_error("failed to acquire swap chain image!");
         }
+
+        // We have to check the size of 3D render area at the beginning of every frame instead of in the recreate
+        // swapchain, because the recreate swapchain can only be called when the overall window area is changed.
+        // However, it's possible that people drag the 3D rendering layout window, which changes the size of the 3D
+        // window.
+        VkExtent2D curRenderTargetExtent = m_renderImgsExtents[m_acqSwapchainImgIdx];
+        VkExtent2D desiredRenderTargetExtent = m_pGuiManager->GetRenderExtent();
+        if ((desiredRenderTargetExtent.width != curRenderTargetExtent.width) ||
+            (desiredRenderTargetExtent.height != curRenderTargetExtent.height))
+        {
+            HGpuImg* pOldColorRenderResultGpuImg = m_frameColorRenderResults[m_acqSwapchainImgIdx];
+            HGpuImg* pOldDepthRenderResultGpuImg = m_frameDepthRenderResults[m_acqSwapchainImgIdx];
+
+            m_pGpuRsrcManager->DereferGpuImg(pOldColorRenderResultGpuImg);
+            m_pGpuRsrcManager->DereferGpuImg(pOldDepthRenderResultGpuImg);
+
+            VkExtent3D desiredExtent3D{ desiredRenderTargetExtent.width, desiredRenderTargetExtent.height, 1 };
+
+            HGpuImgCreateInfo colorRenderTarget = CreateColorTargetHGpuImgInfo(desiredRenderTargetExtent);
+            HGpuImgCreateInfo depthRenderTarget = CreateDepthTargetHGpuImgInfo(desiredRenderTargetExtent);
+
+            m_frameColorRenderResults[m_acqSwapchainImgIdx] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTarget);
+            m_frameDepthRenderResults[m_acqSwapchainImgIdx] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTarget);
+        }
     }
 
     // ================================================================================================================
@@ -207,10 +236,15 @@ namespace Hedge
             for (uint32_t objIdx = 0; objIdx < objsCnt; objIdx++)
             {
                 HRenderContext renderCtx{};
+                {
+                    renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
+                    renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
+                    // renderCtx.
+                    // m_pGuiManager->GetRenderExtent();
+                    // renderCtx.
+                }
 
-
-                m_pRenderers[m_activeRendererIdx]->SetRenderContext(&renderCtx);
-                m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer);
+                m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer, &renderCtx);
             }
             
             /*
@@ -462,6 +496,20 @@ namespace Hedge
                                       &swapchainCreateInfo, 
                                       nullptr, 
                                       &m_swapchain));
+
+        vkGetSwapchainImagesKHR(*m_pGpuRsrcManager->GetLogicalDevice(), m_swapchain, &m_swapchainImgCnt, nullptr);
+
+        // Create the color render target and the depth render target
+        VkExtent2D desiredRenderTargetExtent = m_pGuiManager->GetRenderExtent();
+        HGpuImgCreateInfo colorRenderTargetInfo = CreateColorTargetHGpuImgInfo(desiredRenderTargetExtent);
+        HGpuImgCreateInfo depthRenderTargetInfo = CreateDepthTargetHGpuImgInfo(desiredRenderTargetExtent);
+
+        for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
+        {
+            m_renderImgsExtents[i] = desiredRenderTargetExtent;
+            m_frameColorRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTargetInfo);
+            m_frameDepthRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTargetInfo);
+        }
     }
 
     // ================================================================================================================
@@ -469,7 +517,6 @@ namespace Hedge
     {
         // Create image views for the swapchain images
         std::vector<VkImage> swapchainImages;
-        vkGetSwapchainImagesKHR(*m_pGpuRsrcManager->GetLogicalDevice(), m_swapchain, &m_swapchainImgCnt, nullptr);
         swapchainImages.resize(m_swapchainImgCnt);
         vkGetSwapchainImagesKHR(*m_pGpuRsrcManager->GetLogicalDevice(), 
                                 m_swapchain, 
@@ -660,6 +707,65 @@ namespace Hedge
     {
         return { m_frameColorRenderResults[m_curSwapchainFrameIdx]->imgInfo.extent.width,
                  m_frameColorRenderResults[m_curSwapchainFrameIdx]->imgInfo.extent.height };
+    }
+
+    // ================================================================================================================
+    HGpuImgCreateInfo HRenderManager::CreateColorTargetHGpuImgInfo(
+        VkExtent2D extent)
+    {
+        VkExtent3D desiredExtent3D{ extent.width, extent.height, 1 };
+
+        HGpuImgCreateInfo colorRenderTargetInfo{};
+        {
+            colorRenderTargetInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            colorRenderTargetInfo.hasSampler = false;
+            colorRenderTargetInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            colorRenderTargetInfo.imgFormat = m_surfaceFormat.format;
+            colorRenderTargetInfo.imgExtent = desiredExtent3D;
+            colorRenderTargetInfo.imgUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+            VkImageSubresourceRange imgSubRsrcRange{};
+            {
+                imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                imgSubRsrcRange.baseArrayLayer = 0;
+                imgSubRsrcRange.layerCount = 1;
+                imgSubRsrcRange.baseMipLevel = 0;
+                imgSubRsrcRange.levelCount = 1;
+            }
+            colorRenderTargetInfo.imgSubresRange = imgSubRsrcRange;
+        }
+
+        return colorRenderTargetInfo;
+    }
+
+    // ================================================================================================================
+    HGpuImgCreateInfo HRenderManager::CreateDepthTargetHGpuImgInfo(
+        VkExtent2D extent)
+    {
+        VkExtent3D desiredExtent3D{ extent.width, extent.height, 1 };
+
+        HGpuImgCreateInfo depthRenderTarget{};
+        {
+            depthRenderTarget.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            depthRenderTarget.hasSampler = false;
+            depthRenderTarget.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            depthRenderTarget.imgFormat = VK_FORMAT_D16_UNORM;
+            depthRenderTarget.imgExtent = desiredExtent3D;
+            depthRenderTarget.imgUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+            VkImageSubresourceRange imgSubRsrcRange{};
+            {
+                imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+                imgSubRsrcRange.baseArrayLayer = 0;
+                imgSubRsrcRange.layerCount = 1;
+                imgSubRsrcRange.baseMipLevel = 0;
+                imgSubRsrcRange.levelCount = 1;
+            }
+            depthRenderTarget.imgSubresRange = imgSubRsrcRange;
+        }
+
+        return depthRenderTarget;
     }
 
     // ================================================================================================================

@@ -113,6 +113,9 @@ namespace Hedge
         void CreateRenderpass();
         void CreateSwapchainFramebuffer();
 
+        HGpuImgCreateInfo CreateColorTargetHGpuImgInfo(VkExtent2D extent);
+        HGpuImgCreateInfo CreateDepthTargetHGpuImgInfo(VkExtent2D extent);
+
         // Gpu resource
         HGpuRsrcManager* m_pGpuRsrcManager;
 
@@ -141,8 +144,9 @@ namespace Hedge
         std::vector<HRenderer*>     m_pRenderers;
         HFrameGpuRenderRsrcControl  m_frameGpuRenderRsrcController;
         std::vector<HGpuImg*>       m_frameColorRenderResults;
+        std::vector<HGpuImg*>       m_frameDepthRenderResults;
         // std::vector<VkImageView*> m_pRenderImgViews;
-        // std::vector<VkExtent2D>   m_renderImgsExtents;
+        std::vector<VkExtent2D>   m_renderImgsExtents;
         // std::vector<GpuResource>  m_idxRendererGpuRsrcs;
         // std::vector<GpuResource>  m_vertRendererGpuRsrcs;
     };

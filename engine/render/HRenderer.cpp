@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "UtilMath.h"
 #include "HPipeline.h"
+#include "../core/HGpuRsrcManager.h"
 
 #include <GLFW/glfw3.h>
 
@@ -55,6 +56,78 @@ namespace Hedge
         VkCommandBuffer&            cmdBuf,
         const HRenderContext* const pRenderCtx)
     {
+        VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 
+        VkRenderingAttachmentInfoKHR renderColorAttachmentInfo{};
+        {
+            renderColorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+            renderColorAttachmentInfo.imageView = pRenderCtx->colorAttachmentImgView;
+            renderColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+            renderColorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+            renderColorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            renderColorAttachmentInfo.clearValue = clearColor;
+        }
+
+        VkClearValue depthClearVal{};
+        depthClearVal.depthStencil.depth = 0.f;
+        VkRenderingAttachmentInfoKHR depthModelAttachmentInfo{};
+        {
+            depthModelAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+            depthModelAttachmentInfo.imageView = pRenderCtx->depthAttachmentImgView;
+            depthModelAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+            depthModelAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+            depthModelAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            depthModelAttachmentInfo.clearValue = depthClearVal;
+        }
+
+        VkRenderingInfoKHR renderInfo{};
+        {
+            renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+            renderInfo.renderArea = pRenderCtx->renderArea;
+            renderInfo.layerCount = 1;
+            renderInfo.colorAttachmentCount = 1;
+            renderInfo.pColorAttachments = &renderColorAttachmentInfo;
+            renderInfo.pDepthAttachment = &depthModelAttachmentInfo;
+        }
+
+        vkCmdBeginRendering(cmdBuf, &renderInfo);
+
+        vkCmdBindDescriptorSets(cmdBuf,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                m_pPipelines[0]->GetVkPipelineLayout(),
+                                0, pRenderCtx->descriptorSets.size(), pRenderCtx->descriptorSets.data(), 
+                                0, NULL);
+
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelines[0]->GetVkPipeline());
+
+        VkViewport viewport{};
+        {
+            viewport.x = 0.f;
+            viewport.y = 0.f;
+            viewport.width = pRenderCtx->renderArea.extent.width;
+            viewport.height = pRenderCtx->renderArea.extent.height;
+            viewport.minDepth = 0.f;
+            viewport.maxDepth = 1.f;
+        }
+        vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        {
+            scissor.offset = { 0, 0 };
+            scissor.extent = pRenderCtx->renderArea.extent;
+        }
+        vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+
+        VkDeviceSize vbOffset = 0;
+        vkCmdBindVertexBuffers(cmdBuf, 0, 1, &pRenderCtx->vertBuffer.gpuBuffer, &vbOffset);
+        vkCmdBindIndexBuffer(cmdBuf, pRenderCtx->idxBuffer.gpuBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdPushConstants(cmdBuf,
+                           m_pPipelines[0]->GetVkPipelineLayout(),
+                           VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0,
+                           pRenderCtx->pushConstantDataBytesCnt,
+                           pRenderCtx->pPushConstantData);
+        vkCmdDrawIndexed(cmdBuf, pRenderCtx->idxCnt, 1, 0, 0, 0);
+        vkCmdEndRendering(cmdBuf);
     }
 }

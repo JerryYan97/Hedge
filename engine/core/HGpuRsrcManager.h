@@ -31,6 +31,20 @@ namespace Hedge
         VkSampler         gpuImgSampler;
     };
 
+    struct HGpuImgCreateInfo
+    {
+        // VkImageCreateInfo        imgInfo;
+        VmaAllocationCreateFlags allocFlags;
+        VkImageSubresourceRange  imgSubresRange;
+        VkImageViewType          imgViewType;
+        VkFormat                 imgFormat;
+        VkExtent3D               imgExtent;
+        VkImageUsageFlags        imgUsageFlags;
+
+        bool                hasSampler;
+        VkSamplerCreateInfo samplerInfo;
+    };
+
     // The HGpuRsrcManager holds the vk instance, devices and hides the vma from other parts of the engine.
     // Vertex and idx buffer: refered and released by static mesh components and the render manager.
     // Textures: refered and released by texture components, material components and the render manager.
@@ -76,7 +90,7 @@ namespace Hedge
         HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
 
-        HGpuImg* CreateGpuImage(VkImageCreateInfo imgCreateInfo, VmaAllocationCreateFlags vmaFlags);
+        HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
         
 
     private:

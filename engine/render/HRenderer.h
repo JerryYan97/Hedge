@@ -45,7 +45,14 @@ namespace Hedge
         HGpuBuffer vertBuffer;
         HGpuBuffer uboBuffer;
         std::vector<VkDescriptorSet> descriptorSets;
+        
+        uint32_t idxCnt;
 
+        // Assume that both of them are under the VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR.
+        VkImageView colorAttachmentImgView;
+        VkImageView depthAttachmentImgView;
+        VkRect2D renderArea;
+        
         void*    pPushConstantData;
         uint32_t pushConstantDataBytesCnt;
     };
