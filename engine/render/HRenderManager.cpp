@@ -73,6 +73,8 @@ namespace Hedge
         m_frameColorRenderResults.resize(m_swapchainImgCnt);
         m_frameDepthRenderResults.resize(m_swapchainImgCnt);
         m_renderImgsExtents.resize(m_swapchainImgCnt);
+
+        m_frameGpuRenderRsrcController.Init(m_swapchainImgCnt, m_pGpuRsrcManager);
     }
 
     // ================================================================================================================
@@ -221,6 +223,9 @@ namespace Hedge
     void HRenderManager::RenderCurrentScene(
         const SceneRenderInfo& sceneRenderInfo)
     {
+        // Update UBO data
+        m_frameGpuRenderRsrcController.SwitchToFrame(m_acqSwapchainImgIdx);
+
         // Fill the command buffer
         VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
 
@@ -237,6 +242,10 @@ namespace Hedge
             {
                 HRenderContext renderCtx{};
                 {
+                    renderCtx.idxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
+                    renderCtx.vertBuffer = sceneRenderInfo.objsVertBuffers[objIdx];
+                    renderCtx.uboBuffer;
+
                     renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
                     renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
                     // renderCtx.
