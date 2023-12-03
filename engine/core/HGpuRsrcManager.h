@@ -6,6 +6,12 @@
 
 namespace Hedge
 {
+    enum HGpuRsrcType
+    {
+        HGPU_BUFFER,
+        HGPU_IMG
+    };
+
     struct HGpuBuffer
     {
         VkBuffer      gpuBuffer;

@@ -223,9 +223,40 @@ namespace Hedge
     void HRenderManager::RenderCurrentScene(
         const SceneRenderInfo& sceneRenderInfo)
     {
-        // Update UBO data
+        // Update UBO data and point light storage data.
         m_frameGpuRenderRsrcController.SwitchToFrame(m_acqSwapchainImgIdx);
 
+        // The scene information data.
+        uint32_t fragUboDataBytesCnt = sizeof(float) * 4 + sizeof(uint32_t);
+        void* pFragUboData = malloc(fragUboDataBytesCnt);
+        memset(pFragUboData, 0, fragUboDataBytesCnt);
+        memcpy(pFragUboData, sceneRenderInfo.cameraPos, sizeof(float) * 3);
+
+        uint32_t ptLightsCnt = sceneRenderInfo.pointLightsPositions.size();
+        memcpy(static_cast<char*>(pFragUboData) + sizeof(float) * 4, &ptLightsCnt, sizeof(ptLightsCnt));
+
+        HGpuBuffer* pSceneInfoUbo = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
+                                                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                              VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                                                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                                                              pFragUboData, fragUboDataBytesCnt);
+        free(pFragUboData);
+
+        // The point light data
+        uint32_t pointLightPosRadianceBytesCnt = sizeof(HVec3) * sceneRenderInfo.pointLightsPositions.size();
+        
+        HGpuBuffer* pPtLightsPosStorageBuffer = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+            (void*)sceneRenderInfo.pointLightsPositions.data(), pointLightPosRadianceBytesCnt
+        );
+
+        HGpuBuffer* pPtLightsRadianceStorageBuffer = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+            (void*)sceneRenderInfo.pointLightsRadiances.data(), pointLightPosRadianceBytesCnt
+        );
+        
         // Fill the command buffer
         VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
 
@@ -240,6 +271,23 @@ namespace Hedge
         {
             for (uint32_t objIdx = 0; objIdx < objsCnt; objIdx++)
             {
+                // The model matrix and view-perspective matrix UBO data.
+                uint32_t vertUboDataBytesCnt = 32 * sizeof(float);
+                void* pVertUboData = malloc(vertUboDataBytesCnt);
+
+                HMat4x4 modelMat = sceneRenderInfo.modelMats[objIdx];
+                HMat4x4 vpMat    = sceneRenderInfo.vpMat;
+
+                memcpy(pVertUboData, modelMat.eles, sizeof(HMat4x4));
+                memcpy(static_cast<char*>(pVertUboData) + sizeof(HMat4x4), vpMat.eles, sizeof(HMat4x4));
+
+                m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                                      VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                                                                      VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                                                                      pVertUboData, vertUboDataBytesCnt);
+
+                free(pVertUboData);
+
                 HRenderContext renderCtx{};
                 {
                     renderCtx.idxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
@@ -786,28 +834,105 @@ namespace Hedge
 
     // ================================================================================================================
     void HFrameGpuRenderRsrcControl::Init(
-        uint32_t onFlightRsrcCnt,
-        HGpuRsrcManager* pGpuRsrcManager)
+        uint32_t                                  onFlightRsrcCnt,
+        HGpuRsrcManager*                          pGpuRsrcManager,
+        const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts)
     {
         m_gpuRsrcFrameCtxs.resize(onFlightRsrcCnt);
         m_pGpuRsrcManager = pGpuRsrcManager;
+
+        VkDescriptorPool* pDescriptorPool = pGpuRsrcManager->GetDescriptorPool();
+        VkDevice*         pDevice         = pGpuRsrcManager->GetLogicalDevice();
+        for (uint32_t frameIdx = 0; frameIdx < onFlightRsrcCnt; frameIdx++)
+        {
+            m_gpuRsrcFrameCtxs[frameIdx].m_descriptorSets.resize(descriptorSetLayouts.size());
+            for(uint32_t descriptorSetIdx = 0; descriptorSetIdx < descriptorSetLayouts.size(); descriptorSetIdx++)
+            {
+                VkDescriptorSetAllocateInfo desSetAllocInfo{};
+                {
+                    desSetAllocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                    desSetAllocInfo.descriptorPool     = *pDescriptorPool;
+                    desSetAllocInfo.pSetLayouts        = &descriptorSetLayouts[descriptorSetIdx];
+                    desSetAllocInfo.descriptorSetCount = 1;
+                }
+
+                VK_CHECK(vkAllocateDescriptorSets(*pDevice,
+                                                  &desSetAllocInfo,
+                                                  &m_gpuRsrcFrameCtxs[frameIdx].m_descriptorSets[descriptorSetIdx]));
+            }
+        }
     }
 
     // ================================================================================================================
-    HGpuBuffer* HFrameGpuRenderRsrcControl::CreateTmpGpuBuffer(
+    std::vector<VkDescriptorSet> HFrameGpuRenderRsrcControl::GetDescriptorSets()
+    {
+        return m_gpuRsrcFrameCtxs[m_curFrameIdx].m_descriptorSets;
+    }
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::UpdateDescriptorSets(
+        const std::vector<DescriptorSetUpdateInfo>& descriptorSetUpdateInfos)
+    {
+        VkDevice* pDevice = m_pGpuRsrcManager->GetLogicalDevice();
+        for (uint32_t desSetIdx = 0; desSetIdx < descriptorSetUpdateInfos.size(); desSetIdx++)
+        {
+            std::vector<VkWriteDescriptorSet> writeDesSetInfos(descriptorSetUpdateInfos[desSetIdx].pHGpuRsrcs.size());
+            for (uint32_t writeIdx = 0; writeIdx < writeDesSetInfos.size(); writeIdx++)
+            {
+                HGpuRsrcType type = descriptorSetUpdateInfos[desSetIdx].rsrcTypes[writeIdx];
+                if (type == HGPU_BUFFER)
+                {
+
+                }
+                else if (type == HGPU_IMG)
+                {
+
+                }
+                else
+                {
+                    exit(1);
+                }
+            }
+            vkUpdateDescriptorSets(*pDevice, writeDesSetInfos.size(), writeDesSetInfos.data(), 0, NULL);
+        }
+    }
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::AddGpuBufferReferControl(
+        HGpuBuffer* pHGpuBuffer)
+    {
+        m_gpuRsrcFrameCtxs[m_curFrameIdx].m_pTmpGpuBuffers.push_back(pHGpuBuffer);
+    }
+
+    // ================================================================================================================
+    void HFrameGpuRenderRsrcControl::AddGpuImgReferControl(
+        HGpuImg* pHGpuImg)
+    {
+        m_gpuRsrcFrameCtxs[m_curFrameIdx].m_pTmpGpuImgs.push_back(pHGpuImg);
+    }
+
+    // ================================================================================================================
+    HGpuBuffer* HFrameGpuRenderRsrcControl::CreateInitTmpGpuBuffer(
         VkBufferUsageFlags       usage,
         VmaAllocationCreateFlags vmaFlags,
+        void*                    pRamData,
         uint32_t                 bytesNum)
     {
         HGpuBuffer* pBuffer = m_pGpuRsrcManager->CreateGpuBuffer(usage, vmaFlags, bytesNum);
         HGpuRsrcFrameContext& ctx = m_gpuRsrcFrameCtxs[m_curFrameIdx];
+
+        m_pGpuRsrcManager->SendDataToBuffer(pBuffer, pRamData, bytesNum);
+
         ctx.m_pTmpGpuBuffers.push_back(pBuffer);
         return pBuffer;
     }
 
     // ================================================================================================================
-    HGpuImg* HFrameGpuRenderRsrcControl::CreateTmpGpuImage()
-    {}
+    HGpuImg* HFrameGpuRenderRsrcControl::CreateInitTmpGpuImage()
+    {
+        // TODO: Implement as needed.
+        // HGpuImg* pImg = m_pGpuRsrcManager->CreateGpuImage();
+    }
 
     // ================================================================================================================
     void HFrameGpuRenderRsrcControl::DestroyCtxBuffersImgs(

@@ -41,8 +41,16 @@ namespace Hedge
     */
     struct HGpuRsrcFrameContext
     {
-        std::vector<HGpuBuffer*> m_pTmpGpuBuffers;
-        std::vector<HGpuImg*>    m_pTmpGpuImgs;
+        std::vector<HGpuBuffer*>     m_pTmpGpuBuffers;
+        std::vector<HGpuImg*>        m_pTmpGpuImgs;
+        std::vector<VkDescriptorSet> m_descriptorSets;
+    };
+
+    struct DescriptorSetUpdateInfo
+    {
+        std::vector<HGpuRsrcType>     rsrcTypes;
+        std::vector<void*>            pHGpuRsrcs;
+        std::vector<VkDescriptorType> descriptorTypes;
     };
 
     class HFrameGpuRenderRsrcControl
@@ -51,12 +59,19 @@ namespace Hedge
         HFrameGpuRenderRsrcControl();
         ~HFrameGpuRenderRsrcControl() {}
 
-        void Init(uint32_t onFlightRsrcCnt, HGpuRsrcManager* pGpuRsrcManager);
+        void Init(uint32_t onFlightRsrcCnt,
+                  HGpuRsrcManager* pGpuRsrcManager,
+                  const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
 
-        HGpuBuffer* CreateTmpGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
-        HGpuImg*    CreateTmpGpuImage();
+        HGpuBuffer* CreateInitTmpGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, void* pRamData, uint32_t bytesNum);
+        HGpuImg*    CreateInitTmpGpuImage();
+
+        void AddGpuBufferReferControl(HGpuBuffer* pHGpuBuffer);
+        void AddGpuImgReferControl(HGpuImg* pHGpuImg);
 
         void SwitchToFrame(uint32_t frameIdx);
+        void UpdateDescriptorSets(const std::vector<DescriptorSetUpdateInfo>& descriptorSetUpdateInfos);
+        std::vector<VkDescriptorSet> GetDescriptorSets();
 
         void CleanupRsrc();
 

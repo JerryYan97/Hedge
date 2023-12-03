@@ -34,8 +34,11 @@ namespace Hedge
 
         std::vector<HVec3> pointLightsPositions;
         std::vector<HVec3> pointLightsRadiances;
+        
+        float iblMaxMipLevels;
 
         HMat4x4 vpMat;
+        float   cameraPos[3];
     };
 
     class HScene
