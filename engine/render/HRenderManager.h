@@ -46,6 +46,11 @@ namespace Hedge
         std::vector<VkDescriptorSet> m_descriptorSets;
     };
 
+    // This struct describes a descriptor set's bindings' writes. The positions in vectors represent the binding
+    // number.
+    // Note: For a scene, there are different objects. Different objects have different textures, though they share a
+    //       pipeline/render algorithm. Consequently, the number of descriptor sets for a frame rendering depends on
+    //       the number of objects in the scene.
     struct DescriptorSetUpdateInfo
     {
         std::vector<HGpuRsrcType>     rsrcTypes;
@@ -78,9 +83,10 @@ namespace Hedge
     private:
         void DestroyCtxBuffersImgs(HGpuRsrcFrameContext& ctx);
 
-        uint32_t                          m_curFrameIdx;
-        HGpuRsrcManager*                  m_pGpuRsrcManager;
-        std::vector<HGpuRsrcFrameContext> m_gpuRsrcFrameCtxs;
+        uint32_t                           m_curFrameIdx;
+        HGpuRsrcManager*                   m_pGpuRsrcManager;
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts; // Descriptor sets layouts for a pipeline or an object rendering.
+        std::vector<HGpuRsrcFrameContext>  m_gpuRsrcFrameCtxs;
     };
 
     class HRenderManager
