@@ -44,6 +44,7 @@ namespace Hedge
           m_gfxQueue(VK_NULL_HANDLE),
           m_computeQueue(VK_NULL_HANDLE),
           m_presentQueue(VK_NULL_HANDLE)
+          m_dbgMsger(VK_NULL_HANDLE)
     {}
 
     // ================================================================================================================
@@ -329,7 +330,8 @@ namespace Hedge
 
         // We need the swap chain device extension
         const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
-                                                            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
+                                                            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+                                                            VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
 
         VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamic_rendering_feature{};
         {
