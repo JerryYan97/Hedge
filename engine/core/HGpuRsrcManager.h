@@ -17,6 +17,8 @@ namespace Hedge
         VkBuffer      gpuBuffer;
         VmaAllocation gpuBufferAlloc;
         
+        VkDescriptorBufferInfo gpuBufferDescriptorInfo;
+        
         // The buffer data in the RAM. Optional.
         union
         {
@@ -35,6 +37,8 @@ namespace Hedge
         VkImageCreateInfo imgInfo;
         VkImageView       gpuImgView;
         VkSampler         gpuImgSampler;
+
+        VkDescriptorImageInfo gpuImgDescriptorInfo;
     };
 
     struct HGpuImgCreateInfo
@@ -110,7 +114,7 @@ namespace Hedge
 
         // Shared graphics widgets
         VkCommandPool    m_gfxCmdPool;
-        VkDescriptorPool m_descriptorPool;
+        VkDescriptorPool m_descriptorPool; // The descriptor pool is still needed for the imgui.
         VmaAllocator     m_vmaAllocator;
 
         // Logical and physical devices context

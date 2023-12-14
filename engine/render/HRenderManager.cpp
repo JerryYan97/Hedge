@@ -75,8 +75,7 @@ namespace Hedge
         m_renderImgsExtents.resize(m_swapchainImgCnt);
 
         m_frameGpuRenderRsrcController.Init(m_swapchainImgCnt,
-                                            m_pGpuRsrcManager,
-                                            pPbrRenderer->GetRendererInfo().descriptorSetLayouts);
+                                            m_pGpuRsrcManager);
     }
 
     // ================================================================================================================
@@ -298,7 +297,7 @@ namespace Hedge
 
                     renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
                     renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
-                    renderCtx
+                    // renderCtx
                     // renderCtx.
                     // m_pGuiManager->GetRenderExtent();
                     // renderCtx.
@@ -837,111 +836,14 @@ namespace Hedge
 
     // ================================================================================================================
     void HFrameGpuRenderRsrcControl::Init(
-        uint32_t                                  onFlightRsrcCnt,
-        HGpuRsrcManager*                          pGpuRsrcManager,
-        const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts)
+        uint32_t         onFlightRsrcCnt,
+        HGpuRsrcManager* pGpuRsrcManager)
     {
         m_gpuRsrcFrameCtxs.resize(onFlightRsrcCnt);
         m_pGpuRsrcManager = pGpuRsrcManager;
-        m_descriptorSetLayouts = descriptorSetLayouts;
 
         VkDescriptorPool* pDescriptorPool = pGpuRsrcManager->GetDescriptorPool();
         VkDevice*         pDevice         = pGpuRsrcManager->GetLogicalDevice();
-    }
-
-    // ================================================================================================================
-    std::vector<VkDescriptorSet> HFrameGpuRenderRsrcControl::GetDescriptorSets()
-    {
-        return m_gpuRsrcFrameCtxs[m_curFrameIdx].m_descriptorSets;
-    }
-
-    // ================================================================================================================
-    void HFrameGpuRenderRsrcControl::UpdateDescriptorSets(
-        const std::vector<DescriptorSetUpdateInfo>& descriptorSetUpdateInfos)
-    {
-        VkDevice* pDevice = m_pGpuRsrcManager->GetLogicalDevice();
-        std::vector<void*> tmpHeapDataPtrs;
-
-        // Create descriptor sets for this object.
-        for (uint32_t frameIdx = 0; frameIdx < onFlightRsrcCnt; frameIdx++)
-        {
-            m_gpuRsrcFrameCtxs[frameIdx].m_descriptorSets.resize(descriptorSetLayouts.size());
-            for (uint32_t descriptorSetIdx = 0; descriptorSetIdx < descriptorSetLayouts.size(); descriptorSetIdx++)
-            {
-                VkDescriptorSetAllocateInfo desSetAllocInfo{};
-                {
-                    desSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-                    desSetAllocInfo.descriptorPool = *pDescriptorPool;
-                    desSetAllocInfo.pSetLayouts = &descriptorSetLayouts[descriptorSetIdx];
-                    desSetAllocInfo.descriptorSetCount = 1;
-                }
-
-                VK_CHECK(vkAllocateDescriptorSets(*pDevice,
-                    &desSetAllocInfo,
-                    &m_gpuRsrcFrameCtxs[frameIdx].m_descriptorSets[descriptorSetIdx]));
-            }
-        }
-
-        // Update this descriptor set.
-        for (uint32_t desSetIdx = 0; desSetIdx < descriptorSetUpdateInfos.size(); desSetIdx++)
-        {
-            std::vector<VkWriteDescriptorSet> writeDesSetInfos(descriptorSetUpdateInfos[desSetIdx].pHGpuRsrcs.size());
-            for (uint32_t writeIdx = 0; writeIdx < writeDesSetInfos.size(); writeIdx++)
-            {
-                HGpuRsrcType type = descriptorSetUpdateInfos[desSetIdx].rsrcTypes[writeIdx];
-                
-                VkWriteDescriptorSet writeDesSet{};
-                writeDesSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                writeDesSet.descriptorCount = 1;
-                writeDesSet.dstSet = m_gpuRsrcFrameCtxs[m_curFrameIdx].m_descriptorSets[desSetIdx];
-                writeDesSet.dstBinding = writeIdx;
-                writeDesSet.descriptorType = descriptorSetUpdateInfos[desSetIdx].descriptorTypes[writeIdx];
-
-                if (type == HGPU_BUFFER)
-                {
-                    HGpuBuffer* pGpuBuffer = static_cast<HGpuBuffer*>(descriptorSetUpdateInfos[desSetIdx].pHGpuRsrcs[writeIdx]);
-
-                    VkDescriptorBufferInfo* pBufferInfo = new VkDescriptorBufferInfo();
-                    memset(pBufferInfo, 0, sizeof(VkDescriptorBufferInfo));
-                    {
-                        pBufferInfo->buffer = pGpuBuffer->gpuBuffer;
-                        pBufferInfo->offset = 0;
-                        pBufferInfo->range = pGpuBuffer->byteCnt;
-                    }
-
-                    writeDesSet.pBufferInfo = pBufferInfo;
-                    tmpHeapDataPtrs.push_back(pBufferInfo);
-                }
-                else if (type == HGPU_IMG)
-                {
-                    HGpuImg* pGpuImg = static_cast<HGpuImg*>(descriptorSetUpdateInfos[desSetIdx].pHGpuRsrcs[writeIdx]);
-
-                    VkDescriptorImageInfo* pImgInfo = new VkDescriptorImageInfo();
-                    memset(pImgInfo, 0, sizeof(VkDescriptorImageInfo));
-                    {
-                        pImgInfo->imageView = pGpuImg->gpuImgView;
-                        pImgInfo->sampler = pGpuImg->gpuImgSampler;
-                        pImgInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    }
-
-                    writeDesSet.pImageInfo = pImgInfo;
-                    tmpHeapDataPtrs.push_back(pImgInfo);
-                }
-                else
-                {
-                    exit(1);
-                }
-
-                writeDesSetInfos.push_back(writeDesSet);
-            }
-            vkUpdateDescriptorSets(*pDevice, writeDesSetInfos.size(), writeDesSetInfos.data(), 0, NULL);
-        }
-
-        // Cleanup the tmp heap
-        for (void* pData : tmpHeapDataPtrs)
-        {
-            delete pData;
-        }
     }
 
     // ================================================================================================================

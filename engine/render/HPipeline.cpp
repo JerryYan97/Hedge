@@ -1,6 +1,7 @@
 #include "HPipeline.h"
 #include "Utils.h"
 #include <cassert>
+#include "../render/HRenderManager.h"
 #include "g_prebuiltShaders.h"
 
 namespace Hedge
@@ -330,6 +331,7 @@ namespace Hedge
         // (https://vulkan.lunarg.com/doc/view/1.3.236.0/windows/1.3-extensions/vkspec.html#VUID-VkDescriptorSetLayoutCreateInfo-binding-00279)
 
         // Create pipeline binding and descriptor objects for the camera parameters
+        std::vector<VkDescriptorSetLayoutBinding> pbrDescriptorSetBindings;
 
         // Binding related to the scene info ubo
         VkDescriptorSetLayoutBinding vpMatUboBinding{};
@@ -339,153 +341,109 @@ namespace Hedge
             vpMatUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             vpMatUboBinding.descriptorCount = 1;
         }
+        pbrDescriptorSetBindings.push_back(vpMatUboBinding);
 
         // Bindings related to the IBL
-        std::vector<VkDescriptorSetLayoutBinding> backgroundTexBindings;
         VkDescriptorSetLayoutBinding diffuseIrradianceBinding{};
         {
-            diffuseIrradianceBinding.binding = 0;
+            diffuseIrradianceBinding.binding = 1;
             diffuseIrradianceBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             diffuseIrradianceBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             diffuseIrradianceBinding.descriptorCount = 1;
         }
-        backgroundTexBindings.push_back(diffuseIrradianceBinding);
+        pbrDescriptorSetBindings.push_back(diffuseIrradianceBinding);
 
         VkDescriptorSetLayoutBinding prefilterEnvBinding{};
         {
-            prefilterEnvBinding.binding = 1;
+            prefilterEnvBinding.binding = 2;
             prefilterEnvBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             prefilterEnvBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             prefilterEnvBinding.descriptorCount = 1;
         }
-        backgroundTexBindings.push_back(prefilterEnvBinding);
+        pbrDescriptorSetBindings.push_back(prefilterEnvBinding);
 
         VkDescriptorSetLayoutBinding envBrdfBinding{};
         {
-            envBrdfBinding.binding = 2;
+            envBrdfBinding.binding = 3;
             envBrdfBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             envBrdfBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             envBrdfBinding.descriptorCount = 1;
         }
-        backgroundTexBindings.push_back(envBrdfBinding);
+        pbrDescriptorSetBindings.push_back(envBrdfBinding);
 
         // Bindings related to object's material
-        std::vector<VkDescriptorSetLayoutBinding> modelTexBindings;
         VkDescriptorSetLayoutBinding baseColorBinding{};
         {
-            baseColorBinding.binding = 0;
+            baseColorBinding.binding = 4;
             baseColorBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             baseColorBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             baseColorBinding.descriptorCount = 1;
         }
-        modelTexBindings.push_back(baseColorBinding);
+        pbrDescriptorSetBindings.push_back(baseColorBinding);
 
         VkDescriptorSetLayoutBinding normalBinding{};
         {
-            normalBinding.binding = 1;
+            normalBinding.binding = 5;
             normalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             normalBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             normalBinding.descriptorCount = 1;
         }
-        modelTexBindings.push_back(normalBinding);
+        pbrDescriptorSetBindings.push_back(normalBinding);
 
         VkDescriptorSetLayoutBinding metallicRoughnessBinding{};
         {
-            metallicRoughnessBinding.binding = 2;
+            metallicRoughnessBinding.binding = 6;
             metallicRoughnessBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             metallicRoughnessBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             metallicRoughnessBinding.descriptorCount = 1;
         }
-        modelTexBindings.push_back(metallicRoughnessBinding);
+        pbrDescriptorSetBindings.push_back(metallicRoughnessBinding);
 
         VkDescriptorSetLayoutBinding occlusionBinding{};
         {
-            occlusionBinding.binding = 3;
+            occlusionBinding.binding = 7;
             occlusionBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             occlusionBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             occlusionBinding.descriptorCount = 1;
         }
-        modelTexBindings.push_back(occlusionBinding);
+        pbrDescriptorSetBindings.push_back(occlusionBinding);
 
         // Bindings related to point lights. We don't know how many lights in the scene at a specific frame, so we need
         // to use the storage buffer.
-        std::vector<VkDescriptorSetLayoutBinding> ptLightsBindings;
         VkDescriptorSetLayoutBinding ptLightsPosBinding{};
         {
-            ptLightsPosBinding.binding = 0;
+            ptLightsPosBinding.binding = 8;
             ptLightsPosBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             ptLightsPosBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             ptLightsPosBinding.descriptorCount = 1;
         }
-        ptLightsBindings.push_back(ptLightsPosBinding);
+        pbrDescriptorSetBindings.push_back(ptLightsPosBinding);
 
         VkDescriptorSetLayoutBinding ptLightRadianceBinding{};
         {
-            ptLightRadianceBinding.binding = 1;
+            ptLightRadianceBinding.binding = 9;
             ptLightRadianceBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             ptLightRadianceBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             ptLightRadianceBinding.descriptorCount = 1;
         }
-        ptLightsBindings.push_back(ptLightRadianceBinding);
+        pbrDescriptorSetBindings.push_back(ptLightRadianceBinding);
 
         // Create descriptor layouts create infos
-        VkDescriptorSetLayoutCreateInfo sceneUboDesSetLayoutInfo{};
+        VkDescriptorSetLayoutCreateInfo pbrDesSetLayoutInfo{};
         {
-            sceneUboDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            sceneUboDesSetLayoutInfo.bindingCount = 1;
-            sceneUboDesSetLayoutInfo.pBindings = &vpMatUboBinding;
+            pbrDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            pbrDesSetLayoutInfo.bindingCount = pbrDescriptorSetBindings.size();
+            pbrDesSetLayoutInfo.pBindings = pbrDescriptorSetBindings.data();
         }
 
-        VkDescriptorSetLayoutCreateInfo backgroundTexDesSetLayoutInfo{};
-        {
-            backgroundTexDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            backgroundTexDesSetLayoutInfo.bindingCount = backgroundTexBindings.size();
-            backgroundTexDesSetLayoutInfo.pBindings = backgroundTexBindings.data();
-        }
-
-        VkDescriptorSetLayoutCreateInfo modelTexDesSetLayoutInfo{};
-        {
-            modelTexDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            modelTexDesSetLayoutInfo.bindingCount = modelTexBindings.size();
-            modelTexDesSetLayoutInfo.pBindings = modelTexBindings.data();
-        }
-
-        VkDescriptorSetLayoutCreateInfo lightsDesSetLayoutInfo{};
-        {
-            lightsDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            lightsDesSetLayoutInfo.bindingCount = ptLightsBindings.size();
-            lightsDesSetLayoutInfo.pBindings = ptLightsBindings.data();
-        }
-
-        // Create descriptor sets layouts
-        VkDescriptorSetLayout sceneUboDescriptorSetLayout;
+        // Create the descriptor set layout
+        VkDescriptorSetLayout pbrDescriptorSetLayout;
         VK_CHECK(vkCreateDescriptorSetLayout(m_device,
-                                             &sceneUboDesSetLayoutInfo,
+                                             &pbrDesSetLayoutInfo,
                                              nullptr,
-                                             &sceneUboDescriptorSetLayout));
+                                             &pbrDescriptorSetLayout));
 
-        VkDescriptorSetLayout backgroundTexDescriptorSetLayout;
-        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
-                                             &backgroundTexDesSetLayoutInfo,
-                                             nullptr,
-                                             &backgroundTexDescriptorSetLayout));
-
-        VkDescriptorSetLayout modelTexDescriptorSetLayout;
-        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
-                                             &modelTexDesSetLayoutInfo,
-                                             nullptr,
-                                             &modelTexDescriptorSetLayout));
-
-        VkDescriptorSetLayout lightsStorageBufDescriptorSetLayout;
-        VK_CHECK(vkCreateDescriptorSetLayout(m_device,
-                                             &lightsDesSetLayoutInfo,
-                                             nullptr,
-                                             &lightsStorageBufDescriptorSetLayout));
-
-        AddDescriptorSetLayout(sceneUboDescriptorSetLayout);
-        AddDescriptorSetLayout(backgroundTexDescriptorSetLayout);
-        AddDescriptorSetLayout(modelTexDescriptorSetLayout);
-        AddDescriptorSetLayout(lightsStorageBufDescriptorSetLayout);
+        AddDescriptorSetLayout(pbrDescriptorSetLayout);
     }
 
     // ================================================================================================================
@@ -624,5 +582,13 @@ namespace Hedge
         }
 
         return depthStencilInfo;
+    }
+
+    // ================================================================================================================
+    void PBRPipeline::CmdBindDescriptors(
+        VkCommandBuffer cmdBuf,
+        const HGpuRsrcFrameContext* const pGpuRsrcCtx)
+    {
+        
     }
 }

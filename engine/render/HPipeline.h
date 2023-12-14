@@ -9,6 +9,8 @@
 // In addition, we always use the dynamic rendering.
 namespace Hedge
 {
+    struct HGpuRsrcFrameContext;
+
     struct PipelineColorBlendInfo
     {
         VkPipelineColorBlendAttachmentState colorBlendAttachment;
@@ -30,7 +32,7 @@ namespace Hedge
         VkPipeline GetVkPipeline() { return m_pipeline; }
         VkPipelineLayout GetVkPipelineLayout() { return m_pipelineLayout; }
 
-         void CreatePipeline(VkDevice device);
+        void CreatePipeline(VkDevice device);
 
         void AddShaderStageInfo(VkPipelineShaderStageCreateInfo shaderStgInfo);
         void SetPNext(void* pNext) { m_pNext = pNext; }
@@ -45,6 +47,8 @@ namespace Hedge
         {
             m_pDepthStencilState = pDepthStencilInfo;
         }
+
+        virtual void CmdBindDescriptors(VkCommandBuffer cmdBuf, const HGpuRsrcFrameContext* const pGpuRsrcCtx) = 0;
 
     protected:
         VkPipelineShaderStageCreateInfo CreateDefaultShaderStgCreateInfo(const VkShaderModule& shaderModule, const VkShaderStageFlagBits stg);
@@ -96,6 +100,8 @@ namespace Hedge
     public:
         PBRPipeline();
         ~PBRPipeline();
+
+        virtual void CmdBindDescriptors(VkCommandBuffer cmdBuf, const HGpuRsrcFrameContext* const pGpuRsrcCtx);
 
     protected:
         virtual void CreateSetCustomPipelineInfo() override;

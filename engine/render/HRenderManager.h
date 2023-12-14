@@ -39,23 +39,11 @@ namespace Hedge
     * Q1: Will frequent create and destroy buffer affect the performance? Not so sure since the memory backend doesn't
     * change. It looks like it is highly possible that the performance should be ok.
     */
+    // Assume that all gpu buffers and images will be used for shader inputs.
     struct HGpuRsrcFrameContext
     {
-        std::vector<HGpuBuffer*>     m_pTmpGpuBuffers;
-        std::vector<HGpuImg*>        m_pTmpGpuImgs;
-        std::vector<VkDescriptorSet> m_descriptorSets;
-    };
-
-    // This struct describes a descriptor set's bindings' writes. The positions in vectors represent the binding
-    // number.
-    // Note: For a scene, there are different objects. Different objects have different textures, though they share a
-    //       pipeline/render algorithm. Consequently, the number of descriptor sets for a frame rendering depends on
-    //       the number of objects in the scene.
-    struct DescriptorSetUpdateInfo
-    {
-        std::vector<HGpuRsrcType>     rsrcTypes;
-        std::vector<void*>            pHGpuRsrcs;
-        std::vector<VkDescriptorType> descriptorTypes;
+        std::vector<HGpuBuffer*> m_pTmpGpuBuffers;
+        std::vector<HGpuImg*>    m_pTmpGpuImgs;
     };
 
     class HFrameGpuRenderRsrcControl
@@ -64,9 +52,7 @@ namespace Hedge
         HFrameGpuRenderRsrcControl();
         ~HFrameGpuRenderRsrcControl() {}
 
-        void Init(uint32_t onFlightRsrcCnt,
-                  HGpuRsrcManager* pGpuRsrcManager,
-                  const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts);
+        void Init(uint32_t onFlightRsrcCnt, HGpuRsrcManager* pGpuRsrcManager);
 
         HGpuBuffer* CreateInitTmpGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, void* pRamData, uint32_t bytesNum);
         HGpuImg*    CreateInitTmpGpuImage();
@@ -75,18 +61,15 @@ namespace Hedge
         void AddGpuImgReferControl(HGpuImg* pHGpuImg);
 
         void SwitchToFrame(uint32_t frameIdx);
-        void UpdateDescriptorSets(const std::vector<DescriptorSetUpdateInfo>& descriptorSetUpdateInfos);
-        std::vector<VkDescriptorSet> GetDescriptorSets();
 
         void CleanupRsrc();
 
     private:
         void DestroyCtxBuffersImgs(HGpuRsrcFrameContext& ctx);
 
-        uint32_t                           m_curFrameIdx;
-        HGpuRsrcManager*                   m_pGpuRsrcManager;
-        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts; // Descriptor sets layouts for a pipeline or an object rendering.
-        std::vector<HGpuRsrcFrameContext>  m_gpuRsrcFrameCtxs;
+        uint32_t                          m_curFrameIdx;
+        HGpuRsrcManager*                  m_pGpuRsrcManager;
+        std::vector<HGpuRsrcFrameContext> m_gpuRsrcFrameCtxs;
     };
 
     class HRenderManager
@@ -162,13 +145,10 @@ namespace Hedge
 
         // Renderers -- shared GPU resources for different renderers.
         // May need to be moved to the gui render manager since a game normally doesn't have a second renderer.
-        std::vector<HRenderer*>     m_pRenderers;
-        HFrameGpuRenderRsrcControl  m_frameGpuRenderRsrcController;
-        std::vector<HGpuImg*>       m_frameColorRenderResults;
-        std::vector<HGpuImg*>       m_frameDepthRenderResults;
-        // std::vector<VkImageView*> m_pRenderImgViews;
-        std::vector<VkExtent2D>   m_renderImgsExtents;
-        // std::vector<GpuResource>  m_idxRendererGpuRsrcs;
-        // std::vector<GpuResource>  m_vertRendererGpuRsrcs;
+        std::vector<HRenderer*>    m_pRenderers;
+        HFrameGpuRenderRsrcControl m_frameGpuRenderRsrcController;
+        std::vector<HGpuImg*>      m_frameColorRenderResults;
+        std::vector<HGpuImg*>      m_frameDepthRenderResults;
+        std::vector<VkExtent2D>    m_renderImgsExtents;
     };
 }
