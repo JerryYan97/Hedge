@@ -20,7 +20,8 @@ namespace Hedge
         m_pipelineLayout(VK_NULL_HANDLE),
         m_isVertexInputInfoDefault(false),
         m_device(VK_NULL_HANDLE),
-        m_pDepthStencilState(nullptr)
+        m_pDepthStencilState(nullptr),
+        m_pfnCmdPushDescriptorSet(VK_NULL_HANDLE)
     {}
 
     // ================================================================================================================
@@ -251,6 +252,12 @@ namespace Hedge
         }
 
         VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline));
+
+        m_pfnCmdPushDescriptorSet = (PFN_vkCmdPushDescriptorSetKHR)vkGetDeviceProcAddr(m_device,
+                                                                                       "vkCmdPushDescriptorSetKHR");
+        if (!m_pfnCmdPushDescriptorSet) {
+            exit(1);
+        }
     }
 
     // ================================================================================================================
@@ -585,10 +592,39 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void PBRPipeline::CmdBindDescriptors(
-        VkCommandBuffer cmdBuf,
-        const HGpuRsrcFrameContext* const pGpuRsrcCtx)
+    void HPipeline::CmdBindDescriptors(
+        VkCommandBuffer                        cmdBuf,
+        const std::vector<ShaderInputBinding>& bindings)
     {
+        std::vector<VkWriteDescriptorSet> writeDescriptorSetsVec;
         
+        for (uint32_t i = 0; i < bindings.size(); i++)
+        {
+            ShaderInputBinding binding = bindings[i];
+            VkWriteDescriptorSet writeDescriptorSet{};
+            writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writeDescriptorSet.dstBinding = i;
+            writeDescriptorSet.descriptorCount = 1;
+
+            if (binding.first == HGPU_BUFFER)
+            {
+                HGpuBuffer* pGpuBuffer = static_cast<HGpuBuffer*>(binding.second);
+                writeDescriptorSet.descriptorType = pGpuBuffer->gpuBufferDescriptorType;
+                writeDescriptorSet.pBufferInfo = &pGpuBuffer->gpuBufferDescriptorInfo;
+            }
+            else
+            {
+                HGpuImg* pGpuImg = static_cast<HGpuImg*>(binding.second);
+                writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                writeDescriptorSet.pImageInfo = &pGpuImg->gpuImgDescriptorInfo;
+            }
+
+            writeDescriptorSetsVec.push_back(writeDescriptorSet);
+        }
+
+        m_pfnCmdPushDescriptorSet(cmdBuf,
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  m_pipelineLayout,
+                                  0, writeDescriptorSetsVec.size(), writeDescriptorSetsVec.data());
     }
 }

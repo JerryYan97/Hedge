@@ -4,7 +4,6 @@
 #include "../scene/HScene.h"
 #include "Utils.h"
 #include "UtilMath.h"
-#include "HPipeline.h"
 #include "../core/HGpuRsrcManager.h"
 
 #include <GLFW/glfw3.h>
@@ -43,12 +42,6 @@ namespace Hedge
     // ================================================================================================================
     HBasicRenderer::~HBasicRenderer()
     {
-    }
-
-    // ================================================================================================================
-    HRendererInfo HBasicRenderer::GetRendererInfo()
-    {
-
     }
 
     // ================================================================================================================
@@ -92,11 +85,13 @@ namespace Hedge
 
         vkCmdBeginRendering(cmdBuf, &renderInfo);
 
+        /*
         vkCmdBindDescriptorSets(cmdBuf,
                                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 m_pPipelines[0]->GetVkPipelineLayout(),
                                 0, pRenderCtx->descriptorSets.size(), pRenderCtx->descriptorSets.data(), 
                                 0, NULL);
+        */
 
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelines[0]->GetVkPipeline());
 

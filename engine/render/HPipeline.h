@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "../core/HGpuRsrcManager.h"
 
 // The design philosophy of the pipeline is to set the pipeline states or infos along the way and record what we set.
 // When we create the pipeline, if we find out that some infos are not fed before, we'll just use the default settings.
@@ -22,6 +23,8 @@ namespace Hedge
         std::vector<VkDynamicState> dynamicStates;
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo;
     };
+
+    typedef std::pair<HGpuRsrcType, void*> ShaderInputBinding;
 
     class HPipeline
     {
@@ -48,7 +51,7 @@ namespace Hedge
             m_pDepthStencilState = pDepthStencilInfo;
         }
 
-        virtual void CmdBindDescriptors(VkCommandBuffer cmdBuf, const HGpuRsrcFrameContext* const pGpuRsrcCtx) = 0;
+        void CmdBindDescriptors(VkCommandBuffer cmdBuf, const std::vector<ShaderInputBinding>& bindings);
 
     protected:
         VkPipelineShaderStageCreateInfo CreateDefaultShaderStgCreateInfo(const VkShaderModule& shaderModule, const VkShaderStageFlagBits stg);
@@ -65,6 +68,8 @@ namespace Hedge
         VkDevice                           m_device;
         std::vector<void*>                 m_heapMem;
         std::vector<void*>                 m_heapArrayMem;
+
+        PFN_vkCmdPushDescriptorSetKHR m_pfnCmdPushDescriptorSet;
 
     private:
         std::vector<VkPipelineShaderStageCreateInfo> m_shaderStgInfos;
@@ -100,8 +105,6 @@ namespace Hedge
     public:
         PBRPipeline();
         ~PBRPipeline();
-
-        virtual void CmdBindDescriptors(VkCommandBuffer cmdBuf, const HGpuRsrcFrameContext* const pGpuRsrcCtx);
 
     protected:
         virtual void CreateSetCustomPipelineInfo() override;

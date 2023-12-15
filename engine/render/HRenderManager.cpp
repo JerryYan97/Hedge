@@ -228,20 +228,20 @@ namespace Hedge
         m_frameGpuRenderRsrcController.SwitchToFrame(m_acqSwapchainImgIdx);
 
         // The scene information data.
-        uint32_t fragUboDataBytesCnt = sizeof(float) * 4 + sizeof(uint32_t);
-        void* pFragUboData = malloc(fragUboDataBytesCnt);
-        memset(pFragUboData, 0, fragUboDataBytesCnt);
-        memcpy(pFragUboData, sceneRenderInfo.cameraPos, sizeof(float) * 3);
+        uint32_t fragPushConstantDataBytesCnt = sizeof(float) * 4 + sizeof(uint32_t);
+        void* pFragPushConstantData = malloc(fragPushConstantDataBytesCnt);
+        memset(pFragPushConstantData, 0, fragPushConstantDataBytesCnt);
+        memcpy(pFragPushConstantData, sceneRenderInfo.cameraPos, sizeof(float) * 3);
 
         uint32_t ptLightsCnt = sceneRenderInfo.pointLightsPositions.size();
-        memcpy(static_cast<char*>(pFragUboData) + sizeof(float) * 4, &ptLightsCnt, sizeof(ptLightsCnt));
+        memcpy(static_cast<char*>(pFragPushConstantData) + sizeof(float) * 4, &ptLightsCnt, sizeof(ptLightsCnt));
 
         HGpuBuffer* pSceneInfoUbo = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
                                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                                               VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
                                                               VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                                                              pFragUboData, fragUboDataBytesCnt);
-        free(pFragUboData);
+                                                              pFragPushConstantData, fragPushConstantDataBytesCnt);
+        free(pFragPushConstantData);
 
         // The point light data
         uint32_t pointLightPosRadianceBytesCnt = sizeof(HVec3) * sceneRenderInfo.pointLightsPositions.size();
@@ -252,12 +252,26 @@ namespace Hedge
             (void*)sceneRenderInfo.pointLightsPositions.data(), pointLightPosRadianceBytesCnt
         );
 
+        ShaderInputBinding ptLightsPosBinding{ HGPU_BUFFER, pPtLightsPosStorageBuffer };
+
         HGpuBuffer* pPtLightsRadianceStorageBuffer = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
             VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
             (void*)sceneRenderInfo.pointLightsRadiances.data(), pointLightPosRadianceBytesCnt
         );
+
+        ShaderInputBinding ptLightsRadianceBinding{ HGPU_BUFFER, pPtLightsRadianceStorageBuffer };
+
+        // Image based lightning bindings
+        // Diffuse cubemap light map
+
+
+        // Prefilter environment cubemap
+
+
+        // Environment BRDF
         
+
         // Fill the command buffer
         VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
 
@@ -282,25 +296,36 @@ namespace Hedge
                 memcpy(pVertUboData, modelMat.eles, sizeof(HMat4x4));
                 memcpy(static_cast<char*>(pVertUboData) + sizeof(HMat4x4), vpMat.eles, sizeof(HMat4x4));
 
-                m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                                      VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-                                                                      VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                                                                      pVertUboData, vertUboDataBytesCnt);
+                HGpuBuffer* pVertUbo = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                                                             VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                                                                                             VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                                                                                             pVertUboData, vertUboDataBytesCnt);
 
                 free(pVertUboData);
+                ShaderInputBinding vertUboBinding{};
+                {
+                    vertUboBinding.first = HGPU_BUFFER;
+                    vertUboBinding.second = pVertUbo;
+                }
+
+                // Base color
+
+
 
                 HRenderContext renderCtx{};
                 {
                     renderCtx.idxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
+                    renderCtx.idxCnt = sceneRenderInfo.idxCounts[objIdx];
                     renderCtx.vertBuffer = sceneRenderInfo.objsVertBuffers[objIdx];
-                    renderCtx.uboBuffer;
+
+                    renderCtx.pPushConstantData = pFragPushConstantData;
+                    renderCtx.pushConstantDataBytesCnt = fragPushConstantDataBytesCnt;
+                    
+                    renderCtx.bindings.push_back(vertUboBinding);
+                    renderCtx.bindings.push_back()
 
                     renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
                     renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
-                    // renderCtx
-                    // renderCtx.
-                    // m_pGuiManager->GetRenderExtent();
-                    // renderCtx.
                 }
 
                 m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer, &renderCtx);
@@ -915,9 +940,6 @@ namespace Hedge
 
         // Cleanup the frame idx if there are resources.
         HGpuRsrcFrameContext& ctx = m_gpuRsrcFrameCtxs[frameIdx];
-
-        // Cleanup previous descriptor sets.
-
 
         DestroyCtxBuffersImgs(ctx);
     }

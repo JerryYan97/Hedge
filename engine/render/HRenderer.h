@@ -29,22 +29,21 @@
 #include <iostream>
 #include <vector>
 
+#include "HPipeline.h"
+
 namespace Hedge
 {
     class HPipeline;
     struct HGpuBuffer;
 
-    struct HRendererInfo
-    {
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
-    };
-
     struct HRenderContext
     {
         HGpuBuffer idxBuffer;
         HGpuBuffer vertBuffer;
-        HGpuBuffer uboBuffer;
-        std::vector<VkDescriptorSet> descriptorSets;
+
+        std::vector<ShaderInputBinding> bindings;
+        // HGpuBuffer uboBuffer;
+        // std::vector<VkDescriptorSet> descriptorSets;
         
         uint32_t idxCnt;
 
@@ -63,7 +62,6 @@ namespace Hedge
         explicit HRenderer(VkDevice device);
         virtual ~HRenderer();
 
-        virtual HRendererInfo GetRendererInfo() = 0;
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) = 0;
 
         void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
@@ -86,7 +84,6 @@ namespace Hedge
 
         virtual ~HBasicRenderer();
 
-        virtual HRendererInfo GetRendererInfo() override;
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) override;
 
     private:

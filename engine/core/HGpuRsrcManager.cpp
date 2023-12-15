@@ -43,7 +43,7 @@ namespace Hedge
           m_presentQueueFamilyIdx(0),
           m_gfxQueue(VK_NULL_HANDLE),
           m_computeQueue(VK_NULL_HANDLE),
-          m_presentQueue(VK_NULL_HANDLE)
+          m_presentQueue(VK_NULL_HANDLE),
           m_dbgMsger(VK_NULL_HANDLE)
     {}
 
@@ -370,10 +370,6 @@ namespace Hedge
         {
             bufAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             bufAllocInfo.flags = vmaFlags;
-            /*
-            mappableBufCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                                          VMA_ALLOCATION_CREATE_MAPPED_BIT;
-            */
         }
 
         // Create Vertex Buffer
@@ -395,6 +391,15 @@ namespace Hedge
                                  &(pGpuBuffer->gpuBuffer),
                                  &(pGpuBuffer->gpuBufferAlloc),
                                  nullptr));
+
+        if (usage == VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+        {
+            pGpuBuffer->gpuBufferDescriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        }
+        else if (usage == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+        {
+            pGpuBuffer->gpuBufferDescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        }
 
         m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, 1 });
 

@@ -18,6 +18,7 @@ namespace Hedge
         VmaAllocation gpuBufferAlloc;
         
         VkDescriptorBufferInfo gpuBufferDescriptorInfo;
+        VkDescriptorType       gpuBufferDescriptorType;
         
         // The buffer data in the RAM. Optional.
         union

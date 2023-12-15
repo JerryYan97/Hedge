@@ -34,6 +34,11 @@ namespace Hedge
 
         std::vector<HVec3> pointLightsPositions;
         std::vector<HVec3> pointLightsRadiances;
+
+        // Image based lightning
+        HGpuImg diffuseCubemapGpuImg;
+        HGpuImg prefilterEnvCubemapGpuImg;
+        HGpuImg envBrdfGpuImg;
         
         float iblMaxMipLevels;
 
