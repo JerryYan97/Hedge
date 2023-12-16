@@ -3,9 +3,15 @@
 #include <unordered_map>
 #include <string>
 
+// NOTE: For the gpu rsrc of each assets, we just store them along with their RAM data. However, the gpu rsrc doesn't
+//       have any guids but in reality they can also have guid like any assets, since they can have unique names and it
+//       also enables the gpu rsrc share between different gpu rsrc.
+
 namespace Hedge
 {
     class HAssetRsrcManager;
+    struct HGpuBuffer;
+    struct HGpuImg;
 
     // All assets have their own path name in the game or in the game project.
     // They can be stored on the disk and loaded from the disk.
@@ -34,9 +40,15 @@ namespace Hedge
     public:
         HStaticMeshAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
 
-        ~HStaticMeshAsset() { }
+        ~HStaticMeshAsset();
 
         virtual void LoadAssetFromDisk();
+
+        HGpuBuffer* GetIdxGpuBuffer();
+        HGpuBuffer* GetVertGpuBuffer();
+        uint64_t GetMaterialGUID() { return m_materialGUID; }
+        uint32_t GetIdxCnt() { return m_idxData.size(); }
+        uint32_t GetVertCnt() { return m_vertData.size() / 12; }
 
     private:
         void LoadGltf(const std::string& namePath);
@@ -46,6 +58,9 @@ namespace Hedge
 
         std::vector<uint16_t> m_idxData;
         std::vector<float>    m_vertData;
+
+        HGpuBuffer* m_pIdxDataGpuBuffer;
+        HGpuBuffer* m_pVertDataGpuBuffer;
     };
 
     // A material only describes the property of a mesh surface.
@@ -58,7 +73,23 @@ namespace Hedge
 
         virtual void LoadAssetFromDisk();
 
+        uint64_t GetBaseColorTextureGUID() { return m_baseColorTextureGUID; }
+        uint64_t GetNormalMapGUID() { return m_normalMapGUID; }
+        uint64_t GetMetallicRoughnessGUID() { return m_metallicRoughnessGUID; }
+        uint64_t GetOcclusionGUID() { return m_occlusionGUID; }
+
     private:
+        std::string m_baseColorTexturePathName;
+        uint64_t    m_baseColorTextureGUID;
+
+        std::string m_normalMapPathName;
+        uint64_t    m_normalMapGUID;
+
+        std::string m_metallicRoughnessPathName;
+        uint64_t    m_metallicRoughnessGUID;
+
+        std::string m_occlusionPathName;
+        uint64_t    m_occlusionGUID;
     };
 
     // A texuture asset holds an image data.
@@ -66,9 +97,11 @@ namespace Hedge
     {
     public:
         HTextureAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
-        ~HTextureAsset() {}
+        ~HTextureAsset();
 
         virtual void LoadAssetFromDisk();
+
+        HGpuImg* GetGpuImgPtr() { return m_pGpuImg; }
 
     private:
         uint32_t             m_widthPix;
@@ -77,6 +110,8 @@ namespace Hedge
         uint8_t              m_bytesPerEle;
         std::vector<float>   m_dataFloat;
         std::vector<uint8_t> m_dataUInt8;
+
+        HGpuImg* m_pGpuImg;
     };
 
     // GUID - RAM ptr based asset manager.

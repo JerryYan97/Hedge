@@ -9,9 +9,6 @@
 
 #include <sstream>
 
-// #define TINYOBJLOADER_IMPLEMENTATION
-// #include "tiny_obj_loader.h"
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 

@@ -2,6 +2,7 @@
 #include "g_builtInModels.h"
 #include "Utils.h"
 #include "yaml-cpp/yaml.h"
+#include "HGpuRsrcManager.h"
 
 #define TINYGLTF_IMPLEMENTATION
 // #define STB_IMAGE_IMPLEMENTATION
@@ -11,6 +12,9 @@
 
 namespace Hedge
 {
+    extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
+
+    // ================================================================================================================
     std::string GetPostFix(
         const std::string& namePath)
     {
@@ -145,8 +149,24 @@ namespace Hedge
         HAssetRsrcManager* pAssetRsrcManager) :
         HAsset(guid, assetPathName, pAssetRsrcManager),
         m_materialGUID(0),
-        m_materialPathName("None")
+        m_materialPathName("None"),
+        m_pIdxDataGpuBuffer(nullptr),
+        m_pVertDataGpuBuffer(nullptr)
     {
+    }
+
+    // ================================================================================================================
+    HStaticMeshAsset::~HStaticMeshAsset()
+    {
+        if (m_pIdxDataGpuBuffer != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuBuffer(m_pIdxDataGpuBuffer);
+        }
+
+        if (m_pVertDataGpuBuffer != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuBuffer(m_pVertDataGpuBuffer);
+        }
     }
 
     // ================================================================================================================
@@ -158,7 +178,7 @@ namespace Hedge
         std::string err;
         std::string warn;
 
-        bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, inputfile);
+        bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, namePath);
         //bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, argv[1]); // for binary glTF(.glb)
         if (!warn.empty()) {
             printf("Warn: %s\n", warn.c_str());
@@ -205,6 +225,26 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    HGpuBuffer* HStaticMeshAsset::GetIdxGpuBuffer()
+    {
+        if (m_pIdxDataGpuBuffer == nullptr)
+        {
+
+        }
+        return m_pIdxDataGpuBuffer;
+    }
+
+    // ================================================================================================================
+    HGpuBuffer* HStaticMeshAsset::GetVertGpuBuffer()
+    {
+        if (m_pVertDataGpuBuffer == nullptr)
+        {
+
+        }
+        return m_pVertDataGpuBuffer;
+    }
+
+    // ================================================================================================================
     HTextureAsset::HTextureAsset(
         uint64_t    guid,
         std::string assetPathName,
@@ -213,8 +253,18 @@ namespace Hedge
         m_widthPix(0),
         m_heightPix(0),
         m_elePerPix(0),
-        m_bytesPerEle(0)
+        m_bytesPerEle(0),
+        m_pGpuImg(nullptr)
     {}
+
+    // ================================================================================================================
+    HTextureAsset::~HTextureAsset()
+    {
+        if (m_pGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pGpuImg);
+        }
+    }
 
     // ================================================================================================================
     void HTextureAsset::LoadAssetFromDisk()
@@ -228,6 +278,10 @@ namespace Hedge
         uint64_t    guid,
         std::string assetPathName,
         HAssetRsrcManager* pAssetRsrcManager) :
-        HAsset(guid, assetPathName, pAssetRsrcManager)
+        HAsset(guid, assetPathName, pAssetRsrcManager),
+        m_baseColorTextureGUID(0),
+        m_normalMapGUID(0),
+        m_metallicRoughnessGUID(0),
+        m_occlusionGUID(0)
     {}
 }

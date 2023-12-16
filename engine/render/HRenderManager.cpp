@@ -264,13 +264,13 @@ namespace Hedge
 
         // Image based lightning bindings
         // Diffuse cubemap light map
-        ShaderInputBinding diffuseLightCubemapBinding{ HGPU_IMG, (void*)&sceneRenderInfo.diffuseCubemapGpuImg };
+        ShaderInputBinding diffuseLightCubemapBinding{ HGPU_IMG, (void*)sceneRenderInfo.diffuseCubemapGpuImg };
 
         // Prefilter environment cubemap
-        ShaderInputBinding prefilterEnvCubemapBinding{ HGPU_IMG, (void*)&sceneRenderInfo.prefilterEnvCubemapGpuImg };
+        ShaderInputBinding prefilterEnvCubemapBinding{ HGPU_IMG, (void*)sceneRenderInfo.prefilterEnvCubemapGpuImg };
 
         // Environment BRDF
-        ShaderInputBinding envBrdfBinding{ HGPU_IMG, (void*)&sceneRenderInfo.envBrdfGpuImg };
+        ShaderInputBinding envBrdfBinding{ HGPU_IMG, (void*)sceneRenderInfo.envBrdfGpuImg };
 
         // Fill the command buffer
         VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
@@ -305,22 +305,22 @@ namespace Hedge
                 ShaderInputBinding vertUboBinding{ HGPU_BUFFER, pVertUbo };
 
                 // Base color
-                ShaderInputBinding baseColorBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelBaseColors[objIdx] };
+                ShaderInputBinding baseColorBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelBaseColors[objIdx] };
 
                 // Normal map
-                ShaderInputBinding normalMapBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelNormalTexs[objIdx] };
+                ShaderInputBinding normalMapBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelNormalTexs[objIdx] };
 
                 // Metallic roughness
-                ShaderInputBinding metallicRoughnessBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelMetallicRoughnessTexs[objIdx] };
+                ShaderInputBinding metallicRoughnessBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelMetallicRoughnessTexs[objIdx] };
 
                 // Occlusion
-                ShaderInputBinding occlusionBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelOcclusionTexs[objIdx] };
+                ShaderInputBinding occlusionBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelOcclusionTexs[objIdx] };
 
                 HRenderContext renderCtx{};
                 {
-                    renderCtx.idxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
+                    renderCtx.pIdxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
                     renderCtx.idxCnt = sceneRenderInfo.idxCounts[objIdx];
-                    renderCtx.vertBuffer = sceneRenderInfo.objsVertBuffers[objIdx];
+                    renderCtx.pVertBuffer = sceneRenderInfo.objsVertBuffers[objIdx];
                     renderCtx.renderArea.offset = { 0, 0 };
                     renderCtx.renderArea.extent = m_pGuiManager->GetRenderExtent();
 
@@ -340,6 +340,15 @@ namespace Hedge
                     renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
                 }
 
+                // Add the static mesh gpu rsrc into the frame resource control
+                m_frameGpuRenderRsrcController.AddGpuBufferReferControl(renderCtx.pIdxBuffer);
+                m_frameGpuRenderRsrcController.AddGpuBufferReferControl(renderCtx.pVertBuffer);
+                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelBaseColors[objIdx]);
+                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelNormalTexs[objIdx]);
+                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelMetallicRoughnessTexs[objIdx]);
+                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelOcclusionTexs[objIdx]);
+
+                // Record the rendering instructions
                 m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer, &renderCtx);
             }
         }
@@ -841,6 +850,7 @@ namespace Hedge
     void HFrameGpuRenderRsrcControl::AddGpuBufferReferControl(
         HGpuBuffer* pHGpuBuffer)
     {
+        m_pGpuRsrcManager->ReferGpuBufferImg(pHGpuBuffer);
         m_gpuRsrcFrameCtxs[m_curFrameIdx].m_pTmpGpuBuffers.push_back(pHGpuBuffer);
     }
 
@@ -848,6 +858,7 @@ namespace Hedge
     void HFrameGpuRenderRsrcControl::AddGpuImgReferControl(
         HGpuImg* pHGpuImg)
     {
+        m_pGpuRsrcManager->ReferGpuBufferImg(pHGpuImg);
         m_gpuRsrcFrameCtxs[m_curFrameIdx].m_pTmpGpuImgs.push_back(pHGpuImg);
     }
 

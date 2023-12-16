@@ -7,8 +7,7 @@ Scene Entities:
         ROT: [0, 0, 0]
         SCALE: [1, 1, 1]
       StaticMeshComponent:
-        Is Prebuilt: true
-        Prebuilt Mesh Name: Cube
+        Asset Name: SM_Cube
   DefaultCameraInst:
     Type: HCameraEntity
     Components:

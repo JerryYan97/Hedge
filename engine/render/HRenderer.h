@@ -38,8 +38,8 @@ namespace Hedge
 
     struct HRenderContext
     {
-        HGpuBuffer idxBuffer;
-        HGpuBuffer vertBuffer;
+        HGpuBuffer* pIdxBuffer;
+        HGpuBuffer* pVertBuffer;
 
         std::vector<ShaderInputBinding> bindings;
         // HGpuBuffer uboBuffer;
