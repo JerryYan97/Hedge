@@ -14,6 +14,7 @@ namespace Hedge
     class HAsset
     {
     public:
+        // The input asset path name should be absolute.
         HAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
         ~HAsset() {}
 
@@ -21,7 +22,7 @@ namespace Hedge
 
     protected:
         HAssetRsrcManager* m_pAssetRsrcManager;
-        const std::string  m_assetPathName;
+        const std::string  m_assetPathName;      // Absolute path name.
 
     private:
         const uint64_t    m_guid;
@@ -38,6 +39,8 @@ namespace Hedge
         virtual void LoadAssetFromDisk();
 
     private:
+        void LoadGltf(const std::string& namePath);
+
         std::string m_materialPathName;
         uint64_t    m_materialGUID;
 
@@ -85,8 +88,15 @@ namespace Hedge
         HAssetRsrcManager();
         ~HAssetRsrcManager();
 
+        // For the editor, the rootDir is the project dir.
+        // For the game, the rootDir is the game's dir.
+        void UpdateAssetFolderPath(const std::string& rootDir) { m_assetFolderPath = rootDir + "\\assets\\"; }
+
+        std::string GetAssetFolderPath() { return m_assetFolderPath; }
+
         // We track the reference counter in Loadxxx or ReleaseAsset function.
         // The resource is unloaded when it's reference count become 0.
+        // The input asset name path is a relative name path in the asset folder.
         uint64_t LoadAsset(const std::string& assetNamePath);
 
         void ReleaseAsset(uint64_t guid);
@@ -106,5 +116,6 @@ namespace Hedge
         };
         std::unordered_map<uint64_t, AssetWrap> m_assetsMap;
 
+        std::string m_assetFolderPath;
     };
 }

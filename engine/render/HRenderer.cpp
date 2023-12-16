@@ -85,13 +85,7 @@ namespace Hedge
 
         vkCmdBeginRendering(cmdBuf, &renderInfo);
 
-        /*
-        vkCmdBindDescriptorSets(cmdBuf,
-                                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_pPipelines[0]->GetVkPipelineLayout(),
-                                0, pRenderCtx->descriptorSets.size(), pRenderCtx->descriptorSets.data(), 
-                                0, NULL);
-        */
+        m_pPipelines[0]->CmdBindDescriptors(cmdBuf, pRenderCtx->bindings);
 
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelines[0]->GetVkPipeline());
 

@@ -264,13 +264,13 @@ namespace Hedge
 
         // Image based lightning bindings
         // Diffuse cubemap light map
-
+        ShaderInputBinding diffuseLightCubemapBinding{ HGPU_IMG, (void*)&sceneRenderInfo.diffuseCubemapGpuImg };
 
         // Prefilter environment cubemap
-
+        ShaderInputBinding prefilterEnvCubemapBinding{ HGPU_IMG, (void*)&sceneRenderInfo.prefilterEnvCubemapGpuImg };
 
         // Environment BRDF
-        
+        ShaderInputBinding envBrdfBinding{ HGPU_IMG, (void*)&sceneRenderInfo.envBrdfGpuImg };
 
         // Fill the command buffer
         VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
@@ -302,27 +302,39 @@ namespace Hedge
                                                                                              pVertUboData, vertUboDataBytesCnt);
 
                 free(pVertUboData);
-                ShaderInputBinding vertUboBinding{};
-                {
-                    vertUboBinding.first = HGPU_BUFFER;
-                    vertUboBinding.second = pVertUbo;
-                }
+                ShaderInputBinding vertUboBinding{ HGPU_BUFFER, pVertUbo };
 
                 // Base color
+                ShaderInputBinding baseColorBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelBaseColors[objIdx] };
 
+                // Normal map
+                ShaderInputBinding normalMapBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelNormalTexs[objIdx] };
 
+                // Metallic roughness
+                ShaderInputBinding metallicRoughnessBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelMetallicRoughnessTexs[objIdx] };
+
+                // Occlusion
+                ShaderInputBinding occlusionBinding{ HGPU_IMG, (void*)&sceneRenderInfo.modelOcclusionTexs[objIdx] };
 
                 HRenderContext renderCtx{};
                 {
                     renderCtx.idxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
                     renderCtx.idxCnt = sceneRenderInfo.idxCounts[objIdx];
                     renderCtx.vertBuffer = sceneRenderInfo.objsVertBuffers[objIdx];
+                    renderCtx.renderArea.offset = { 0, 0 };
+                    renderCtx.renderArea.extent = m_pGuiManager->GetRenderExtent();
 
                     renderCtx.pPushConstantData = pFragPushConstantData;
                     renderCtx.pushConstantDataBytesCnt = fragPushConstantDataBytesCnt;
                     
                     renderCtx.bindings.push_back(vertUboBinding);
-                    renderCtx.bindings.push_back()
+                    renderCtx.bindings.push_back(diffuseLightCubemapBinding);
+                    renderCtx.bindings.push_back(prefilterEnvCubemapBinding);
+                    renderCtx.bindings.push_back(envBrdfBinding);
+                    renderCtx.bindings.push_back(baseColorBinding);
+                    renderCtx.bindings.push_back(normalMapBinding);
+                    renderCtx.bindings.push_back(metallicRoughnessBinding);
+                    renderCtx.bindings.push_back(occlusionBinding);
 
                     renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
                     renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
@@ -330,52 +342,6 @@ namespace Hedge
 
                 m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer, &renderCtx);
             }
-            
-            /*
-            if (m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
-                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
-            {
-                m_pGpuRsrcManager->DestroyGpuResource(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx]);
-                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc = nullptr;
-                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer = nullptr;
-            }
-
-            if (m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc != nullptr &&
-                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer != nullptr)
-            {
-                m_pGpuRsrcManager->DestroyGpuResource(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx]);
-                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pAlloc = nullptr;
-                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx].m_pBuffer = nullptr;
-            }
-
-            if (renderInfo.m_vertBufBytes != 0 && renderInfo.m_idxNum != 0)
-            {
-                m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-                    m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, renderInfo.m_vertBufBytes);
-                m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx] =
-                    m_pGpuRsrcManager->CreateGpuBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, sizeof(uint32_t) * renderInfo.m_idxNum);
-
-
-                // Send vertex and index data to gpu buffers
-                m_pGpuRsrcManager->SendDataToBuffer(m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                    renderInfo.m_pVert,
-                    renderInfo.m_vertBufBytes);
-
-                m_pGpuRsrcManager->SendDataToBuffer(m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                    renderInfo.m_pIdx,
-                    renderInfo.m_idxNum * sizeof(uint32_t));
-
-                VkExtent2D renderImgExtent = m_pGuiManager->GetRenderExtent();
-                m_pRenderImgViews[m_curSwapchainFrameIdx] = m_pRenderers[m_activeRendererIdx]->Render(
-                    m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx],
-                    m_idxRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                    m_vertRendererGpuRsrcs[m_curSwapchainFrameIdx],
-                    renderImgExtent,
-                    m_curSwapchainFrameIdx,
-                    renderInfo);
-                m_renderImgsExtents[m_curSwapchainFrameIdx] = renderImgExtent;
-            }
-            */
         }
     }
 

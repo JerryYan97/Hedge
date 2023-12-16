@@ -3,11 +3,21 @@
 #include "Utils.h"
 #include "yaml-cpp/yaml.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#define TINYGLTF_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
+#include "tiny_gltf.h"
 
 namespace Hedge
 {
+    std::string GetPostFix(
+        const std::string& namePath)
+    {
+        size_t idx = namePath.rfind('.');
+        return namePath.substr(idx);
+    }
+
     // ================================================================================================================
     std::string GetNamePathFolderName(
         const std::string& assetNamePath)
@@ -140,6 +150,35 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HStaticMeshAsset::LoadGltf(
+        const std::string& namePath)
+    {
+        tinygltf::Model model;
+        tinygltf::TinyGLTF loader;
+        std::string err;
+        std::string warn;
+
+        bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, inputfile);
+        //bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, argv[1]); // for binary glTF(.glb)
+        if (!warn.empty()) {
+            printf("Warn: %s\n", warn.c_str());
+        }
+
+        if (!err.empty()) {
+            printf("Err: %s\n", err.c_str());
+        }
+
+        if (!ret) {
+            printf("Failed to parse glTF\n");
+            exit(1);
+        }
+
+        // NOTE: TinyGltf loader has already loaded the binary buffer data and the images data.
+        const auto& binaryBuffer = model.buffers[0].data;
+        const unsigned char* pBufferData = binaryBuffer.data();
+    }
+
+    // ================================================================================================================
     void HStaticMeshAsset::LoadAssetFromDisk()
     {
         // Read the configuration file
@@ -148,10 +187,21 @@ namespace Hedge
          
         // Load other assets according to the configuation file
         // E.g. The material asset on this static mesh asset.
-
+        
 
         // Load the raw geometry
+        std::string rawGeometryFileName = config["src file"].as<std::string>();
+        std::string postFix = GetPostFix(rawGeometryFileName);
 
+        if (postFix.compare("gltf") == 0)
+        {
+            std::string gltfAbsPathName = m_pAssetRsrcManager->GetAssetFolderPath() + "\\" + rawGeometryFileName;
+            LoadGltf(gltfAbsPathName);
+        }
+        else
+        {
+            exit(1);
+        }
     }
 
     // ================================================================================================================

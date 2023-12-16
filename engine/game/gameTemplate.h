@@ -25,6 +25,7 @@ namespace Hedge
     protected:
         virtual void RegisterCustomSerializeClass() override {};
 
+        std::string m_gameDir;
         std::string m_gameName;
         HScene* m_pScene;
     };

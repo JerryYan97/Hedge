@@ -251,6 +251,8 @@ namespace Hedge
         HScene* pTmpScene = new HScene();
         GetSerializer().DeserializeYamlToScene(m_rootDir + "\\scene\\" + firstSceneName, *pTmpScene, GetEventManager());
         m_pScenes.push_back(pTmpScene);
+
+        g_pAssetRsrcManager->UpdateAssetFolderPath(m_rootDir);
     }
 
     // ================================================================================================================
@@ -267,6 +269,9 @@ namespace Hedge
         m_pGpuRsrcManager           = new HGpuRsrcManager();
         m_pHedgeEditorRenderManager = new HedgeEditorRenderManager(m_pHedgeEditorGuiManager, m_pGpuRsrcManager);
         m_pAssetRsrcManager         = new HAssetRsrcManager();
+
+        std::string defaultProjDir(getenv("HEDGE_LIB"));
+        m_pAssetRsrcManager->UpdateAssetFolderPath(defaultProjDir);
     }
 
     // ================================================================================================================

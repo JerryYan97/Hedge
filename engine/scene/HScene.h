@@ -2,12 +2,12 @@
 #include <entt.hpp>
 #include <unordered_map>
 #include <vector>
+#include "../core/HGpuRsrcManager.h"
 
 namespace Hedge
 {
     class HEntity;
     class HEventManager;
-    struct HGpuBuffer;
 
     struct HMat4x4
     {
@@ -31,6 +31,10 @@ namespace Hedge
         std::vector<uint64_t> objsMaterialsGuid;
         
         std::vector<HMat4x4> modelMats;
+        std::vector<HGpuImg> modelBaseColors;
+        std::vector<HGpuImg> modelNormalTexs;
+        std::vector<HGpuImg> modelMetallicRoughnessTexs;
+        std::vector<HGpuImg> modelOcclusionTexs;
 
         std::vector<HVec3> pointLightsPositions;
         std::vector<HVec3> pointLightsRadiances;

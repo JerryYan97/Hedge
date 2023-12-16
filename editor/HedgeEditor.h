@@ -35,6 +35,8 @@ namespace Hedge
 
         virtual HScene& GetActiveScene() override;
 
+        std::string GetProjectDir() { return m_rootDir; }
+
     protected:
         virtual void RegisterCustomSerializeClass() override {};
 

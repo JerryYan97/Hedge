@@ -198,5 +198,10 @@ namespace Hedge
         m_pGameGuiManager = new HGameGuiManager();
         m_pGpuRsrcManager = new HGpuRsrcManager();
         m_pGameRenderManager = new HGameRenderManager(m_pGameGuiManager, m_pGpuRsrcManager);
+        m_pAssetRsrcManager = new HAssetRsrcManager();
+
+        std::string exePathName = GetExePath();
+        std::string exePath = GetFileDir(exePathName);
+        m_pAssetRsrcManager->UpdateAssetFolderPath(exePath);
     }
 }
