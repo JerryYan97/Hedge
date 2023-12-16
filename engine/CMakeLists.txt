@@ -102,7 +102,8 @@ target_include_directories(HedgeEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util/
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../external/EnTT/single_include/entt
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../shaders
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../builtInModels
-                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/tinyObj)
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/tinyObj
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../external/tinygltf)
 
 target_link_directories(HedgeEngine PUBLIC $ENV{VULKAN_SDK}/lib
                                            ${ENGINE_LIB_DIR})
