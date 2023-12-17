@@ -51,6 +51,8 @@ namespace Hedge
     // ================================================================================================================
     void HedgeEditor::AppStarts()
     {
+        std::string defaultProjDir(getenv("HEDGE_LIB"));
+        OpenGameProject(defaultProjDir);
     }
 
     // ================================================================================================================
@@ -275,9 +277,6 @@ namespace Hedge
         m_pGpuRsrcManager           = new HGpuRsrcManager();
         m_pHedgeEditorRenderManager = new HedgeEditorRenderManager(m_pHedgeEditorGuiManager, m_pGpuRsrcManager);
         m_pAssetRsrcManager         = new HAssetRsrcManager();
-
-        std::string defaultProjDir(getenv("HEDGE_LIB"));
-        m_pAssetRsrcManager->UpdateAssetFolderPath(defaultProjDir);
     }
 
     // ================================================================================================================

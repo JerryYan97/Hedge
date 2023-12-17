@@ -488,7 +488,7 @@ namespace Hedge
             imgInfo.mipLevels = createInfo.imgSubresRange.levelCount;
             imgInfo.arrayLayers = createInfo.imgSubresRange.layerCount;
             imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-            imgInfo.tiling = VK_IMAGE_TILING_LINEAR;
+            imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
             imgInfo.usage = createInfo.imgUsageFlags;
             imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         }

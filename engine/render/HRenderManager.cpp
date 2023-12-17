@@ -74,6 +74,8 @@ namespace Hedge
         m_frameDepthRenderResults.resize(m_swapchainImgCnt);
         m_renderImgsExtents.resize(m_swapchainImgCnt);
 
+        CreateRenderTargets();
+
         m_frameGpuRenderRsrcController.Init(m_swapchainImgCnt,
                                             m_pGpuRsrcManager);
     }
@@ -436,6 +438,22 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HRenderManager::CreateRenderTargets()
+    {
+        // Create the color render target and the depth render target
+        VkExtent2D desiredRenderTargetExtent = m_pGuiManager->GetRenderExtent();
+        HGpuImgCreateInfo colorRenderTargetInfo = CreateColorTargetHGpuImgInfo(desiredRenderTargetExtent);
+        HGpuImgCreateInfo depthRenderTargetInfo = CreateDepthTargetHGpuImgInfo(desiredRenderTargetExtent);
+
+        for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
+        {
+            m_renderImgsExtents[i] = desiredRenderTargetExtent;
+            m_frameColorRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTargetInfo);
+            m_frameDepthRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTargetInfo);
+        }
+    }
+
+    // ================================================================================================================
     void HRenderManager::CreateSwapchain()
     {
         // Create the swapchain
@@ -557,18 +575,6 @@ namespace Hedge
                                       &m_swapchain));
 
         vkGetSwapchainImagesKHR(*m_pGpuRsrcManager->GetLogicalDevice(), m_swapchain, &m_swapchainImgCnt, nullptr);
-
-        // Create the color render target and the depth render target
-        VkExtent2D desiredRenderTargetExtent = m_pGuiManager->GetRenderExtent();
-        HGpuImgCreateInfo colorRenderTargetInfo = CreateColorTargetHGpuImgInfo(desiredRenderTargetExtent);
-        HGpuImgCreateInfo depthRenderTargetInfo = CreateDepthTargetHGpuImgInfo(desiredRenderTargetExtent);
-
-        for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
-        {
-            m_renderImgsExtents[i] = desiredRenderTargetExtent;
-            m_frameColorRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTargetInfo);
-            m_frameDepthRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTargetInfo);
-        }
     }
 
     // ================================================================================================================

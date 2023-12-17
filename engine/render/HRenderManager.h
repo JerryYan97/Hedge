@@ -116,6 +116,7 @@ namespace Hedge
         void CreateSwapchainSynObjs();
         void CreateRenderpass();
         void CreateSwapchainFramebuffer();
+        void CreateRenderTargets();
 
         HGpuImgCreateInfo CreateColorTargetHGpuImgInfo(VkExtent2D extent);
         HGpuImgCreateInfo CreateDepthTargetHGpuImgInfo(VkExtent2D extent);

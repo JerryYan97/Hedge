@@ -6,8 +6,6 @@ extern Hedge::HFrameListener* g_pFrameListener;
 extern Hedge::HRenderManager* g_pRenderManager;
 extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
 
-// TODO: Managers initialization maybe complicated and interleaved. We may need a function to handle these 
-// initialization. Currently, the render manager handles gpu rsrc manager's initialization is not ideal.
 void main(int argc, char** argv)
 {
     std::cout << "Hello From Hedge Engine!" << std::endl;
