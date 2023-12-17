@@ -38,7 +38,7 @@ struct SceneInfo
 [[vk::binding(8, 0)]] RWBuffer<float3> i_pointLightsPos;
 [[vk::binding(9, 0)]] RWBuffer<float3> i_pointLightsRadience;
 
-[[vk::push_constant]] SceneInfoUbo i_sceneInfo;
+[[vk::push_constant]] SceneInfo i_sceneInfo;
 
 float4 main(
     float4 i_pixelWorldPos     : POSITION0,

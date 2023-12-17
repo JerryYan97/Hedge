@@ -20,7 +20,8 @@ namespace Hedge
         virtual void FrameEnded() override {};
         virtual void AppStarts() override;
 
-        virtual HScene& GetActiveScene() override { return *m_pScene; };
+        virtual HScene& GetActiveScene() override { return *m_pScene; }
+        virtual SceneRenderInfo& GetActiveSceneRenderInfo() override { return m_pScenes[m_activeScene]->GetSceneRenderInfo(); }
 
     protected:
         virtual void RegisterCustomSerializeClass() override {};

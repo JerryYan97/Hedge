@@ -25,10 +25,10 @@ void main(int argc, char** argv)
 
         // Issue io events
         g_pRenderManager->SendIOEvents(g_pFrameListener->GetActiveScene(),
-                                         g_pFrameListener->GetEventManager());
+                                       g_pFrameListener->GetEventManager());
 
         // Render current scene (Generate scene rendering command buffer)
-        g_pRenderManager->RenderCurrentScene(g_pFrameListener->GetActiveScene());
+        g_pRenderManager->RenderCurrentScene(g_pFrameListener->GetActiveSceneRenderInfo());
 
         // Frame listener frame end
         g_pFrameListener->FrameEnded();

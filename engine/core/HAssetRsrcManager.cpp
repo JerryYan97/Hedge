@@ -5,15 +5,15 @@
 #include "HGpuRsrcManager.h"
 
 #define TINYGLTF_IMPLEMENTATION
-// #define STB_IMAGE_IMPLEMENTATION
-// #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "tiny_gltf.h"
 
+extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
+
 namespace Hedge
 {
-    extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
-
     // ================================================================================================================
     std::string GetPostFix(
         const std::string& namePath)
@@ -147,25 +147,19 @@ namespace Hedge
         uint64_t           guid,
         std::string        assetPathName,
         HAssetRsrcManager* pAssetRsrcManager) :
-        HAsset(guid, assetPathName, pAssetRsrcManager),
-        m_materialGUID(0),
-        m_materialPathName("None"),
-        m_pIdxDataGpuBuffer(nullptr),
-        m_pVertDataGpuBuffer(nullptr)
+        HAsset(guid, assetPathName, pAssetRsrcManager)
     {
     }
 
     // ================================================================================================================
     HStaticMeshAsset::~HStaticMeshAsset()
     {
-        if (m_pIdxDataGpuBuffer != nullptr)
+        uint32_t sectionsCnt = GetSectionCounts();
+        for (uint32_t i = 0; i < sectionsCnt; i++)
         {
-            g_pGpuRsrcManager->DereferGpuBuffer(m_pIdxDataGpuBuffer);
-        }
-
-        if (m_pVertDataGpuBuffer != nullptr)
-        {
-            g_pGpuRsrcManager->DereferGpuBuffer(m_pVertDataGpuBuffer);
+            m_pAssetRsrcManager->ReleaseAsset(m_materialGUIDs[i]);
+            g_pGpuRsrcManager->DereferGpuBuffer(m_pIdxDataGpuBuffers[i]);
+            g_pGpuRsrcManager->DereferGpuBuffer(m_pVertDataGpuBuffers[i]);
         }
     }
 
@@ -225,23 +219,17 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    HGpuBuffer* HStaticMeshAsset::GetIdxGpuBuffer()
+    HGpuBuffer* HStaticMeshAsset::GetIdxGpuBuffer(
+        uint32_t i)
     {
-        if (m_pIdxDataGpuBuffer == nullptr)
-        {
-
-        }
-        return m_pIdxDataGpuBuffer;
+        return m_pIdxDataGpuBuffers[i];
     }
 
     // ================================================================================================================
-    HGpuBuffer* HStaticMeshAsset::GetVertGpuBuffer()
+    HGpuBuffer* HStaticMeshAsset::GetVertGpuBuffer(
+        uint32_t i)
     {
-        if (m_pVertDataGpuBuffer == nullptr)
-        {
-
-        }
-        return m_pVertDataGpuBuffer;
+        return m_pVertDataGpuBuffers[i];
     }
 
     // ================================================================================================================
@@ -284,4 +272,10 @@ namespace Hedge
         m_metallicRoughnessGUID(0),
         m_occlusionGUID(0)
     {}
+
+    // ================================================================================================================
+    void HMaterialAsset::LoadAssetFromDisk()
+    {
+
+    }
 }

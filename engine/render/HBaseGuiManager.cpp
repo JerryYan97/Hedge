@@ -4,7 +4,6 @@
 #include "backends/imgui_impl_vulkan.h"
 #include <vector>
 #include <cassert>
-#include <GLFW/glfw3.h>
 #include <algorithm>
 
 namespace Hedge

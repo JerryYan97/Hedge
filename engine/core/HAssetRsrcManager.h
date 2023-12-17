@@ -35,6 +35,8 @@ namespace Hedge
     };
 
     // Static mesh has raw geometry data and a material.
+    // Note that for gltf models, we may need to import them first before we can use them.
+    // They may have lots of sub-models that we need to generate the custom asset format first.
     class HStaticMeshAsset : public HAsset
     {
     public:
@@ -42,25 +44,29 @@ namespace Hedge
 
         ~HStaticMeshAsset();
 
-        virtual void LoadAssetFromDisk();
+        virtual void LoadAssetFromDisk() override;
 
-        HGpuBuffer* GetIdxGpuBuffer();
-        HGpuBuffer* GetVertGpuBuffer();
-        uint64_t GetMaterialGUID() { return m_materialGUID; }
-        uint32_t GetIdxCnt() { return m_idxData.size(); }
-        uint32_t GetVertCnt() { return m_vertData.size() / 12; }
+        uint32_t GetSectionCounts() { return m_materialPathNames.size(); }
+
+        HGpuBuffer* GetIdxGpuBuffer(uint32_t i);
+        HGpuBuffer* GetVertGpuBuffer(uint32_t i);
+        uint64_t GetMaterialGUID(uint32_t i) { return m_materialGUIDs[i]; }
+        uint32_t GetIdxCnt(uint32_t i) { return m_idxDataVec[i].size(); }
+        uint32_t GetVertCnt(uint32_t i) { return m_vertDataVec[i].size() / 12; }
 
     private:
         void LoadGltf(const std::string& namePath);
 
-        std::string m_materialPathName;
-        uint64_t    m_materialGUID;
+        // Note: for a model, it's possible that it has multiple sections or sub-models.
+        //       (Helmet's glass, top and mouth cover, etc)
+        std::vector<std::string> m_materialPathNames;
+        std::vector<uint64_t>    m_materialGUIDs;
 
-        std::vector<uint16_t> m_idxData;
-        std::vector<float>    m_vertData;
+        std::vector<std::vector<uint16_t>> m_idxDataVec;
+        std::vector<std::vector<float>>    m_vertDataVec;
 
-        HGpuBuffer* m_pIdxDataGpuBuffer;
-        HGpuBuffer* m_pVertDataGpuBuffer;
+        std::vector<HGpuBuffer*> m_pIdxDataGpuBuffers;
+        std::vector<HGpuBuffer*> m_pVertDataGpuBuffers;
     };
 
     // A material only describes the property of a mesh surface.
@@ -71,7 +77,7 @@ namespace Hedge
         HMaterialAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
         ~HMaterialAsset() {};
 
-        virtual void LoadAssetFromDisk();
+        virtual void LoadAssetFromDisk() override;
 
         uint64_t GetBaseColorTextureGUID() { return m_baseColorTextureGUID; }
         uint64_t GetNormalMapGUID() { return m_normalMapGUID; }

@@ -50,6 +50,22 @@ def GenerateHeader(shaderFoldersPathsNameList, shadersPath):
     generateHeaderHandle.close()
 
 
+def SelectDxc():
+    pathEnvStr = os.environ['PATH']
+    pathEnvStrList = pathEnvStr.rsplit(';')
+    foundVulkanSDK = False
+    dxcCmdStr = ''
+    for path in pathEnvStrList:
+        if 'VulkanSDK' in path:
+            foundVulkanSDK = True
+            dxcCmdStr = path
+
+    if foundVulkanSDK is False:
+        sys.exit('Cannot find the Vulkan SDK in the PATH environment variable.')
+
+    return dxcCmdStr + '\\dxc.exe'
+
+
 def CompileShaderHlsl(shaderPathName, folderPath, shaderType):
     shaderFlag = ""
     if shaderType == "vert":
@@ -60,7 +76,7 @@ def CompileShaderHlsl(shaderPathName, folderPath, shaderType):
         sys.exit('Unrecogonized hlsl shader type.')
     
     subprocess.check_output([
-        "dxc.exe",
+        "C:\\VulkanSDK\\1.3.236.0\\Bin\\dxc.exe",
         '-spirv',
         '-T', shaderFlag,
         '-E', 'main',

@@ -262,6 +262,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    SceneRenderInfo& HedgeEditor::GetActiveSceneRenderInfo()
+    {
+        return m_pScenes[m_activeScene]->GetSceneRenderInfo();
+    }
+
+    // ================================================================================================================
     GlobalVariablesRAIIManager::GlobalVariablesRAIIManager()
     {
         m_pHedgeEditor              = new HedgeEditor();

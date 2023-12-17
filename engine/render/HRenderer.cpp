@@ -108,8 +108,8 @@ namespace Hedge
         vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
         VkDeviceSize vbOffset = 0;
-        vkCmdBindVertexBuffers(cmdBuf, 0, 1, &pRenderCtx->vertBuffer.gpuBuffer, &vbOffset);
-        vkCmdBindIndexBuffer(cmdBuf, pRenderCtx->idxBuffer.gpuBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindVertexBuffers(cmdBuf, 0, 1, &pRenderCtx->pVertBuffer->gpuBuffer, &vbOffset);
+        vkCmdBindIndexBuffer(cmdBuf, pRenderCtx->pIdxBuffer->gpuBuffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdPushConstants(cmdBuf,
                            m_pPipelines[0]->GetVkPipelineLayout(),
                            VK_SHADER_STAGE_FRAGMENT_BIT,

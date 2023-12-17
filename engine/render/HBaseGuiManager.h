@@ -1,5 +1,6 @@
 #pragma once
 #include "HRenderer.h"
+#include <GLFW/glfw3.h>
 
 namespace Hedge
 {

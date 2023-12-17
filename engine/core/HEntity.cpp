@@ -4,6 +4,7 @@
 #include "HComponent.h"
 #include "Utils.h"
 #include "HEvent.h"
+#include "../core/HAssetRsrcManager.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -11,6 +12,8 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+extern Hedge::HAssetRsrcManager* g_pAssetRsrcManager;
 
 namespace Hedge
 {
@@ -59,26 +62,19 @@ namespace Hedge
     HCubeEntity::~HCubeEntity()
     {
         StaticMeshComponent& meshComponent = GetComponent<StaticMeshComponent>();
-        delete meshComponent.m_pIdx;
-        delete meshComponent.m_pVert;
+        g_pAssetRsrcManager->ReleaseAsset(meshComponent.m_meshAssetGuid);
     }
 
     // ================================================================================================================
     void HCubeEntity::OnDefineEntity(
         HEventManager& eventManager)
     {
-        //
         float pos[3] = {0.f, 0.f, 2.f};
         float rot[3] = {0.f, 0.f, 0.f};
         float scale[3] = {1.f, 1.f, 1.f};
 
         AddComponent<TransformComponent>(pos, rot, scale);
-
-        AddComponent<StaticMeshComponent>(CubeIdxData,
-                                          CubeVertBufData,
-                                          uint32_t(sizeof(CubeIdxData) / sizeof(uint32_t)),
-                                          uint32_t(sizeof(CubeVertBufData)),
-                                          "Cube", true);
+        AddComponent<StaticMeshComponent>();
     }
 
     // ================================================================================================================

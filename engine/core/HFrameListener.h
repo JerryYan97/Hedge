@@ -9,6 +9,7 @@
 namespace Hedge
 {
     class HScene;
+    struct SceneRenderInfo;
 
     class HFrameListener
     {
@@ -21,6 +22,7 @@ namespace Hedge
         virtual void FrameStarted() = 0;
         virtual void FrameEnded()   = 0;
         virtual HScene& GetActiveScene() = 0;
+        virtual SceneRenderInfo& GetActiveSceneRenderInfo() = 0;
         virtual void AppStarts() = 0;
 
         HEventManager& GetEventManager() { return m_eventManager; }

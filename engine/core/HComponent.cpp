@@ -2,10 +2,10 @@
 #include "yaml-cpp/yaml.h"
 #include "HAssetRsrcManager.h"
 
+extern Hedge::HAssetRsrcManager* g_pAssetRsrcManager;
+
 namespace Hedge
 {
-    extern HAssetRsrcManager* g_pAssetRsrcManager;
-
     // ================================================================================================================
     void TransformComponent::Seralize(
         YAML::Emitter& emitter)

@@ -883,6 +883,7 @@ namespace Hedge
     {
         // TODO: Implement as needed.
         // HGpuImg* pImg = m_pGpuRsrcManager->CreateGpuImage();
+        return nullptr;
     }
 
     // ================================================================================================================
