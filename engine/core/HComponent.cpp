@@ -63,8 +63,8 @@ namespace Hedge
         YAML::Node& node)
     {
         // Load the static mesh asset (geometry data + material) into RAM
-        std::string assetNamePath = node["Mesh Asset Name Path"].as<std::string>();
-        m_meshAssetGuid = g_pAssetRsrcManager->LoadAsset(assetNamePath);
+        std::string assetName = node["Asset Name"].as<std::string>();
+        m_meshAssetGuid = g_pAssetRsrcManager->LoadAsset(assetName);
     }
 
     // ================================================================================================================

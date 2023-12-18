@@ -34,6 +34,19 @@ namespace Hedge
         const uint64_t    m_guid;
     };
 
+    struct Mesh
+    {
+        float modelPos[4];
+        std::vector<float>    vertData;
+        std::vector<uint16_t> idxData;
+
+        HGpuBuffer* pIdxDataGpuBuffer;
+        HGpuBuffer* pVertDataGpuBuffer;
+
+        std::string materialPathName;
+        uint64_t    materialGUID;
+    };
+
     // Static mesh has raw geometry data and a material.
     // Note that for gltf models, we may need to import them first before we can use them.
     // They may have lots of sub-models that we need to generate the custom asset format first.
@@ -46,27 +59,29 @@ namespace Hedge
 
         virtual void LoadAssetFromDisk() override;
 
-        uint32_t GetSectionCounts() { return m_materialPathNames.size(); }
+        uint32_t GetSectionCounts() { return m_meshes.size(); }
 
         HGpuBuffer* GetIdxGpuBuffer(uint32_t i);
         HGpuBuffer* GetVertGpuBuffer(uint32_t i);
-        uint64_t GetMaterialGUID(uint32_t i) { return m_materialGUIDs[i]; }
-        uint32_t GetIdxCnt(uint32_t i) { return m_idxDataVec[i].size(); }
-        uint32_t GetVertCnt(uint32_t i) { return m_vertDataVec[i].size() / 12; }
+        uint64_t GetMaterialGUID(uint32_t i) { return m_meshes[i].materialGUID; }
+        uint32_t GetIdxCnt(uint32_t i) { return m_meshes[i].idxData.size(); }
+        uint32_t GetVertCnt(uint32_t i) { return m_meshes[i].vertData.size() / 12; }
 
     private:
-        void LoadGltf(const std::string& namePath);
+        void LoadGltfRawGeo(const std::string& namePath);
+
+        std::vector<Mesh> m_meshes;
 
         // Note: for a model, it's possible that it has multiple sections or sub-models.
         //       (Helmet's glass, top and mouth cover, etc)
-        std::vector<std::string> m_materialPathNames;
-        std::vector<uint64_t>    m_materialGUIDs;
+        // std::vector<std::string> m_materialPathNames;
+        // std::vector<uint64_t>    m_materialGUIDs;
 
-        std::vector<std::vector<uint16_t>> m_idxDataVec;
-        std::vector<std::vector<float>>    m_vertDataVec;
+        // std::vector<std::vector<uint16_t>> m_idxDataVec;
+        // std::vector<std::vector<float>>    m_vertDataVec;
 
-        std::vector<HGpuBuffer*> m_pIdxDataGpuBuffers;
-        std::vector<HGpuBuffer*> m_pVertDataGpuBuffers;
+        // std::vector<HGpuBuffer*> m_pIdxDataGpuBuffers;
+        // std::vector<HGpuBuffer*> m_pVertDataGpuBuffers;
     };
 
     // A material only describes the property of a mesh surface.

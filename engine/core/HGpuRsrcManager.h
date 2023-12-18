@@ -62,6 +62,9 @@ namespace Hedge
     // NOTE: We use HGpuBuffer or HGpuImg pointer address to label a gpu resource, so we have to pass their pointers
     // around instead of their structs.
     // TODO: We maybe able to say GPU resources include both GRAM resources and GPU compute resources.
+    // TODO: We need the GUID + String based GPU rsrc management now, because multiple cubes materials need one same
+    //       roughness, metallic, occlusion texture (Pure black). -- No. We can just use the asset manager and the
+    //       management of the texture assets to workaround it.
     class HGpuRsrcManager
     {
     public:

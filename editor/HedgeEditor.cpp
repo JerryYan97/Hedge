@@ -24,11 +24,6 @@ namespace Hedge
     HedgeEditor::HedgeEditor()
         : HFrameListener()
     {
-        m_pScenes.push_back(new HScene());
-        m_activeScene = 0;
-
-        m_pScenes[0]->SpawnEntity(new HCubeEntity(), GetEventManager());
-        m_pScenes[0]->SpawnEntity(new HCameraEntity(), GetEventManager());
     }
 
     // ================================================================================================================
@@ -52,6 +47,7 @@ namespace Hedge
     void HedgeEditor::AppStarts()
     {
         std::string defaultProjDir(getenv("HEDGE_LIB"));
+        defaultProjDir += "\\DefaultProject\\DefaultProject.yml";
         OpenGameProject(defaultProjDir);
     }
 
@@ -241,6 +237,7 @@ namespace Hedge
 
         m_projFilePath = pathName;
         m_rootDir = Hedge::GetFileDir(pathName);
+        g_pAssetRsrcManager->UpdateAssetFolderPath(m_rootDir);
 
         // Deseriazlie the target project
         YAML::Node config = YAML::LoadFile(pathName.c_str());
@@ -253,8 +250,6 @@ namespace Hedge
         HScene* pTmpScene = new HScene();
         GetSerializer().DeserializeYamlToScene(m_rootDir + "\\scene\\" + firstSceneName, *pTmpScene, GetEventManager());
         m_pScenes.push_back(pTmpScene);
-
-        g_pAssetRsrcManager->UpdateAssetFolderPath(m_rootDir);
     }
 
     // ================================================================================================================
