@@ -422,5 +422,7 @@ namespace Hedge
         transComponent.Deseralize(node["TransformComponent"]);
 
         // Point light Component
+        auto& pointLightComponent = pPtLightEntity->GetComponent<PointLightComponent>();
+        pointLightComponent.Deseralize(node["PointLightComponent"]);
     }
 }

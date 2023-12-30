@@ -86,11 +86,12 @@ namespace Hedge
 
     // A material only describes the property of a mesh surface.
     // It can have multiple textures.
+    // We temporily stores textures in a material...
     class HMaterialAsset : public HAsset
     {
     public:
         HMaterialAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
-        ~HMaterialAsset() {};
+        ~HMaterialAsset();
 
         virtual void LoadAssetFromDisk() override;
 
@@ -102,17 +103,23 @@ namespace Hedge
     private:
         std::string m_baseColorTexturePathName;
         uint64_t    m_baseColorTextureGUID;
+        HGpuImg*    m_pBaseColorGpuImg;
 
         std::string m_normalMapPathName;
         uint64_t    m_normalMapGUID;
+        HGpuImg*    m_pNormalGpuImg;
 
         std::string m_metallicRoughnessPathName;
         uint64_t    m_metallicRoughnessGUID;
+        HGpuImg*    m_pMetallicRoughnessGpuImg;
 
         std::string m_occlusionPathName;
         uint64_t    m_occlusionGUID;
+        HGpuImg*    m_pOcclusionGpuImg;
     };
 
+    // NOTE: We temporily don't use it since we don't have standalone texture...
+    //       We can just put textures into the material...
     // A texuture asset holds an image data.
     class HTextureAsset : public HAsset
     {

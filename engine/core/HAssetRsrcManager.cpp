@@ -417,7 +417,6 @@ namespace Hedge
 
     }
     
-
     // ================================================================================================================
     // Material doesn't have a src file.
     HMaterialAsset::HMaterialAsset(
@@ -428,12 +427,172 @@ namespace Hedge
         m_baseColorTextureGUID(0),
         m_normalMapGUID(0),
         m_metallicRoughnessGUID(0),
-        m_occlusionGUID(0)
+        m_occlusionGUID(0),
+        m_pBaseColorGpuImg(nullptr),
+        m_pNormalGpuImg(nullptr),
+        m_pMetallicRoughnessGpuImg(nullptr),
+        m_pOcclusionGpuImg(nullptr)
     {}
+
+    // ================================================================================================================
+    HMaterialAsset::~HMaterialAsset()
+    {
+        if (m_pBaseColorGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pBaseColorGpuImg);
+        }
+        
+        if (m_pNormalGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pNormalGpuImg);
+        }
+
+        if (m_pMetallicRoughnessGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pMetallicRoughnessGpuImg);
+        }
+
+        if (m_pOcclusionGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pOcclusionGpuImg);
+        }
+    }
 
     // ================================================================================================================
     void HMaterialAsset::LoadAssetFromDisk()
     {
+        std::cout << "Hello Material" << std::endl;
 
+        std::string folderName = GetNamePathFolderName(m_assetPathName);
+        std::string assetPathName = m_assetPathName + "/" + folderName + ".yml";
+
+        YAML::Node config = YAML::LoadFile(assetPathName.c_str());;
+        bool isBaseColorFile = config["base color"].IsScalar();
+        bool isNormalFile = config["normal map"].IsScalar();
+        bool isMetallicRoughnessFile = config["metalic roughness"].IsScalar();
+        bool isOcclusionFile = config["occlusion"].IsScalar();
+
+        VkImageSubresourceRange imgSubRsrcRange{};
+        {
+            imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imgSubRsrcRange.baseArrayLayer = 0;
+            imgSubRsrcRange.layerCount = 1;
+            imgSubRsrcRange.baseMipLevel = 0;
+            imgSubRsrcRange.levelCount = 1;
+        }
+
+        VkSamplerCreateInfo samplerInfo{};
+        {
+            samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.minLod = -1000;
+            samplerInfo.maxLod = 1000;
+            samplerInfo.maxAnisotropy = 1.0f;
+        }
+
+        HGpuImgCreateInfo gpuImgCreateInfoTemplate{};
+        {
+            gpuImgCreateInfoTemplate.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            gpuImgCreateInfoTemplate.hasSampler = true;
+            gpuImgCreateInfoTemplate.imgSubresRange = imgSubRsrcRange;
+            gpuImgCreateInfoTemplate.imgUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            gpuImgCreateInfoTemplate.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
+        }
+
+        if (isBaseColorFile == false)
+        {
+            // Make a four component padding since we will always use the RGBA format for Nvidia compatibility.
+            YAML::Node baseColorSeq = config["base color"];
+            float baseColor[4] = {
+                baseColorSeq[0].as<float>(),
+                baseColorSeq[1].as<float>(),
+                baseColorSeq[2].as<float>(),
+                1.0
+            };
+
+            m_baseColorTexturePathName = std::to_string(baseColor[0]) + "_" +
+                                         std::to_string(baseColor[1]) + "_" +
+                                         std::to_string(baseColor[2]) + ".cc"; // Constant Color.
+
+            HGpuImgCreateInfo baseColorGpuImgCreateInfo = gpuImgCreateInfoTemplate;
+            baseColorGpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
+            baseColorGpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_SRGB;
+
+            m_pBaseColorGpuImg = g_pGpuRsrcManager->CreateGpuImage(baseColorGpuImgCreateInfo);
+            g_pGpuRsrcManager->SendDataToImage(m_pBaseColorGpuImg, baseColor, sizeof(baseColor));
+        }
+        else
+        {
+
+        }
+
+        if (isNormalFile == false)
+        {
+            YAML::Node normalMapSeq = config["normal map"];
+            float normal[4] = {
+                normalMapSeq[0].as<float>(),
+                normalMapSeq[1].as<float>(),
+                normalMapSeq[2].as<float>(),
+                1.0
+            };
+
+            m_normalMapPathName = std::to_string(normal[0]) + "_" +
+                                  std::to_string(normal[1]) + "_" +
+                                  std::to_string(normal[2]) + ".cc"; // Constant Color.
+
+            HGpuImgCreateInfo normalMapGpuImgCreateInfo = gpuImgCreateInfoTemplate;
+            normalMapGpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
+            normalMapGpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+
+            m_pNormalGpuImg = g_pGpuRsrcManager->CreateGpuImage(normalMapGpuImgCreateInfo);
+            g_pGpuRsrcManager->SendDataToImage(m_pNormalGpuImg, normal, sizeof(normal));
+        }
+        else
+        {
+
+        }
+
+        if (isMetallicRoughnessFile == false)
+        {
+            YAML::Node metallicRoughnessSeq = config["metalic roughness"];
+            float metallicRoughness[4] = {
+                metallicRoughnessSeq[0].as<float>(),
+                metallicRoughnessSeq[1].as<float>(),
+                1.0,
+                1.0
+            };
+
+            m_metallicRoughnessPathName = std::to_string(metallicRoughness[0]) + "_" +
+                                          std::to_string(metallicRoughness[1]) + "_" +
+                                          std::to_string(metallicRoughness[2]) + ".cc"; // Constant Color.
+
+            HGpuImgCreateInfo metallicRoughnessMapGpuImgCreateInfo = gpuImgCreateInfoTemplate;
+            metallicRoughnessMapGpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
+            metallicRoughnessMapGpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+
+            m_pMetallicRoughnessGpuImg = g_pGpuRsrcManager->CreateGpuImage(metallicRoughnessMapGpuImgCreateInfo);
+            g_pGpuRsrcManager->SendDataToImage(m_pMetallicRoughnessGpuImg,
+                                               metallicRoughness,
+                                               sizeof(metallicRoughness));
+        }
+        else
+        {
+
+        }
+
+        if (isOcclusionFile == false)
+        {
+
+        }
+        else
+        {
+
+        }
     }
 }

@@ -525,6 +525,15 @@ namespace Hedge
         return pGpuImg;
     }
 
+    // ================================================================================================================
+    void HGpuRsrcManager::SendDataToImage(
+        const HGpuImg* pGpuImg,
+        void*          pData,
+        uint32_t       bytes)
+    {
+
+    }
+
 #ifndef NDEBUG
     // ================================================================================================================
     void HGpuRsrcManager::ValidateDebugExtAndValidationLayer()

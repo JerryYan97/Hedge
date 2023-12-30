@@ -107,6 +107,7 @@ namespace Hedge
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
 
         HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
+        void SendDataToImage(const HGpuImg* pGpuImg, void* pData, uint32_t bytes);
         
 
     private:
