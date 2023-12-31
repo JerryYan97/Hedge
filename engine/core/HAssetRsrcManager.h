@@ -70,23 +70,15 @@ namespace Hedge
     private:
         void LoadGltfRawGeo(const std::string& namePath);
 
-        std::vector<Mesh> m_meshes;
-
         // Note: for a model, it's possible that it has multiple sections or sub-models.
         //       (Helmet's glass, top and mouth cover, etc)
-        // std::vector<std::string> m_materialPathNames;
-        // std::vector<uint64_t>    m_materialGUIDs;
-
-        // std::vector<std::vector<uint16_t>> m_idxDataVec;
-        // std::vector<std::vector<float>>    m_vertDataVec;
-
-        // std::vector<HGpuBuffer*> m_pIdxDataGpuBuffers;
-        // std::vector<HGpuBuffer*> m_pVertDataGpuBuffers;
+        std::vector<Mesh> m_meshes;
     };
 
     // A material only describes the property of a mesh surface.
     // It can have multiple textures.
     // We temporily stores textures in a material...
+    // No... Texture is necessary now because the render info follows the original design.
     class HMaterialAsset : public HAsset
     {
     public:
@@ -103,23 +95,22 @@ namespace Hedge
     private:
         std::string m_baseColorTexturePathName;
         uint64_t    m_baseColorTextureGUID;
-        HGpuImg*    m_pBaseColorGpuImg;
 
         std::string m_normalMapPathName;
         uint64_t    m_normalMapGUID;
-        HGpuImg*    m_pNormalGpuImg;
 
         std::string m_metallicRoughnessPathName;
         uint64_t    m_metallicRoughnessGUID;
-        HGpuImg*    m_pMetallicRoughnessGpuImg;
 
         std::string m_occlusionPathName;
         uint64_t    m_occlusionGUID;
-        HGpuImg*    m_pOcclusionGpuImg;
     };
 
     // NOTE: We temporily don't use it since we don't have standalone texture...
     //       We can just put textures into the material...
+    //       The texture asset maybe implemented in the future because we need to make sure for one color or texture it
+    //       only exists in the RAM or GPU memory for one copy. Gpu rsrc manager only cares about the pointer but the
+    //       asset manager can help to manage the string based resources.
     // A texuture asset holds an image data.
     class HTextureAsset : public HAsset
     {
@@ -132,6 +123,8 @@ namespace Hedge
         HGpuImg* GetGpuImgPtr() { return m_pGpuImg; }
 
     private:
+        void GetColorValFromName(const std::string& name, float* pVal);
+
         uint32_t             m_widthPix;
         uint32_t             m_heightPix;
         uint8_t              m_elePerPix;

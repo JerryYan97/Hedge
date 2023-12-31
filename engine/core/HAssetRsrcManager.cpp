@@ -26,12 +26,54 @@ namespace Hedge
     std::string GetNamePathFolderName(
         const std::string& assetNamePath)
     {
+        /* The code here is problematic because if we have '\\' as input, then it returns the left-most idx. However,
+        *  we want the right-most non-npos idx.
         size_t idx = std::min(assetNamePath.rfind('/'), assetNamePath.rfind('\\'));
         if (idx == std::string::npos)
         {
             exit(1);
         }
-        return assetNamePath.substr(idx);
+        */
+
+        size_t idxForwardSlash = assetNamePath.rfind('/');
+        size_t idxBackSlash = assetNamePath.rfind('\\');
+        size_t idx = 0;
+
+        if ((idxForwardSlash == std::string::npos) && (idxBackSlash == std::string::npos))
+        {
+            exit(1);
+        }
+        else if (idxForwardSlash == std::string::npos)
+        {
+            idx = idxBackSlash;
+        }
+        else if (idxBackSlash == std::string::npos)
+        {
+            idx = idxForwardSlash;
+        }
+        else
+        {
+            idx = std::max(idxForwardSlash, idxBackSlash);
+        }
+
+        return assetNamePath.substr(idx + 1);
+    }
+
+    // ================================================================================================================
+    std::vector<int> FindLocations(
+        std::string sample,
+        char        findIt)
+    {
+        std::vector<int> characterLocations;
+        for (int i = 0; i < sample.size(); i++)
+        {
+            if (sample[i] == findIt)
+            {
+                characterLocations.push_back(i);
+            }
+        }           
+
+        return characterLocations;
     }
 
     // ================================================================================================================
@@ -64,17 +106,16 @@ namespace Hedge
             assetWrap.refCounter = 1;
 
             // Read the type of the asset
-            std::string assetConfigFileNamePath;
             std::string assetTypeStr;
 
             if (assetName.rfind('.') != std::string::npos)
             {
                 // virtual texture asset: .vta
-                assetConfigFileNamePath = "";
                 assetTypeStr = "HTextureAsset";
             }
             else
             {
+                std::string assetConfigFileNamePath;
                 assetConfigFileNamePath = m_assetFolderPath + assetName + "\\" + assetName + ".yml";
                 YAML::Node config = YAML::LoadFile(assetConfigFileNamePath.c_str());
                 assetTypeStr = config["asset type"].as<std::string>();
@@ -348,16 +389,19 @@ namespace Hedge
     void HStaticMeshAsset::LoadAssetFromDisk()
     {
         // Read the configuration file
-        std::string assetConfigFileNamePath = m_assetPathName + GetNamePathFolderName(m_assetPathName) + ".yml";
+        std::string assetConfigFileNamePath = m_assetPathName + "\\" + GetNamePathFolderName(m_assetPathName) + ".yml";
         YAML::Node config = YAML::LoadFile(assetConfigFileNamePath.c_str());
          
         // Load other assets according to the configuation file
         // E.g. The material asset on this static mesh asset.
         YAML::Node materials = config["materials"];
+        m_meshes.resize(materials.size());
+
         for (uint32_t i = 0; i < materials.size(); i++)
         {
             std::string materialAssetName = materials[i].as<std::string>();
-            m_pAssetRsrcManager->LoadAsset(materialAssetName);
+            m_meshes[i].materialGUID = m_pAssetRsrcManager->LoadAsset(materialAssetName);
+            m_meshes[i].materialPathName = materialAssetName;
         }
 
         // Load the raw geometry
@@ -414,64 +458,6 @@ namespace Hedge
     // ================================================================================================================
     void HTextureAsset::LoadAssetFromDisk()
     {
-
-    }
-    
-    // ================================================================================================================
-    // Material doesn't have a src file.
-    HMaterialAsset::HMaterialAsset(
-        uint64_t    guid,
-        std::string assetPathName,
-        HAssetRsrcManager* pAssetRsrcManager) :
-        HAsset(guid, assetPathName, pAssetRsrcManager),
-        m_baseColorTextureGUID(0),
-        m_normalMapGUID(0),
-        m_metallicRoughnessGUID(0),
-        m_occlusionGUID(0),
-        m_pBaseColorGpuImg(nullptr),
-        m_pNormalGpuImg(nullptr),
-        m_pMetallicRoughnessGpuImg(nullptr),
-        m_pOcclusionGpuImg(nullptr)
-    {}
-
-    // ================================================================================================================
-    HMaterialAsset::~HMaterialAsset()
-    {
-        if (m_pBaseColorGpuImg != nullptr)
-        {
-            g_pGpuRsrcManager->DereferGpuImg(m_pBaseColorGpuImg);
-        }
-        
-        if (m_pNormalGpuImg != nullptr)
-        {
-            g_pGpuRsrcManager->DereferGpuImg(m_pNormalGpuImg);
-        }
-
-        if (m_pMetallicRoughnessGpuImg != nullptr)
-        {
-            g_pGpuRsrcManager->DereferGpuImg(m_pMetallicRoughnessGpuImg);
-        }
-
-        if (m_pOcclusionGpuImg != nullptr)
-        {
-            g_pGpuRsrcManager->DereferGpuImg(m_pOcclusionGpuImg);
-        }
-    }
-
-    // ================================================================================================================
-    void HMaterialAsset::LoadAssetFromDisk()
-    {
-        std::cout << "Hello Material" << std::endl;
-
-        std::string folderName = GetNamePathFolderName(m_assetPathName);
-        std::string assetPathName = m_assetPathName + "/" + folderName + ".yml";
-
-        YAML::Node config = YAML::LoadFile(assetPathName.c_str());;
-        bool isBaseColorFile = config["base color"].IsScalar();
-        bool isNormalFile = config["normal map"].IsScalar();
-        bool isMetallicRoughnessFile = config["metalic roughness"].IsScalar();
-        bool isOcclusionFile = config["occlusion"].IsScalar();
-
         VkImageSubresourceRange imgSubRsrcRange{};
         {
             imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -505,6 +491,117 @@ namespace Hedge
             gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
         }
 
+        // TODO: We may want to put it as a static/const member of the class so that we can reuse it.
+        VkBufferImageCopy bufToImgCopyTemplate{};
+        {
+            VkExtent3D extent{};
+            {
+                extent.width = 1;
+                extent.height = 1;
+                extent.depth = 1;
+            }
+
+            bufToImgCopyTemplate.bufferRowLength = 1;
+            bufToImgCopyTemplate.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            bufToImgCopyTemplate.imageSubresource.mipLevel = 0;
+            bufToImgCopyTemplate.imageSubresource.baseArrayLayer = 0;
+            bufToImgCopyTemplate.imageSubresource.layerCount = 1;
+            bufToImgCopyTemplate.imageExtent = extent;
+        }
+
+
+        std::string postFix = GetPostFix(m_assetPathName);
+        // Always assume 4 color channels in a vta.
+        if (postFix == "vta")
+        {
+            // Virtual texture asset. Pure consant color image.
+            m_widthPix = 1;
+            m_heightPix = 1;
+            m_elePerPix = 4;
+            m_bytesPerEle = sizeof(float); // Bytes per channel.
+            
+            // Get the pure color value from the name
+            float data[4] = {};
+            std::string nameWithPostFix = GetNamePathFolderName(m_assetPathName);
+            uint32_t dotIdx = nameWithPostFix.rfind('.');
+            std::cout << nameWithPostFix.substr(0, dotIdx) << std::endl;
+            GetColorValFromName(nameWithPostFix.substr(0, dotIdx), data);
+            
+            m_dataFloat = std::vector<float>(data, data + 4);
+
+            HGpuImgCreateInfo gpuImgCreateInfo = gpuImgCreateInfoTemplate;
+            gpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
+            gpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_SRGB;
+
+            m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(gpuImgCreateInfo);
+
+            VkBufferImageCopy baseColorCopy = bufToImgCopyTemplate;
+            g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataFloat.data(), sizeof(float) * m_dataFloat.size());
+        }
+        else
+        {
+
+        }
+    }
+
+    // ================================================================================================================
+    void HTextureAsset::GetColorValFromName(
+        const std::string& name,
+        float*             pVal)
+    {
+        std::vector<int> underlineIdxs = FindLocations(name, '_');
+        int dotIdx = name.rfind('.');
+        
+        int prevUnderlineIdx = -1;
+        for (uint32_t i = 0; i < underlineIdxs.size(); i++)
+        {
+            int curUnderlineIdx = underlineIdxs[i];
+            std::string curValStr = name.substr(prevUnderlineIdx + 1, curUnderlineIdx - prevUnderlineIdx - 1);
+            prevUnderlineIdx = curUnderlineIdx;
+            pVal[i] = std::stof(curValStr);
+        }
+
+        // The last value
+        std::string lastValStr = name.substr(prevUnderlineIdx + 1, dotIdx - prevUnderlineIdx - 1);
+        pVal[3] = std::stof(lastValStr);
+    }
+    
+    // ================================================================================================================
+    // Material doesn't have a src file.
+    HMaterialAsset::HMaterialAsset(
+        uint64_t    guid,
+        std::string assetPathName,
+        HAssetRsrcManager* pAssetRsrcManager) :
+        HAsset(guid, assetPathName, pAssetRsrcManager),
+        m_baseColorTextureGUID(0),
+        m_normalMapGUID(0),
+        m_metallicRoughnessGUID(0),
+        m_occlusionGUID(0)
+    {}
+
+    // ================================================================================================================
+    HMaterialAsset::~HMaterialAsset()
+    {
+        m_pAssetRsrcManager->ReleaseAsset(m_baseColorTextureGUID);
+        m_pAssetRsrcManager->ReleaseAsset(m_normalMapGUID);
+        m_pAssetRsrcManager->ReleaseAsset(m_metallicRoughnessGUID);
+        m_pAssetRsrcManager->ReleaseAsset(m_occlusionGUID);
+    }
+
+    // ================================================================================================================
+    void HMaterialAsset::LoadAssetFromDisk()
+    {
+        std::cout << "Hello Material" << std::endl;
+
+        std::string folderName = GetNamePathFolderName(m_assetPathName);
+        std::string assetPathName = m_assetPathName + "/" + folderName + ".yml";
+
+        YAML::Node config = YAML::LoadFile(assetPathName.c_str());;
+        bool isBaseColorFile = config["base color"].IsScalar();
+        bool isNormalFile = config["normal map"].IsScalar();
+        bool isMetallicRoughnessFile = config["metalic roughness"].IsScalar();
+        bool isOcclusionFile = config["occlusion"].IsScalar();
+
         if (isBaseColorFile == false)
         {
             // Make a four component padding since we will always use the RGBA format for Nvidia compatibility.
@@ -516,16 +613,13 @@ namespace Hedge
                 1.0
             };
 
+            // virtual texture asset: .vta
             m_baseColorTexturePathName = std::to_string(baseColor[0]) + "_" +
                                          std::to_string(baseColor[1]) + "_" +
-                                         std::to_string(baseColor[2]) + ".cc"; // Constant Color.
+                                         std::to_string(baseColor[2]) + "_" +
+                                         std::to_string(baseColor[3]) + ".vta";
 
-            HGpuImgCreateInfo baseColorGpuImgCreateInfo = gpuImgCreateInfoTemplate;
-            baseColorGpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
-            baseColorGpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_SRGB;
-
-            m_pBaseColorGpuImg = g_pGpuRsrcManager->CreateGpuImage(baseColorGpuImgCreateInfo);
-            g_pGpuRsrcManager->SendDataToImage(m_pBaseColorGpuImg, baseColor, sizeof(baseColor));
+            m_baseColorTextureGUID = m_pAssetRsrcManager->LoadAsset(m_baseColorTexturePathName);
         }
         else
         {
@@ -542,16 +636,13 @@ namespace Hedge
                 1.0
             };
 
+            // virtual texture asset: .vta
             m_normalMapPathName = std::to_string(normal[0]) + "_" +
                                   std::to_string(normal[1]) + "_" +
-                                  std::to_string(normal[2]) + ".cc"; // Constant Color.
+                                  std::to_string(normal[2]) + "_" + 
+                                  std::to_string(normal[3]) + ".vta";
 
-            HGpuImgCreateInfo normalMapGpuImgCreateInfo = gpuImgCreateInfoTemplate;
-            normalMapGpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
-            normalMapGpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
-
-            m_pNormalGpuImg = g_pGpuRsrcManager->CreateGpuImage(normalMapGpuImgCreateInfo);
-            g_pGpuRsrcManager->SendDataToImage(m_pNormalGpuImg, normal, sizeof(normal));
+            m_normalMapGUID = m_pAssetRsrcManager->LoadAsset(m_normalMapPathName);
         }
         else
         {
@@ -568,18 +659,13 @@ namespace Hedge
                 1.0
             };
 
+            // virtual texture asset: .vta
             m_metallicRoughnessPathName = std::to_string(metallicRoughness[0]) + "_" +
                                           std::to_string(metallicRoughness[1]) + "_" +
-                                          std::to_string(metallicRoughness[2]) + ".cc"; // Constant Color.
+                                          std::to_string(metallicRoughness[2]) + "_" +
+                                          std::to_string(metallicRoughness[3]) + ".vta";
 
-            HGpuImgCreateInfo metallicRoughnessMapGpuImgCreateInfo = gpuImgCreateInfoTemplate;
-            metallicRoughnessMapGpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
-            metallicRoughnessMapGpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
-
-            m_pMetallicRoughnessGpuImg = g_pGpuRsrcManager->CreateGpuImage(metallicRoughnessMapGpuImgCreateInfo);
-            g_pGpuRsrcManager->SendDataToImage(m_pMetallicRoughnessGpuImg,
-                                               metallicRoughness,
-                                               sizeof(metallicRoughness));
+            m_metallicRoughnessGUID = m_pAssetRsrcManager->LoadAsset(m_metallicRoughnessPathName);
         }
         else
         {
@@ -588,7 +674,18 @@ namespace Hedge
 
         if (isOcclusionFile == false)
         {
+            YAML::Node occlusionNode = config["occlusion"];
+            float occlusion[4] = {
+                occlusionNode[0].as<float>(),
+                1.f, 1.f, 1.f
+            };
 
+            m_occlusionPathName = std::to_string(occlusion[0]) + "_" +
+                                  std::to_string(occlusion[1]) + "_" +
+                                  std::to_string(occlusion[2]) + "_" +
+                                  std::to_string(occlusion[3]) + ".cc"; // Constant Color.
+
+            m_occlusionGUID = m_pAssetRsrcManager->LoadAsset(m_occlusionPathName);
         }
         else
         {

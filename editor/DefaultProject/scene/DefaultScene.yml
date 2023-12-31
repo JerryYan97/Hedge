@@ -8,6 +8,16 @@ Scene Entities:
         SCALE: [1, 1, 1]
       StaticMeshComponent:
         Asset Name: SM_Cube
+  DefaultPointLightInst:
+    Type: HPointLightEntity
+    Components:
+      TransformComponent:
+        POS: [0, 2, 0]
+        ROT: [0, 0, 0]
+        SCALE: [1, 1, 1]
+      PointLightComponent:
+        Radiance: [1.0, 1.0, 1.0]
+        Affect Radius: 5.0
   DefaultCameraInst:
     Type: HCameraEntity
     Components:
@@ -23,3 +33,4 @@ Scene Entities:
         far: 100
         near: 0.100000001
         isActive: true
+  

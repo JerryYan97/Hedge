@@ -40,6 +40,7 @@ namespace Hedge
         VkSampler         gpuImgSampler;
 
         VkDescriptorImageInfo gpuImgDescriptorInfo;
+        VkImageSubresourceRange  imgSubresRange;
     };
 
     struct HGpuImgCreateInfo
@@ -107,7 +108,7 @@ namespace Hedge
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
 
         HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
-        void SendDataToImage(const HGpuImg* pGpuImg, void* pData, uint32_t bytes);
+        void SendDataToImage(const HGpuImg* pGpuImg, VkBufferImageCopy bufToImgCopyInfo, void* pData, uint32_t bytes);
         
 
     private:

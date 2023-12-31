@@ -1,6 +1,7 @@
 #include <iostream>
 #include "render/HRenderManager.h"
 #include "core/HFrameListener.h"
+#include "scene/HScene.h"
 
 extern Hedge::HFrameListener* g_pFrameListener;
 extern Hedge::HRenderManager* g_pRenderManager;

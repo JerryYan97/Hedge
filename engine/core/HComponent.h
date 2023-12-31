@@ -95,14 +95,17 @@ namespace Hedge
     {
     public:
         PointLightComponent(
-            float* pColor)
+            float* pColor,
+            float affectRadius) :
+            m_radius(affectRadius)
         {
             memcpy(m_color, pColor, 3 * sizeof(float));
         }
 
-        void Seralize(YAML::Emitter& emitter) {};
-        void Deseralize(YAML::Node& node) {};
+        void Seralize(YAML::Emitter& emitter);
+        void Deseralize(YAML::Node& node);
 
         float m_color[3];
+        float m_radius;
     };
 }

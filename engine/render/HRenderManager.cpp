@@ -25,7 +25,7 @@ namespace Hedge
     HRenderManager::HRenderManager(
         HBaseGuiManager* pGuiManager,
         HGpuRsrcManager* pGpuRsrcManager)
-        : // m_curSwapchainFrameIdx(0),
+        : m_curSwapchainFrameIdx(0),
           m_pGuiManager(pGuiManager),
           m_pGpuRsrcManager(pGpuRsrcManager)
     {
@@ -142,9 +142,9 @@ namespace Hedge
         vkResetFences(*m_pGpuRsrcManager->GetLogicalDevice(), 1, &m_inFlightFences[m_curSwapchainFrameIdx]);
         vkResetCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 0);
 
-        HandleResize();
-
         m_pGuiManager->StartNewFrame();
+
+        HandleResize();
     }
 
     // ================================================================================================================
@@ -159,6 +159,8 @@ namespace Hedge
     // TODO: I am thinking the swapchain doesn't really need a m_curSwapchainFrameIdx.
     //       We only need the m_acqSwapchainImgIdx. If the next image is ready, then all the other resources should
     //       also be ready.
+    //       The thought above doesn't hold because the vkAcquiredNextImage is none-obstructive, so it's possible that
+    //       the resources 
     void HRenderManager::HandleResize()
     {
         VkResult result = vkAcquireNextImageKHR(*m_pGpuRsrcManager->GetLogicalDevice(),
@@ -317,6 +319,10 @@ namespace Hedge
 
                 // Occlusion
                 ShaderInputBinding occlusionBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelOcclusionTexs[objIdx] };
+
+                // Point lights positions and radiance
+                ShaderInputBinding ptLightsPosBinding{ HGPU_BUFFER, (void*) };
+                ShaderInputBinding ptLightsRadianceBinding{ HGPU_BUFFER, (void*) };
 
                 HRenderContext renderCtx{};
                 {

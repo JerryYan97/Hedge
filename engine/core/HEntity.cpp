@@ -378,7 +378,14 @@ namespace Hedge
     void HPointLightEntity::OnDefineEntity(
         HEventManager& eventManager)
     {
+        float pos[3] = { 0.f, 0.f, -1.f };
+        float rot[3] = { 0.f, 0.f, 0.f };
+        float scale[3] = { 1.f, 1.f, 1.f };
 
+        AddComponent<TransformComponent>(pos, rot, scale);
+
+        float radiance[3] = { 1.f, 1.f, 1.f };
+        AddComponent<PointLightComponent>(radiance, 1.f);
     }
 
     // ================================================================================================================

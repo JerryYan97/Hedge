@@ -2,5 +2,5 @@ asset type: HMaterialAsset
 name: M_Basic_Wall
 base color: [0.8, 0.8, 0.8]
 normal map: [0.0, 0.0, 1.0]
-metalic roughness: [0.0, 0.0]
+metalic roughness: [0.0, 1.0]
 occlusion: [0.0]

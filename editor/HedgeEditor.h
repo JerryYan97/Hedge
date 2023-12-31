@@ -34,7 +34,7 @@ namespace Hedge
         virtual void AppStarts() override;
 
         virtual HScene& GetActiveScene() override;
-        virtual SceneRenderInfo& GetActiveSceneRenderInfo() override;
+        virtual SceneRenderInfo GetActiveSceneRenderInfo() override;
 
         std::string GetProjectDir() { return m_rootDir; }
 

@@ -30,6 +30,67 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(
 
 namespace Hedge
 {
+    // RAII style command buffer and submittion management.
+    class HCommandBuffer
+    {
+    public:
+        HCommandBuffer(
+            VkDevice      device,
+            VkCommandPool cmdPool,
+            VkQueue       queue) :
+            m_fence(VK_NULL_HANDLE),
+            m_queue(queue)
+        {
+            m_device = device;
+            
+            VkCommandBufferAllocateInfo commandBufferAllocInfo{};
+            {
+                commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+                commandBufferAllocInfo.commandPool = cmdPool;
+                commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+                commandBufferAllocInfo.commandBufferCount = 1;
+            }
+            VK_CHECK(vkAllocateCommandBuffers(m_device, &commandBufferAllocInfo, &m_vkCmdBuffer));
+
+            VkFenceCreateInfo fenceInfo{};
+            {
+                fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+                fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+            }
+            VK_CHECK(vkCreateFence(device, &fenceInfo, nullptr, &m_fence));
+            VK_CHECK(vkResetFences(device, 1, &m_fence));
+        }
+
+        ~HCommandBuffer()
+        {
+            vkDestroyFence(m_device, m_fence, nullptr);
+        }
+
+        VkCommandBuffer GetVkCmdBuffer() { return m_vkCmdBuffer; }
+
+        void SubmitAndWait()
+        {
+            VkSubmitInfo submitInfo{};
+            {
+                submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                submitInfo.commandBufferCount = 1;
+                submitInfo.pCommandBuffers = &m_vkCmdBuffer;
+            }
+            VK_CHECK(vkQueueSubmit(m_queue, 1, &submitInfo, m_fence));
+            VK_CHECK(vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX));
+
+            VK_CHECK(vkResetFences(m_device, 1, &m_fence));
+            VK_CHECK(vkResetCommandBuffer(m_vkCmdBuffer, 0));
+        }
+
+    private:
+        VkCommandBuffer m_vkCmdBuffer;
+        VkDevice        m_device;
+        VkFence         m_fence;
+        VkQueue         m_queue;
+    };
+
+
     // ================================================================================================================
     HGpuRsrcManager::HGpuRsrcManager()
         : m_vkInst(VK_NULL_HANDLE),
@@ -401,6 +462,10 @@ namespace Hedge
             pGpuBuffer->gpuBufferDescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         }
 
+        pGpuBuffer->gpuBufferDescriptorInfo.buffer = pGpuBuffer->gpuBuffer;
+        pGpuBuffer->gpuBufferDescriptorInfo.offset = 0;
+        pGpuBuffer->gpuBufferDescriptorInfo.range = bytesNum;
+
         m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, 1 });
 
         return pGpuBuffer;
@@ -520,18 +585,100 @@ namespace Hedge
             VK_CHECK(vkCreateSampler(m_vkDevice, &createInfo.samplerInfo, nullptr, &(pGpuImg->gpuImgSampler)));
         }
 
+        pGpuImg->imgSubresRange = createInfo.imgSubresRange;
+
+        pGpuImg->gpuImgDescriptorInfo.sampler = pGpuImg->gpuImgSampler;
+        pGpuImg->gpuImgDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        pGpuImg->gpuImgDescriptorInfo.imageView = pGpuImg->gpuImgView;
+
         m_gpuBuffersImgs.insert({ (void*)pGpuImg, 1 });
 
         return pGpuImg;
     }
 
     // ================================================================================================================
+    // Let's try whether it's possible to make it from undefined to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL.
     void HGpuRsrcManager::SendDataToImage(
-        const HGpuImg* pGpuImg,
-        void*          pData,
-        uint32_t       bytes)
+        const HGpuImg*    pGpuImg,
+        VkBufferImageCopy bufToImgCopyInfo,
+        void*             pData,        
+        uint32_t          bytes)
     {
+        HCommandBuffer hCmdBuffer(m_vkDevice, m_gfxCmdPool, m_gfxQueue);
+        VkCommandBuffer cmdBuffer = hCmdBuffer.GetVkCmdBuffer();
 
+        // Create the staging buffer resources
+        VkBuffer stagingBuffer;
+        VmaAllocation stagingBufAlloc;
+        
+        VmaAllocationCreateInfo stagingBufAllocInfo{};
+        {
+            stagingBufAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            stagingBufAllocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
+                                        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        }
+
+        VkBufferCreateInfo stgBufInfo{};
+        {
+            stgBufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            stgBufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            stgBufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            stgBufInfo.size = bytes;
+        }
+
+        VK_CHECK(vmaCreateBuffer(m_vmaAllocator,
+                                 &stgBufInfo,
+                                 &stagingBufAllocInfo,
+                                 &stagingBuffer,
+                                 &stagingBufAlloc, nullptr));
+
+        // Send data to staging Buffer
+        void* pStgData;
+        vmaMapMemory(m_vmaAllocator, stagingBufAlloc, &pStgData);
+        memcpy(pStgData, pData, bytes);
+        vmaUnmapMemory(m_vmaAllocator, stagingBufAlloc);
+
+        /* Send staging buffer data to the GPU image. */
+        VkCommandBufferBeginInfo beginInfo{};
+        {
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        }
+        VK_CHECK(vkBeginCommandBuffer(cmdBuffer, &beginInfo));
+
+        // Transform the layout of the image to copy source
+        VkImageMemoryBarrier undefToDstBarrier{};
+        {
+            undefToDstBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            undefToDstBarrier.image = pGpuImg->gpuImg;
+            undefToDstBarrier.subresourceRange = pGpuImg->imgSubresRange;
+            undefToDstBarrier.srcAccessMask = 0;
+            undefToDstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            undefToDstBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            undefToDstBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        }
+
+        vkCmdPipelineBarrier(
+            cmdBuffer,
+            VK_PIPELINE_STAGE_HOST_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &undefToDstBarrier);
+
+        // Copy the data from buffer to the image
+        vkCmdCopyBufferToImage(
+            cmdBuffer,
+            stagingBuffer,
+            pGpuImg->gpuImg,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1, &bufToImgCopyInfo);
+
+        // End the command buffer and submit the packets
+        vkEndCommandBuffer(cmdBuffer);
+
+        // Submit the filled command buffer to the graphics queue to draw the image
+        hCmdBuffer.SubmitAndWait();
     }
 
 #ifndef NDEBUG

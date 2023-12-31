@@ -22,7 +22,8 @@ namespace Hedge
 {
     // ================================================================================================================
     HedgeEditor::HedgeEditor()
-        : HFrameListener()
+        : HFrameListener(),
+          m_activeScene(0)
     {
     }
 
@@ -259,7 +260,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    SceneRenderInfo& HedgeEditor::GetActiveSceneRenderInfo()
+    SceneRenderInfo HedgeEditor::GetActiveSceneRenderInfo()
     {
         return m_pScenes[m_activeScene]->GetSceneRenderInfo();
     }

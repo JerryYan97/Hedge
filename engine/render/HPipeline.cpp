@@ -439,6 +439,7 @@ namespace Hedge
         VkDescriptorSetLayoutCreateInfo pbrDesSetLayoutInfo{};
         {
             pbrDesSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            pbrDesSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
             pbrDesSetLayoutInfo.bindingCount = pbrDescriptorSetBindings.size();
             pbrDesSetLayoutInfo.pBindings = pbrDescriptorSetBindings.data();
         }

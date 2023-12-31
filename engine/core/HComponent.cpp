@@ -122,4 +122,34 @@ namespace Hedge
         m_near = near;
         m_active = isActive;
     }
+
+    // ================================================================================================================
+    void PointLightComponent::Seralize(
+        YAML::Emitter& emitter)
+    {
+        emitter << YAML::Key << "CameraComponent";
+        emitter << YAML::Value;
+
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "Radiance";
+        emitter << YAML::Value;
+        emitter << YAML::Flow;
+        emitter << YAML::BeginSeq << m_color[0] << m_color[1] << m_color[2] << YAML::EndSeq;
+
+        emitter << YAML::Key << "Affect Radius";
+        emitter << YAML::Value << m_radius;
+
+        emitter << YAML::EndMap;
+    }
+
+    // ================================================================================================================
+    void PointLightComponent::Deseralize(
+        YAML::Node& node)
+    {
+        std::vector<float> radiance = node["Radiance"].as<std::vector<float>>();
+
+        memcpy(m_color, radiance.data(), sizeof(float) * radiance.size());
+
+        m_radius = node["Affect Radius"].as<float>();
+    }
 }
