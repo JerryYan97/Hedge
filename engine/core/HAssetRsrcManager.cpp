@@ -535,7 +535,12 @@ namespace Hedge
 
             VkBufferImageCopy baseColorCopy = bufToImgCopyTemplate;
             g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataFloat.data(), sizeof(float) * m_dataFloat.size());
-            g_pGpuRsrcManager->TransImageLayout(m_pGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            g_pGpuRsrcManager->TransImageLayout(m_pGpuImg,
+                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                VK_ACCESS_NONE,
+                                                VK_ACCESS_NONE,
+                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
         }
         else
         {

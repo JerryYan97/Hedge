@@ -33,28 +33,34 @@ namespace Hedge
     // ================================================================================================================
     void HRenderer::CmdTransImgLayout(
         VkCommandBuffer& cmdBuf,
-        const HGpuImg* const pGpuImg,
-        VkImageLayout targetLayout)
+        HGpuImg* pGpuImg,
+        VkImageLayout targetLayout,
+        VkAccessFlags srcFlags,
+        VkAccessFlags dstFlags,
+        VkPipelineStageFlags srcPipelineStg,
+        VkPipelineStageFlags dstPipelineStg)
     {
-        VkImageMemoryBarrier undefToTargetBarrier{};
+        VkImageMemoryBarrier toTargetBarrier{};
         {
-            undefToTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            undefToTargetBarrier.image = pGpuImg->gpuImg;
-            undefToTargetBarrier.subresourceRange = pGpuImg->imgSubresRange;
-            undefToTargetBarrier.srcAccessMask = 0;
-            // undefToDstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            undefToTargetBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            undefToTargetBarrier.newLayout = targetLayout;
+            toTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            toTargetBarrier.image = pGpuImg->gpuImg;
+            toTargetBarrier.subresourceRange = pGpuImg->imgSubresRange;
+            toTargetBarrier.srcAccessMask = srcFlags;
+            toTargetBarrier.dstAccessMask = dstFlags;
+            toTargetBarrier.oldLayout = pGpuImg->curImgLayout;
+            toTargetBarrier.newLayout = targetLayout;
         }
 
         vkCmdPipelineBarrier(
             cmdBuf,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            srcPipelineStg,
+            dstPipelineStg,
             0,
             0, nullptr,
             0, nullptr,
-            1, &undefToTargetBarrier);
+            1, &toTargetBarrier);
+
+        pGpuImg->curImgLayout = targetLayout;
     }
 
     // ================================================================================================================
@@ -82,8 +88,8 @@ namespace Hedge
         {
             renderColorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
             renderColorAttachmentInfo.imageView = pRenderCtx->pColorAttachmentImg->gpuImgView;
-            renderColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-            renderColorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+            renderColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            renderColorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             renderColorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             renderColorAttachmentInfo.clearValue = clearColor;
         }
@@ -94,8 +100,8 @@ namespace Hedge
         {
             depthModelAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
             depthModelAttachmentInfo.imageView = pRenderCtx->pDepthAttachmentImg->gpuImgView;
-            depthModelAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-            depthModelAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+            depthModelAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+            depthModelAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             depthModelAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthModelAttachmentInfo.clearValue = depthClearVal;
         }

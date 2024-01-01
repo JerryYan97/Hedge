@@ -65,7 +65,13 @@ namespace Hedge
         virtual ~HRenderer();
 
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) = 0;
-        void CmdTransImgLayout(VkCommandBuffer& cmdBuf, const HGpuImg* const pGpuImg, VkImageLayout targetLayout);
+        void CmdTransImgLayout(VkCommandBuffer& cmdBuf,
+                               HGpuImg* pGpuImg,
+                               VkImageLayout targetLayout,
+                               VkAccessFlags srcFlags,
+                               VkAccessFlags dstFlags,
+                               VkPipelineStageFlags srcPipelineStg,
+                               VkPipelineStageFlags dstPipelineStg);
 
         void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
 

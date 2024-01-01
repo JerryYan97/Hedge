@@ -544,8 +544,17 @@ namespace Hedge
     // ================================================================================================================
     void HGpuRsrcManager::TransImageLayout(
         HGpuImg*      pTargetImg,
-        VkImageLayout targetLayout)
+        VkImageLayout targetLayout,
+        VkAccessFlags srcAccess,
+        VkAccessFlags dstAccess,
+        VkPipelineStageFlags srcPipelineStg,
+        VkPipelineStageFlags dstPipelineStg)
     {
+        if (targetLayout == pTargetImg->curImgLayout)
+        {
+            return;
+        }
+
         HCommandBuffer hCmdBuffer(m_vkDevice, m_gfxCmdPool, m_gfxQueue);
         VkCommandBuffer cmdBuffer = hCmdBuffer.GetVkCmdBuffer();
 
@@ -556,31 +565,33 @@ namespace Hedge
         VK_CHECK(vkBeginCommandBuffer(cmdBuffer, &beginInfo));
 
         // Transform the layout of the image to the target layout
-        VkImageMemoryBarrier undefToTargetBarrier{};
+        VkImageMemoryBarrier toTargetBarrier{};
         {
-            undefToTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            undefToTargetBarrier.image = pTargetImg->gpuImg;
-            undefToTargetBarrier.subresourceRange = pTargetImg->imgSubresRange;
-            undefToTargetBarrier.srcAccessMask = 0;
-            // undefToDstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            undefToTargetBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            undefToTargetBarrier.newLayout = targetLayout;
+            toTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            toTargetBarrier.image = pTargetImg->gpuImg;
+            toTargetBarrier.subresourceRange = pTargetImg->imgSubresRange;
+            toTargetBarrier.srcAccessMask = srcAccess;
+            toTargetBarrier.dstAccessMask = dstAccess;
+            toTargetBarrier.oldLayout = pTargetImg->curImgLayout;
+            toTargetBarrier.newLayout = targetLayout;
         }
 
         vkCmdPipelineBarrier(
             cmdBuffer,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            srcPipelineStg,
+            dstPipelineStg,
             0,
             0, nullptr,
             0, nullptr,
-            1, &undefToTargetBarrier);
+            1, &toTargetBarrier);
 
         // End the command buffer and submit the packets
         vkEndCommandBuffer(cmdBuffer);
 
         // Submit the filled command buffer to the graphics queue to draw the image
         hCmdBuffer.SubmitAndWait();
+        
+        pTargetImg->curImgLayout = targetLayout;
     }
 
     // ================================================================================================================
@@ -700,6 +711,7 @@ namespace Hedge
         pGpuImg->gpuImgDescriptorInfo.sampler = pGpuImg->gpuImgSampler;
         pGpuImg->gpuImgDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         pGpuImg->gpuImgDescriptorInfo.imageView = pGpuImg->gpuImgView;
+        pGpuImg->curImgLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
         // std::cout << "Gpu Img Addr: " << pGpuImg->gpuImg << ". Dbg Msg: " << dbgMsg << std::endl;
 
@@ -742,7 +754,7 @@ namespace Hedge
     // ================================================================================================================
     // Let's try whether it's possible to make it from undefined to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL.
     void HGpuRsrcManager::SendDataToImage(
-        const HGpuImg*    pGpuImg,
+        HGpuImg*          pGpuImg,
         VkBufferImageCopy bufToImgCopyInfo,
         void*             pData,        
         uint32_t          bytes)
@@ -822,6 +834,7 @@ namespace Hedge
 
         // Submit the filled command buffer to the graphics queue to draw the image
         hCmdBuffer.SubmitAndWait();
+        pGpuImg->curImgLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
         vmaDestroyBuffer(m_vmaAllocator, stagingBuffer, stagingBufAlloc);
     }

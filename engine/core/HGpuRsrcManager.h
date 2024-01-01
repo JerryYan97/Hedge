@@ -43,6 +43,8 @@ namespace Hedge
 
         VkDescriptorImageInfo gpuImgDescriptorInfo;
         VkImageSubresourceRange  imgSubresRange;
+
+        VkImageLayout curImgLayout;
     };
 
     struct HGpuImgCreateInfo
@@ -113,11 +115,16 @@ namespace Hedge
 
         // HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
         HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo, std::string dbgMsg);
-        void SendDataToImage(const HGpuImg* pGpuImg, VkBufferImageCopy bufToImgCopyInfo, void* pData, uint32_t bytes);
+        void SendDataToImage(HGpuImg* pGpuImg, VkBufferImageCopy bufToImgCopyInfo, void* pData, uint32_t bytes);
 
         void CleanColorGpuImage(HGpuImg* pTargetImg, VkClearColorValue* pClearColorVal);
         
-        void TransImageLayout(HGpuImg* pTargetImg, VkImageLayout targetLayout);
+        void TransImageLayout(HGpuImg* pTargetImg,
+                              VkImageLayout targetLayout,
+                              VkAccessFlags srcAccess,
+                              VkAccessFlags dstAccess,
+                              VkPipelineStageFlags srcPipelineStg,
+                              VkPipelineStageFlags dstPipelineStg);
 
         VkFence CreateFence();
         void WaitAndDestroyTheFence(VkFence fence);
