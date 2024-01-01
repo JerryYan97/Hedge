@@ -280,8 +280,9 @@ namespace Hedge
     {
         delete m_pHedgeEditorGuiManager;
         delete m_pHedgeEditorRenderManager;
-        delete m_pGpuRsrcManager;
+        
         delete m_pHedgeEditor;
         delete m_pAssetRsrcManager;
+        delete m_pGpuRsrcManager;
     }
 }

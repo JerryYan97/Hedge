@@ -169,7 +169,7 @@ namespace Hedge
             m_assetsMap[guid].refCounter--;
             if (m_assetsMap[guid].refCounter == 0)
             {
-                void* ptr = m_assetsMap.at(guid).pAsset;
+                HAsset* ptr = m_assetsMap.at(guid).pAsset;
                 delete ptr;
                 m_assetsMap.erase(guid);
             }
@@ -367,7 +367,7 @@ namespace Hedge
                 m_meshes[i].pIdxDataGpuBuffer = g_pGpuRsrcManager->CreateGpuBuffer(
                     VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                     VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                    idxDataBytesCnt);
+                    idxDataBytesCnt, "IdxBuffer");
 
                 g_pGpuRsrcManager->SendDataToBuffer(m_meshes[i].pIdxDataGpuBuffer, m_meshes[i].idxData.data(), idxDataBytesCnt);
 
@@ -375,7 +375,7 @@ namespace Hedge
                 m_meshes[i].pVertDataGpuBuffer = g_pGpuRsrcManager->CreateGpuBuffer(
                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                     VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                    vertDataBytesCnt
+                    vertDataBytesCnt, "VertBuffer"
                 );
 
                 g_pGpuRsrcManager->SendDataToBuffer(m_meshes[i].pVertDataGpuBuffer, m_meshes[i].vertData.data(), vertDataBytesCnt);
@@ -531,7 +531,7 @@ namespace Hedge
             gpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
             gpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_SRGB;
 
-            m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(gpuImgCreateInfo);
+            m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(gpuImgCreateInfo, m_assetPathName);
 
             VkBufferImageCopy baseColorCopy = bufToImgCopyTemplate;
             g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataFloat.data(), sizeof(float) * m_dataFloat.size());

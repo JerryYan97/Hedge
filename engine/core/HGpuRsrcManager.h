@@ -1,6 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <unordered_map>
+#include <tuple>
+#include <string>
 
 #include "vk_mem_alloc.h"
 
@@ -92,7 +94,7 @@ namespace Hedge
         VkQueue* GetPresentQueue() { return &m_presentQueue; }
         VkDescriptorPool* GetDescriptorPool() { return &m_descriptorPool; }
         VkCommandPool* GetGfxCmdPool() { return &m_gfxCmdPool; }
-        VmaAllocator* GetVmaAllocator() { return &m_vmaAllocator; }
+        // VmaAllocator* GetVmaAllocator() { return &m_vmaAllocator; }
 
         void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
 
@@ -105,10 +107,12 @@ namespace Hedge
         void DereferGpuImg(HGpuImg* pGpuImg);
         
         // Create a gpu buffer and add a refer counter of this buffer.
-        HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
+        // HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum);
+        HGpuBuffer* CreateGpuBuffer(VkBufferUsageFlags usage, VmaAllocationCreateFlags vmaFlags, uint32_t bytesNum, std::string dbgMsg);
         void SendDataToBuffer(const HGpuBuffer* const pGpuBuffer, void* pData, uint32_t bytes);
 
-        HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
+        // HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
+        HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo, std::string dbgMsg);
         void SendDataToImage(const HGpuImg* pGpuImg, VkBufferImageCopy bufToImgCopyInfo, void* pData, uint32_t bytes);
 
         void CleanColorGpuImage(HGpuImg* pTargetImg, VkClearColorValue* pClearColorVal);
@@ -117,6 +121,7 @@ namespace Hedge
 
         VkFence CreateFence();
         void WaitAndDestroyTheFence(VkFence fence);
+        void WaitTheFence(VkFence fence);
 
     private:
         void HGpuRsrcManager::DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
@@ -140,8 +145,8 @@ namespace Hedge
         VkQueue  m_computeQueue;
         VkQueue  m_presentQueue;
 
-        std::unordered_map<void*, uint32_t> m_gpuBuffersImgs;
-
+        // std::unordered_map<void*, uint32_t> m_gpuBuffersImgs;
+        std::unordered_map<void*, std::tuple<uint32_t, std::string>> m_gpuBuffersImgs;
 #ifndef NDEBUG
         // Debug mode
         void ValidateDebugExtAndValidationLayer();

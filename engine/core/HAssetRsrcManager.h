@@ -22,7 +22,7 @@ namespace Hedge
     public:
         // The input asset path name should be absolute.
         HAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
-        ~HAsset() {}
+        virtual ~HAsset() {}
 
         virtual void LoadAssetFromDisk() = 0;
 

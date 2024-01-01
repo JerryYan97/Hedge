@@ -177,6 +177,8 @@ namespace Hedge
 
         m_pGpuRsrcManager->WaitAndDestroyTheFence(fence);
 
+        // It's possible that the swapchain img is ready but the rendering result is not ready.
+        m_pGpuRsrcManager->WaitTheFence(m_inFlightFences[m_acqSwapchainImgIdx]);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -209,8 +211,8 @@ namespace Hedge
             HGpuImgCreateInfo colorRenderTarget = CreateColorTargetHGpuImgInfo(desiredRenderTargetExtent);
             HGpuImgCreateInfo depthRenderTarget = CreateDepthTargetHGpuImgInfo(desiredRenderTargetExtent);
 
-            m_frameColorRenderResults[m_acqSwapchainImgIdx] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTarget);
-            m_frameDepthRenderResults[m_acqSwapchainImgIdx] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTarget);
+            m_frameColorRenderResults[m_acqSwapchainImgIdx] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTarget, "Color Render Target -- Resized");
+            m_frameDepthRenderResults[m_acqSwapchainImgIdx] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTarget, "Depth Render Target -- Resized");
         }
     }
 
@@ -293,6 +295,10 @@ namespace Hedge
         }
         VK_CHECK(vkBeginCommandBuffer(curCmdBuffer, &beginInfo));
 
+        m_pRenderers[m_activeRendererIdx]->CmdTransImgLayout(curCmdBuffer,
+                                                             m_frameColorRenderResults[m_acqSwapchainImgIdx],
+                                                             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
         uint32_t objsCnt = sceneRenderInfo.modelMats.size();
         if (objsCnt != 0)
         {
@@ -350,8 +356,8 @@ namespace Hedge
                     renderCtx.bindings.push_back(ptLightsPosBinding);
                     renderCtx.bindings.push_back(ptLightsRadianceBinding);
 
-                    renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_acqSwapchainImgIdx]->gpuImgView;
-                    renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_acqSwapchainImgIdx]->gpuImgView;
+                    renderCtx.pColorAttachmentImg = m_frameColorRenderResults[m_acqSwapchainImgIdx];
+                    renderCtx.pDepthAttachmentImg = m_frameDepthRenderResults[m_acqSwapchainImgIdx];
                 }
 
                 // Add the static mesh gpu rsrc into the frame resource control
@@ -365,7 +371,14 @@ namespace Hedge
                 // Record the rendering instructions
                 m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer, &renderCtx);
             }
+
+            
         }
+
+        // ImGui needs the Shader Read Only layout -- Note: It waits for all commands so it has some overhead.
+        m_pRenderers[m_activeRendererIdx]->CmdTransImgLayout(curCmdBuffer,
+                                                             m_frameColorRenderResults[m_acqSwapchainImgIdx],
+                                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 
     // ================================================================================================================
@@ -460,8 +473,8 @@ namespace Hedge
         for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
         {
             m_renderImgsExtents[i] = desiredRenderTargetExtent;
-            m_frameColorRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTargetInfo);
-            m_frameDepthRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTargetInfo);
+            m_frameColorRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(colorRenderTargetInfo, "Color Render Target Original");
+            m_frameDepthRenderResults[i] = m_pGpuRsrcManager->CreateGpuImage(depthRenderTargetInfo, "Depth Render Target Original");
         }
     }
 
@@ -897,7 +910,7 @@ namespace Hedge
         void*                    pRamData,
         uint32_t                 bytesNum)
     {
-        HGpuBuffer* pBuffer = m_pGpuRsrcManager->CreateGpuBuffer(usage, vmaFlags, bytesNum);
+        HGpuBuffer* pBuffer = m_pGpuRsrcManager->CreateGpuBuffer(usage, vmaFlags, bytesNum, "TmpGpuBuffer");
         HGpuRsrcFrameContext& ctx = m_gpuRsrcFrameCtxs[m_curFrameIdx];
 
         m_pGpuRsrcManager->SendDataToBuffer(pBuffer, pRamData, bytesNum);

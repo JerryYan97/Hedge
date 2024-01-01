@@ -26,6 +26,11 @@ namespace Hedge
         {
             g_pGpuRsrcManager->DereferGpuImg(m_pDummyBlackCubemap);
         }
+
+        if (m_pDummyBlack2dImg)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pDummyBlack2dImg);
+        }
     }
 
     // ================================================================================================================
@@ -83,7 +88,7 @@ namespace Hedge
                 dummyBlackCubemapInfo.imgFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             }
 
-            m_pDummyBlackCubemap = g_pGpuRsrcManager->CreateGpuImage(dummyBlackCubemapInfo);
+            m_pDummyBlackCubemap = g_pGpuRsrcManager->CreateGpuImage(dummyBlackCubemapInfo, "m_pDummyBlackCubemap");
 
             VkClearColorValue clearColorVal{ 0.f, 0.f, 0.f, 1.f };
             g_pGpuRsrcManager->CleanColorGpuImage(m_pDummyBlackCubemap, &clearColorVal);
@@ -128,7 +133,7 @@ namespace Hedge
                 dummyBlack2dInfo.imgFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             }
 
-            m_pDummyBlack2dImg = g_pGpuRsrcManager->CreateGpuImage(dummyBlack2dInfo);
+            m_pDummyBlack2dImg = g_pGpuRsrcManager->CreateGpuImage(dummyBlack2dInfo, "m_pDummyBlack2dImg");
 
             VkClearColorValue clearColorVal{ 0.f, 0.f, 0.f, 1.f };
             g_pGpuRsrcManager->CleanColorGpuImage(m_pDummyBlack2dImg, &clearColorVal);

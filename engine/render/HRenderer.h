@@ -48,8 +48,10 @@ namespace Hedge
         uint32_t idxCnt;
 
         // Assume that both of them are under the VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR.
-        VkImageView colorAttachmentImgView;
-        VkImageView depthAttachmentImgView;
+        // VkImageView colorAttachmentImgView;
+        // VkImageView depthAttachmentImgView;
+        HGpuImg* pColorAttachmentImg;
+        HGpuImg* pDepthAttachmentImg;
         VkRect2D renderArea;
         
         void*    pPushConstantData;
@@ -63,6 +65,7 @@ namespace Hedge
         virtual ~HRenderer();
 
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) = 0;
+        void CmdTransImgLayout(VkCommandBuffer& cmdBuf, const HGpuImg* const pGpuImg, VkImageLayout targetLayout);
 
         void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
 
@@ -85,7 +88,7 @@ namespace Hedge
         virtual ~HBasicRenderer();
 
         virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) override;
-
+        
     private:
     };
 }

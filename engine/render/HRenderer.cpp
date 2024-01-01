@@ -31,6 +31,33 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HRenderer::CmdTransImgLayout(
+        VkCommandBuffer& cmdBuf,
+        const HGpuImg* const pGpuImg,
+        VkImageLayout targetLayout)
+    {
+        VkImageMemoryBarrier undefToTargetBarrier{};
+        {
+            undefToTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            undefToTargetBarrier.image = pGpuImg->gpuImg;
+            undefToTargetBarrier.subresourceRange = pGpuImg->imgSubresRange;
+            undefToTargetBarrier.srcAccessMask = 0;
+            // undefToDstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            undefToTargetBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            undefToTargetBarrier.newLayout = targetLayout;
+        }
+
+        vkCmdPipelineBarrier(
+            cmdBuf,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &undefToTargetBarrier);
+    }
+
+    // ================================================================================================================
     HBasicRenderer::HBasicRenderer(VkDevice device)
         : HRenderer(device)
     {
@@ -54,7 +81,7 @@ namespace Hedge
         VkRenderingAttachmentInfoKHR renderColorAttachmentInfo{};
         {
             renderColorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-            renderColorAttachmentInfo.imageView = pRenderCtx->colorAttachmentImgView;
+            renderColorAttachmentInfo.imageView = pRenderCtx->pColorAttachmentImg->gpuImgView;
             renderColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
             renderColorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
             renderColorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -66,7 +93,7 @@ namespace Hedge
         VkRenderingAttachmentInfoKHR depthModelAttachmentInfo{};
         {
             depthModelAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-            depthModelAttachmentInfo.imageView = pRenderCtx->depthAttachmentImgView;
+            depthModelAttachmentInfo.imageView = pRenderCtx->pDepthAttachmentImg->gpuImgView;
             depthModelAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
             depthModelAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
             depthModelAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;

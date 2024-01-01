@@ -21,7 +21,7 @@ namespace Hedge
     {
     public:
         HEntity(const std::string& className, const std::string& instName);
-        ~HEntity();
+        virtual ~HEntity(); // We destruct the childen class casted to the parent class pointer.
 
         // Internal used funcs
         void CreateInSceneInternal(HScene* pScene, uint32_t handle);

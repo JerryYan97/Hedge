@@ -154,8 +154,8 @@ namespace Hedge
     {
         if (m_gpuBuffersImgs.count(pGpuBufferImg) > 0)
         {
-            uint32_t dbgRefCnt = m_gpuBuffersImgs[pGpuBufferImg] + 1;
-            m_gpuBuffersImgs[pGpuBufferImg] = dbgRefCnt;
+            uint32_t dbgRefCnt = std::get<0>(m_gpuBuffersImgs[pGpuBufferImg]) + 1;
+            std::get<0>(m_gpuBuffersImgs[pGpuBufferImg]) = dbgRefCnt;
         }
         else
         {
@@ -169,8 +169,8 @@ namespace Hedge
     {
         if (m_gpuBuffersImgs.count(pGpuBuffer) > 0)
         {
-            m_gpuBuffersImgs[pGpuBuffer] = m_gpuBuffersImgs[pGpuBuffer] - 1;
-            if (m_gpuBuffersImgs[pGpuBuffer] == 0)
+            std::get<0>(m_gpuBuffersImgs[pGpuBuffer]) = std::get<0>(m_gpuBuffersImgs[pGpuBuffer]) - 1;
+            if (std::get<0>(m_gpuBuffersImgs[pGpuBuffer]) == 0)
             {
                 DestroyGpuBufferResource(pGpuBuffer);
             }
@@ -425,10 +425,17 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    /*
     HGpuBuffer* HGpuRsrcManager::CreateGpuBuffer(
         VkBufferUsageFlags       usage,
         VmaAllocationCreateFlags vmaFlags,
         uint32_t                 bytesNum)
+    */
+    HGpuBuffer* HGpuRsrcManager::CreateGpuBuffer(
+        VkBufferUsageFlags       usage,
+        VmaAllocationCreateFlags vmaFlags,
+        uint32_t                 bytesNum,
+        std::string              dbgMsg)
     {
         // Create Buffer and allocate memory for vertex buffer, index buffer and render target.
         VmaAllocationCreateInfo bufAllocInfo = {};
@@ -470,7 +477,7 @@ namespace Hedge
         pGpuBuffer->gpuBufferDescriptorInfo.offset = 0;
         pGpuBuffer->gpuBufferDescriptorInfo.range = bytesNum;
 
-        m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, 1 });
+        m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, {1, dbgMsg } });
 
         return pGpuBuffer;
     }
@@ -493,8 +500,8 @@ namespace Hedge
     {
         if (m_gpuBuffersImgs.count(pGpuImg) > 0)
         {
-            m_gpuBuffersImgs[pGpuImg] = m_gpuBuffersImgs[pGpuImg] - 1;
-            if (m_gpuBuffersImgs[pGpuImg] == 0)
+            std::get<0>(m_gpuBuffersImgs[pGpuImg]) = std::get<0>(m_gpuBuffersImgs[pGpuImg]) - 1;
+            if (std::get<0>(m_gpuBuffersImgs[pGpuImg]) == 0)
             {
                 DestroyGpuImgResource(pGpuImg);
             }
@@ -633,7 +640,8 @@ namespace Hedge
 
     // ================================================================================================================
     HGpuImg* HGpuRsrcManager::CreateGpuImage(
-        HGpuImgCreateInfo createInfo)
+        HGpuImgCreateInfo createInfo,
+        std::string       dbgMsg)
     {
         VmaAllocationCreateInfo imgAllocInfo = {};
         {
@@ -693,7 +701,9 @@ namespace Hedge
         pGpuImg->gpuImgDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         pGpuImg->gpuImgDescriptorInfo.imageView = pGpuImg->gpuImgView;
 
-        m_gpuBuffersImgs.insert({ (void*)pGpuImg, 1 });
+        // std::cout << "Gpu Img Addr: " << pGpuImg->gpuImg << ". Dbg Msg: " << dbgMsg << std::endl;
+
+        m_gpuBuffersImgs.insert({ (void*)pGpuImg, {1, dbgMsg} });
 
         return pGpuImg;
     }
@@ -715,10 +725,18 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HGpuRsrcManager::WaitTheFence(
+        VkFence fence)
+    {
+        VK_CHECK(vkWaitForFences(m_vkDevice, 1, &fence, VK_TRUE, UINT64_MAX));
+    }
+
+    // ================================================================================================================
     void HGpuRsrcManager::WaitAndDestroyTheFence(
         VkFence fence)
     {
         VK_CHECK(vkWaitForFences(m_vkDevice, 1, &fence, VK_TRUE, UINT64_MAX));
+        vkDestroyFence(m_vkDevice, fence, nullptr);
     }
 
     // ================================================================================================================
@@ -804,6 +822,8 @@ namespace Hedge
 
         // Submit the filled command buffer to the graphics queue to draw the image
         hCmdBuffer.SubmitAndWait();
+
+        vmaDestroyBuffer(m_vmaAllocator, stagingBuffer, stagingBufAlloc);
     }
 
 #ifndef NDEBUG
