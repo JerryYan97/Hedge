@@ -5,11 +5,13 @@
 #include "../core/HAssetRsrcManager.h"
 
 extern Hedge::HAssetRsrcManager* g_pAssetRsrcManager;
+extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
 
 namespace Hedge
 {
     // ================================================================================================================
-    HScene::HScene()
+    HScene::HScene() :
+        m_pDummyBlackCubemap(nullptr)
     {}
 
     // ================================================================================================================
@@ -18,6 +20,11 @@ namespace Hedge
         for (auto p : m_entitiesHashTable)
         {
             delete p.second;
+        }
+
+        if (m_pDummyBlackCubemap)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_pDummyBlackCubemap);
         }
     }
 
@@ -33,6 +40,102 @@ namespace Hedge
         pEntity->OnDefineEntity(eventManager);
         
         m_entitiesHashTable.insert({ entityHandle, pEntity });
+    }
+
+    // ================================================================================================================
+    void HScene::CreateDummyBlackTextures()
+    {
+        // Cubemap
+        {
+            VkImageSubresourceRange imgSubRsrcRange{};
+            {
+                imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                imgSubRsrcRange.baseArrayLayer = 0;
+                imgSubRsrcRange.layerCount = 6;
+                imgSubRsrcRange.baseMipLevel = 0;
+                imgSubRsrcRange.levelCount = 1;
+            }
+
+            VkSamplerCreateInfo samplerInfo{};
+            {
+                samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+                samplerInfo.magFilter = VK_FILTER_LINEAR;
+                samplerInfo.minFilter = VK_FILTER_LINEAR;
+                samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+                samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                samplerInfo.minLod = -1000;
+                samplerInfo.maxLod = 1000;
+                samplerInfo.maxAnisotropy = 1.0f;
+            }
+
+            HGpuImgCreateInfo dummyBlackCubemapInfo{};
+            {
+                dummyBlackCubemapInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+                dummyBlackCubemapInfo.hasSampler = true;
+                dummyBlackCubemapInfo.imgSubresRange = imgSubRsrcRange;
+                dummyBlackCubemapInfo.imgUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+                dummyBlackCubemapInfo.imgViewType = VK_IMAGE_VIEW_TYPE_CUBE;
+                dummyBlackCubemapInfo.samplerInfo = samplerInfo;
+                dummyBlackCubemapInfo.imgCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+                dummyBlackCubemapInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
+                dummyBlackCubemapInfo.imgFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+            }
+
+            m_pDummyBlackCubemap = g_pGpuRsrcManager->CreateGpuImage(dummyBlackCubemapInfo);
+
+            VkClearColorValue clearColorVal{ 0.f, 0.f, 0.f, 1.f };
+            g_pGpuRsrcManager->CleanColorGpuImage(m_pDummyBlackCubemap, &clearColorVal);
+
+            g_pGpuRsrcManager->TransImageLayout(m_pDummyBlackCubemap, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
+        // 2D black texture
+        {
+            VkImageSubresourceRange imgSubRsrcRange{};
+            {
+                imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                imgSubRsrcRange.baseArrayLayer = 0;
+                imgSubRsrcRange.layerCount = 1;
+                imgSubRsrcRange.baseMipLevel = 0;
+                imgSubRsrcRange.levelCount = 1;
+            }
+
+            VkSamplerCreateInfo samplerInfo{};
+            {
+                samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+                samplerInfo.magFilter = VK_FILTER_LINEAR;
+                samplerInfo.minFilter = VK_FILTER_LINEAR;
+                samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+                samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                samplerInfo.minLod = -1000;
+                samplerInfo.maxLod = 1000;
+                samplerInfo.maxAnisotropy = 1.0f;
+            }
+
+            HGpuImgCreateInfo dummyBlack2dInfo{};
+            {
+                dummyBlack2dInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+                dummyBlack2dInfo.hasSampler = true;
+                dummyBlack2dInfo.imgSubresRange = imgSubRsrcRange;
+                dummyBlack2dInfo.imgUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+                dummyBlack2dInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+                dummyBlack2dInfo.samplerInfo = samplerInfo;
+                dummyBlack2dInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
+                dummyBlack2dInfo.imgFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+            }
+
+            m_pDummyBlack2dImg = g_pGpuRsrcManager->CreateGpuImage(dummyBlack2dInfo);
+
+            VkClearColorValue clearColorVal{ 0.f, 0.f, 0.f, 1.f };
+            g_pGpuRsrcManager->CleanColorGpuImage(m_pDummyBlack2dImg, &clearColorVal);
+
+            g_pGpuRsrcManager->TransImageLayout(m_pDummyBlack2dImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
     }
 
     // ================================================================================================================
@@ -113,6 +216,21 @@ namespace Hedge
 
             renderInfo.pointLightsPositions.push_back(pos);
             renderInfo.pointLightsRadiances.push_back(radiance);
+        }
+
+        // Check whether the scene has IBL. If we don't have, then we need to use black texture asset to init IBL
+        // textures
+        auto iblView = m_registry.view<HImageBasedLightingEntity>();
+        if (iblView.empty())
+        {
+            if ((m_pDummyBlackCubemap == nullptr) || (m_pDummyBlack2dImg == nullptr))
+            {
+                CreateDummyBlackTextures();
+            }
+
+            renderInfo.diffuseCubemapGpuImg = m_pDummyBlackCubemap;
+            renderInfo.prefilterEnvCubemapGpuImg = m_pDummyBlackCubemap;
+            renderInfo.envBrdfGpuImg = m_pDummyBlack2dImg;
         }
 
         return renderInfo;

@@ -50,7 +50,7 @@ namespace Hedge
     {
     public:
         HFrameGpuRenderRsrcControl();
-        ~HFrameGpuRenderRsrcControl() {}
+        ~HFrameGpuRenderRsrcControl();
 
         void Init(uint32_t onFlightRsrcCnt, HGpuRsrcManager* pGpuRsrcManager);
 
@@ -93,7 +93,7 @@ namespace Hedge
 
     protected:
         // GUI
-        uint32_t GetCurSwapchainFrameIdx() { return m_curSwapchainFrameIdx; }
+        uint32_t GetCurSwapchainFrameIdx() { return m_acqSwapchainImgIdx; }
 
         HBaseGuiManager* m_pGuiManager;
 
@@ -140,9 +140,9 @@ namespace Hedge
         std::vector<VkFence>         m_inFlightFences;
         std::vector<VkCommandBuffer> m_swapchainRenderCmdBuffers;
         VkRenderPass                 m_renderPass; // The render pass for gui rendering.
-        uint32_t                     m_curSwapchainFrameIdx;
+        // uint32_t                     m_curSwapchainFrameIdx;
         uint32_t                     m_swapchainImgCnt;
-        uint32_t                     m_acqSwapchainImgIdx;
+        uint32_t                     m_acqSwapchainImgIdx; // Obstructive to make sure all rsrc at this slot is available.
 
         // Renderers -- shared GPU resources for different renderers.
         // May need to be moved to the gui render manager since a game normally doesn't have a second renderer.

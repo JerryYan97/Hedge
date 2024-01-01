@@ -108,4 +108,26 @@ namespace Hedge
         float m_color[3];
         float m_radius;
     };
+
+    class ImageBasedLightingComponent
+    {
+    public:
+        ImageBasedLightingComponent() :
+            m_diffuseIrradianceGUID(0),
+            m_envBrdfGUID(0),
+            m_prefilterEnvGUID(0)
+        {}
+
+        void Seralize(YAML::Emitter& emitter) {}
+        void Deseralize(YAML::Node& node) {}
+
+        uint64_t    m_diffuseIrradianceGUID;
+        std::string m_diffuseIrradianceTextureAssetNamePath;
+
+        uint64_t    m_prefilterEnvGUID;
+        std::string m_prefilterEnvAssetNamePath;
+
+        uint64_t    m_envBrdfGUID;
+        std::string m_envBrdfAssetNamePath;
+    };
 }

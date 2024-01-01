@@ -52,6 +52,7 @@ namespace Hedge
         VkFormat                 imgFormat;
         VkExtent3D               imgExtent;
         VkImageUsageFlags        imgUsageFlags;
+        VkImageCreateFlags       imgCreateFlags; // For the cubemap image.
 
         bool                hasSampler;
         VkSamplerCreateInfo samplerInfo;
@@ -109,7 +110,13 @@ namespace Hedge
 
         HGpuImg* CreateGpuImage(HGpuImgCreateInfo createInfo);
         void SendDataToImage(const HGpuImg* pGpuImg, VkBufferImageCopy bufToImgCopyInfo, void* pData, uint32_t bytes);
+
+        void CleanColorGpuImage(HGpuImg* pTargetImg, VkClearColorValue* pClearColorVal);
         
+        void TransImageLayout(HGpuImg* pTargetImg, VkImageLayout targetLayout);
+
+        VkFence CreateFence();
+        void WaitAndDestroyTheFence(VkFence fence);
 
     private:
         void HGpuRsrcManager::DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);

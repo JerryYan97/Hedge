@@ -111,6 +111,9 @@ namespace Hedge
     // ================================================================================================================
     HGpuRsrcManager::~HGpuRsrcManager()
     {
+        // Temp: Clean up gpu rsrc.. Humm... We don't know the type... So we cannot release them...
+
+
         vkDestroyDescriptorPool(m_vkDevice, m_descriptorPool, nullptr);
 
         vmaDestroyAllocator(m_vmaAllocator);
@@ -151,7 +154,8 @@ namespace Hedge
     {
         if (m_gpuBuffersImgs.count(pGpuBufferImg) > 0)
         {
-            m_gpuBuffersImgs[pGpuBufferImg] = m_gpuBuffersImgs[pGpuBufferImg] + 1;
+            uint32_t dbgRefCnt = m_gpuBuffersImgs[pGpuBufferImg] + 1;
+            m_gpuBuffersImgs[pGpuBufferImg] = dbgRefCnt;
         }
         else
         {
@@ -531,6 +535,103 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HGpuRsrcManager::TransImageLayout(
+        HGpuImg*      pTargetImg,
+        VkImageLayout targetLayout)
+    {
+        HCommandBuffer hCmdBuffer(m_vkDevice, m_gfxCmdPool, m_gfxQueue);
+        VkCommandBuffer cmdBuffer = hCmdBuffer.GetVkCmdBuffer();
+
+        VkCommandBufferBeginInfo beginInfo{};
+        {
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        }
+        VK_CHECK(vkBeginCommandBuffer(cmdBuffer, &beginInfo));
+
+        // Transform the layout of the image to the target layout
+        VkImageMemoryBarrier undefToTargetBarrier{};
+        {
+            undefToTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            undefToTargetBarrier.image = pTargetImg->gpuImg;
+            undefToTargetBarrier.subresourceRange = pTargetImg->imgSubresRange;
+            undefToTargetBarrier.srcAccessMask = 0;
+            // undefToDstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            undefToTargetBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            undefToTargetBarrier.newLayout = targetLayout;
+        }
+
+        vkCmdPipelineBarrier(
+            cmdBuffer,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &undefToTargetBarrier);
+
+        // End the command buffer and submit the packets
+        vkEndCommandBuffer(cmdBuffer);
+
+        // Submit the filled command buffer to the graphics queue to draw the image
+        hCmdBuffer.SubmitAndWait();
+    }
+
+    // ================================================================================================================
+    void HGpuRsrcManager::CleanColorGpuImage(
+        HGpuImg* pTargetImg,
+        VkClearColorValue* pClearColorVal)
+    {
+        if (m_gpuBuffersImgs.count(pTargetImg) > 0)
+        {
+            HCommandBuffer hCmdBuffer(m_vkDevice, m_gfxCmdPool, m_gfxQueue);
+            VkCommandBuffer cmdBuffer = hCmdBuffer.GetVkCmdBuffer();
+
+            /* Send staging buffer data to the GPU image. */
+            VkCommandBufferBeginInfo beginInfo{};
+            {
+                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            }
+            VK_CHECK(vkBeginCommandBuffer(cmdBuffer, &beginInfo));
+
+            // Transform the layout of the image to copy source
+            VkImageMemoryBarrier undefToDstBarrier{};
+            {
+                undefToDstBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                undefToDstBarrier.image = pTargetImg->gpuImg;
+                undefToDstBarrier.subresourceRange = pTargetImg->imgSubresRange;
+                undefToDstBarrier.srcAccessMask = 0;
+                undefToDstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                undefToDstBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                undefToDstBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            }
+
+            vkCmdPipelineBarrier(
+                cmdBuffer,
+                VK_PIPELINE_STAGE_HOST_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &undefToDstBarrier);
+
+            vkCmdClearColorImage(cmdBuffer,
+                                 pTargetImg->gpuImg,
+                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                 pClearColorVal, 1, &pTargetImg->imgSubresRange);
+
+            // End the command buffer and submit the packets
+            vkEndCommandBuffer(cmdBuffer);
+
+            // Submit the filled command buffer to the graphics queue to draw the image
+            hCmdBuffer.SubmitAndWait();
+        }
+        else
+        {
+            exit(1);
+        }
+    }
+
+    // ================================================================================================================
     HGpuImg* HGpuRsrcManager::CreateGpuImage(
         HGpuImgCreateInfo createInfo)
     {
@@ -556,6 +657,7 @@ namespace Hedge
             imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
             imgInfo.usage = createInfo.imgUsageFlags;
             imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imgInfo.flags = createInfo.imgCreateFlags;
         }
 
         VK_CHECK(vmaCreateImage(m_vmaAllocator,
@@ -586,7 +688,7 @@ namespace Hedge
         }
 
         pGpuImg->imgSubresRange = createInfo.imgSubresRange;
-
+        pGpuImg->imgInfo = imgInfo;
         pGpuImg->gpuImgDescriptorInfo.sampler = pGpuImg->gpuImgSampler;
         pGpuImg->gpuImgDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         pGpuImg->gpuImgDescriptorInfo.imageView = pGpuImg->gpuImgView;
@@ -594,6 +696,29 @@ namespace Hedge
         m_gpuBuffersImgs.insert({ (void*)pGpuImg, 1 });
 
         return pGpuImg;
+    }
+
+    // ================================================================================================================
+    VkFence HGpuRsrcManager::CreateFence()
+    {
+        VkFence fence;
+
+        VkFenceCreateInfo fenceInfo{};
+        {
+            fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        }
+        VK_CHECK(vkCreateFence(m_vkDevice, &fenceInfo, nullptr, &fence));
+        VK_CHECK(vkResetFences(m_vkDevice, 1, &fence));
+        
+        return fence;
+    }
+
+    // ================================================================================================================
+    void HGpuRsrcManager::WaitAndDestroyTheFence(
+        VkFence fence)
+    {
+        VK_CHECK(vkWaitForFences(m_vkDevice, 1, &fence, VK_TRUE, UINT64_MAX));
     }
 
     // ================================================================================================================

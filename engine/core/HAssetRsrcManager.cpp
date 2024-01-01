@@ -88,8 +88,6 @@ namespace Hedge
     }
 
     // ================================================================================================================
-
-    // ================================================================================================================
     uint64_t HAssetRsrcManager::LoadAsset(
         const std::string& assetName)
     {
@@ -537,6 +535,7 @@ namespace Hedge
 
             VkBufferImageCopy baseColorCopy = bufToImgCopyTemplate;
             g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataFloat.data(), sizeof(float) * m_dataFloat.size());
+            g_pGpuRsrcManager->TransImageLayout(m_pGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
         else
         {
@@ -683,7 +682,7 @@ namespace Hedge
             m_occlusionPathName = std::to_string(occlusion[0]) + "_" +
                                   std::to_string(occlusion[1]) + "_" +
                                   std::to_string(occlusion[2]) + "_" +
-                                  std::to_string(occlusion[3]) + ".cc"; // Constant Color.
+                                  std::to_string(occlusion[3]) + ".vta";
 
             m_occlusionGUID = m_pAssetRsrcManager->LoadAsset(m_occlusionPathName);
         }

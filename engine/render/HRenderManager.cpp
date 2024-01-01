@@ -25,7 +25,7 @@ namespace Hedge
     HRenderManager::HRenderManager(
         HBaseGuiManager* pGuiManager,
         HGpuRsrcManager* pGpuRsrcManager)
-        : m_curSwapchainFrameIdx(0),
+        : // m_curSwapchainFrameIdx(0),
           m_pGuiManager(pGuiManager),
           m_pGpuRsrcManager(pGpuRsrcManager)
     {
@@ -132,19 +132,19 @@ namespace Hedge
     {
         glfwPollEvents();
 
-        // Wait for the resources from the possible on flight frame
-        vkWaitForFences(*m_pGpuRsrcManager->GetLogicalDevice(), 
-                        1, 
-                        &m_inFlightFences[m_curSwapchainFrameIdx], 
-                        VK_TRUE, 
-                        UINT64_MAX);
-
-        vkResetFences(*m_pGpuRsrcManager->GetLogicalDevice(), 1, &m_inFlightFences[m_curSwapchainFrameIdx]);
-        vkResetCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx], 0);
-
         m_pGuiManager->StartNewFrame();
 
-        HandleResize();
+        HandleResize(); // Get the acquire next frame idx.
+
+        // Wait for the resources from the possible on flight frame
+        vkWaitForFences(*m_pGpuRsrcManager->GetLogicalDevice(),
+            1,
+            &m_inFlightFences[m_acqSwapchainImgIdx],
+            VK_TRUE,
+            UINT64_MAX);
+
+        vkResetFences(*m_pGpuRsrcManager->GetLogicalDevice(), 1, &m_inFlightFences[m_acqSwapchainImgIdx]);
+        vkResetCommandBuffer(m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx], 0);
     }
 
     // ================================================================================================================
@@ -159,16 +159,24 @@ namespace Hedge
     // TODO: I am thinking the swapchain doesn't really need a m_curSwapchainFrameIdx.
     //       We only need the m_acqSwapchainImgIdx. If the next image is ready, then all the other resources should
     //       also be ready.
+    // https://stackoverflow.com/questions/60419749/why-does-vkacquirenextimagekhr-never-block-my-thread
     //       The thought above doesn't hold because the vkAcquiredNextImage is none-obstructive, so it's possible that
-    //       the resources 
+    //       the resources...
+    //       Actually, I can intentionally make this operation obstructive. It's just a casual engine hhh.
     void HRenderManager::HandleResize()
     {
+        VkFence fence = m_pGpuRsrcManager->CreateFence();
+
         VkResult result = vkAcquireNextImageKHR(*m_pGpuRsrcManager->GetLogicalDevice(),
                                                 m_swapchain, 
                                                 UINT64_MAX, 
-                                                m_swapchainImgAvailableSemaphores[m_curSwapchainFrameIdx], 
-                                                VK_NULL_HANDLE, 
+                                                // m_swapchainImgAvailableSemaphores[m_curSwapchainFrameIdx], 
+                                                VK_NULL_HANDLE,
+                                                fence, 
                                                 &m_acqSwapchainImgIdx);
+
+        m_pGpuRsrcManager->WaitAndDestroyTheFence(fence);
+
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -277,7 +285,7 @@ namespace Hedge
         ShaderInputBinding envBrdfBinding{ HGPU_IMG, (void*)sceneRenderInfo.envBrdfGpuImg };
 
         // Fill the command buffer
-        VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
+        VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx];
 
         VkCommandBufferBeginInfo beginInfo{};
         {
@@ -320,10 +328,6 @@ namespace Hedge
                 // Occlusion
                 ShaderInputBinding occlusionBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelOcclusionTexs[objIdx] };
 
-                // Point lights positions and radiance
-                ShaderInputBinding ptLightsPosBinding{ HGPU_BUFFER, (void*) };
-                ShaderInputBinding ptLightsRadianceBinding{ HGPU_BUFFER, (void*) };
-
                 HRenderContext renderCtx{};
                 {
                     renderCtx.pIdxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
@@ -343,9 +347,11 @@ namespace Hedge
                     renderCtx.bindings.push_back(normalMapBinding);
                     renderCtx.bindings.push_back(metallicRoughnessBinding);
                     renderCtx.bindings.push_back(occlusionBinding);
+                    renderCtx.bindings.push_back(ptLightsPosBinding);
+                    renderCtx.bindings.push_back(ptLightsRadianceBinding);
 
-                    renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
-                    renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_curSwapchainFrameIdx]->gpuImgView;
+                    renderCtx.colorAttachmentImgView = m_frameColorRenderResults[m_acqSwapchainImgIdx]->gpuImgView;
+                    renderCtx.depthAttachmentImgView = m_frameDepthRenderResults[m_acqSwapchainImgIdx]->gpuImgView;
                 }
 
                 // Add the static mesh gpu rsrc into the frame resource control
@@ -368,9 +374,9 @@ namespace Hedge
         m_pGuiManager->RecordGuiDraw(m_renderPass,
                                      m_swapchainFramebuffers[m_acqSwapchainImgIdx],
                                      m_swapchainImageExtent,
-                                     m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx]);
+                                     m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx]);
 
-        VK_CHECK(vkEndCommandBuffer(m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx]));
+        VK_CHECK(vkEndCommandBuffer(m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx]));
 
         // Submit the filled command buffer to the graphics queue to draw the image
         VkSubmitInfo submitInfo{};
@@ -378,27 +384,27 @@ namespace Hedge
         {
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             // This draw would wait at dstStage and wait for the waitSemaphores
-            submitInfo.waitSemaphoreCount = 1;
-            submitInfo.pWaitSemaphores = &m_swapchainImgAvailableSemaphores[m_curSwapchainFrameIdx];
-            submitInfo.pWaitDstStageMask = waitStages;
+            submitInfo.waitSemaphoreCount = 0;
+            // submitInfo.pWaitSemaphores = &m_swapchainImgAvailableSemaphores[m_curSwapchainFrameIdx];
+            // submitInfo.pWaitDstStageMask = waitStages;
             submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &m_swapchainRenderCmdBuffers[m_curSwapchainFrameIdx];
+            submitInfo.pCommandBuffers = &m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx];
             // This draw would let the signalSemaphore sign when it finishes
             submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores = &m_swapchainRenderFinishedSemaphores[m_curSwapchainFrameIdx];
+            submitInfo.pSignalSemaphores = &m_swapchainRenderFinishedSemaphores[m_acqSwapchainImgIdx];
         }
         
         VK_CHECK(vkQueueSubmit(*m_pGpuRsrcManager->GetGfxQueue(), 
                                1, 
                                &submitInfo, 
-                               m_inFlightFences[m_curSwapchainFrameIdx]));
+                               m_inFlightFences[m_acqSwapchainImgIdx]));
 
         // Put the swapchain into the present info and wait for the graphics queue previously before presenting.
         VkPresentInfoKHR presentInfo{};
         {
             presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
             presentInfo.waitSemaphoreCount = 1;
-            presentInfo.pWaitSemaphores = &m_swapchainRenderFinishedSemaphores[m_curSwapchainFrameIdx];
+            presentInfo.pWaitSemaphores = &m_swapchainRenderFinishedSemaphores[m_acqSwapchainImgIdx];
             presentInfo.swapchainCount = 1;
             presentInfo.pSwapchains = &m_swapchain;
             presentInfo.pImageIndices = &m_acqSwapchainImgIdx;
@@ -415,7 +421,7 @@ namespace Hedge
             throw std::runtime_error("failed to present swap chain image!");
         }
 
-        m_curSwapchainFrameIdx = (m_curSwapchainFrameIdx + 1) % m_swapchainImgCnt;
+        // m_curSwapchainFrameIdx = (m_curSwapchainFrameIdx + 1) % m_swapchainImgCnt;
     }
 
     // ================================================================================================================
@@ -513,12 +519,12 @@ namespace Hedge
         }
         assert(choisenPresentMode == VK_PRESENT_MODE_FIFO_KHR);
 
-        // Choose the surface format that supports VK_FORMAT_B8G8R8A8_SRGB and color space 
+        // Choose the surface format that supports VK_FORMAT_R8G8B8A8_SRGB and color space 
         // VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
         bool foundFormat = false;
         for (auto curFormat : surfaceFormats)
         {
-            if (curFormat.format     == VK_FORMAT_B8G8R8A8_SRGB && 
+            if (curFormat.format     == VK_FORMAT_R8G8B8A8_SRGB &&
                 curFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             {
                 foundFormat = true;
@@ -770,14 +776,14 @@ namespace Hedge
     // ================================================================================================================
     VkImageView* HRenderManager::GetCurrentRenderImgView() 
     { 
-        return &(m_frameColorRenderResults[m_curSwapchainFrameIdx]->gpuImgView); 
+        return &(m_frameColorRenderResults[m_acqSwapchainImgIdx]->gpuImgView);
     }
 
     // ================================================================================================================
     VkExtent2D HRenderManager::GetCurrentRenderImgExtent()
     {
-        return { m_frameColorRenderResults[m_curSwapchainFrameIdx]->imgInfo.extent.width,
-                 m_frameColorRenderResults[m_curSwapchainFrameIdx]->imgInfo.extent.height };
+        return { m_frameColorRenderResults[m_acqSwapchainImgIdx]->imgInfo.extent.width,
+                 m_frameColorRenderResults[m_acqSwapchainImgIdx]->imgInfo.extent.height };
     }
 
     // ================================================================================================================
@@ -794,7 +800,8 @@ namespace Hedge
             colorRenderTargetInfo.imgFormat = m_surfaceFormat.format;
             colorRenderTargetInfo.imgExtent = desiredExtent3D;
             colorRenderTargetInfo.imgUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                                                  VK_IMAGE_USAGE_SAMPLED_BIT; // Maybe sent to ImGui for showing.
 
             VkImageSubresourceRange imgSubRsrcRange{};
             {
@@ -844,6 +851,15 @@ namespace Hedge
         : m_pGpuRsrcManager(nullptr),
           m_curFrameIdx(0)
     {
+    }
+
+    // ================================================================================================================
+    HFrameGpuRenderRsrcControl::~HFrameGpuRenderRsrcControl()
+    {
+        for (auto& ctx : m_gpuRsrcFrameCtxs)
+        {
+            DestroyCtxBuffersImgs(ctx);
+        }
     }
 
     // ================================================================================================================

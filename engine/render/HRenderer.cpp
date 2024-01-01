@@ -109,7 +109,7 @@ namespace Hedge
 
         VkDeviceSize vbOffset = 0;
         vkCmdBindVertexBuffers(cmdBuf, 0, 1, &pRenderCtx->pVertBuffer->gpuBuffer, &vbOffset);
-        vkCmdBindIndexBuffer(cmdBuf, pRenderCtx->pIdxBuffer->gpuBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(cmdBuf, pRenderCtx->pIdxBuffer->gpuBuffer, 0, VK_INDEX_TYPE_UINT16);
         vkCmdPushConstants(cmdBuf,
                            m_pPipelines[0]->GetVkPipelineLayout(),
                            VK_SHADER_STAGE_FRAGMENT_BIT,

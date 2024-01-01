@@ -164,6 +164,7 @@ namespace Hedge
     {
     }
 
+    // ================================================================================================================
     void HBaseGuiManager::AddTextureToImGUI(
         VkDescriptorSet* img_ds,
         VkImageView*     pTextureImgView,

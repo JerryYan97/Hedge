@@ -77,7 +77,12 @@ namespace Hedge
         bool IsEmpty() { return m_entitiesHashTable.empty(); }
         
     private:
+        void CreateDummyBlackTextures();
+
         entt::registry m_registry;
         std::unordered_map<uint32_t, HEntity*> m_entitiesHashTable;
+
+        HGpuImg* m_pDummyBlackCubemap;
+        HGpuImg* m_pDummyBlack2dImg;
     };
 }
