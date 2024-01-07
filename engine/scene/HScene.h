@@ -23,7 +23,7 @@ namespace Hedge
     struct SceneRenderInfo
     {
         std::vector<HGpuBuffer*> objsIdxBuffers;
-        std::vector<uint32_t>   idxCounts;
+        std::vector<uint32_t>    idxCounts;
         
         std::vector<HGpuBuffer*> objsVertBuffers;
         std::vector<uint32_t>    vertCounts;

@@ -604,18 +604,18 @@ namespace Hedge
             ShaderInputBinding binding = bindings[i];
             VkWriteDescriptorSet writeDescriptorSet{};
             writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writeDescriptorSet.dstBinding = i;
+            writeDescriptorSet.dstBinding = std::get<1>(binding);
             writeDescriptorSet.descriptorCount = 1;
 
-            if (binding.first == HGPU_BUFFER)
+            if (std::get<0>(binding) == HGPU_BUFFER)
             {
-                HGpuBuffer* pGpuBuffer = static_cast<HGpuBuffer*>(binding.second);
+                HGpuBuffer* pGpuBuffer = static_cast<HGpuBuffer*>(std::get<2>(binding));
                 writeDescriptorSet.descriptorType = pGpuBuffer->gpuBufferDescriptorType;
                 writeDescriptorSet.pBufferInfo = &pGpuBuffer->gpuBufferDescriptorInfo;
             }
             else
             {
-                HGpuImg* pGpuImg = static_cast<HGpuImg*>(binding.second);
+                HGpuImg* pGpuImg = static_cast<HGpuImg*>(std::get<2>(binding));
                 writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 writeDescriptorSet.pImageInfo = &pGpuImg->gpuImgDescriptorInfo;
             }

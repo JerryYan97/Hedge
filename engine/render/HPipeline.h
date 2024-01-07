@@ -24,7 +24,8 @@ namespace Hedge
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo;
     };
 
-    typedef std::pair<HGpuRsrcType, void*> ShaderInputBinding;
+    // Gpu resource type, binding id, gpu resource pointer.
+    typedef std::tuple<HGpuRsrcType, uint32_t, void*> ShaderInputBinding;
 
     class HPipeline
     {

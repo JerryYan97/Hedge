@@ -35,17 +35,19 @@ namespace Hedge
 {
     class HPipeline;
     struct HGpuBuffer;
+    struct SceneRenderInfo;
+    class HFrameGpuRenderRsrcControl;
 
     struct HRenderContext
     {
-        HGpuBuffer* pIdxBuffer;
-        HGpuBuffer* pVertBuffer;
+        // HGpuBuffer* pIdxBuffer;
+        // HGpuBuffer* pVertBuffer;
 
-        std::vector<ShaderInputBinding> bindings;
+        // std::vector<ShaderInputBinding> bindings;
         // HGpuBuffer uboBuffer;
         // std::vector<VkDescriptorSet> descriptorSets;
         
-        uint32_t idxCnt;
+        // uint32_t idxCnt;
 
         // Assume that both of them are under the VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR.
         // VkImageView colorAttachmentImgView;
@@ -53,9 +55,6 @@ namespace Hedge
         HGpuImg* pColorAttachmentImg;
         HGpuImg* pDepthAttachmentImg;
         VkRect2D renderArea;
-        
-        void*    pPushConstantData;
-        uint32_t pushConstantDataBytesCnt;
     };
 
     class HRenderer
@@ -64,7 +63,12 @@ namespace Hedge
         explicit HRenderer(VkDevice device);
         virtual ~HRenderer();
 
-        virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) = 0;
+        virtual void CmdRenderInsts(VkCommandBuffer&            cmdBuf,
+                                    const HRenderContext* const pRenderCtx,
+                                    const SceneRenderInfo&      sceneRenderInfo,
+                                    HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl) = 0;
+
+        /*
         void CmdTransImgLayout(VkCommandBuffer& cmdBuf,
                                HGpuImg* pGpuImg,
                                VkImageLayout targetLayout,
@@ -72,6 +76,16 @@ namespace Hedge
                                VkAccessFlags dstFlags,
                                VkPipelineStageFlags srcPipelineStg,
                                VkPipelineStageFlags dstPipelineStg);
+        */
+
+        // Note: Remember to free the output memory pointer. Push constant RAM data is managed by the renderer internally.
+        /*
+        virtual void GenPushConstants(const SceneRenderInfo& sceneRenderInfo) = 0;
+        virtual void GenPerFrameGpuRsrcAndBindings(const SceneRenderInfo& sceneRenderInfo,
+                                                   HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl) = 0;
+        virtual void GenPerGpuRsrcAndBindings(const SceneRenderInfo& sceneRenderInfo,
+                                                   HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl) = 0;
+        */
 
         void AddPipeline(HPipeline* pPipeline) { m_pPipelines.push_back(pPipeline); };
 
@@ -79,10 +93,16 @@ namespace Hedge
         std::vector<HPipeline*> m_pPipelines;
         VkDevice                m_device;
 
+        // void*    m_pPushConstantData;
+        // uint32_t m_pushConstantDataBytes;
+
+        // std::vector<ShaderInputBinding> m_perFrameBindings;
+        // std::vector<ShaderInputBinding> m_perObjBindings;
+
     private:
     };
 
-    // A basic one pipeline renderer.
+    // A basic one pipeline forward PBR renderer.
     // TODO: Currently, the basic renderer is specific to the PBR pipeline.
     //       In the future, we may want to make it a parent class so that PBR pipeline, cubemap rendering pipeline
     //       IBL generation pipeline can derive from it.
@@ -93,8 +113,19 @@ namespace Hedge
 
         virtual ~HBasicRenderer();
 
-        virtual void CmdRenderInsts(VkCommandBuffer& cmdBuf, const HRenderContext* const pRenderCtx) override;
-        
+        virtual void CmdRenderInsts(VkCommandBuffer&            cmdBuf,
+                                    const HRenderContext* const pRenderCtx,
+                                    const SceneRenderInfo&      sceneRenderInfo,
+                                    HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl) override;
+
     private:
+        std::vector<ShaderInputBinding> GenPerFrameGpuRsrcBinding(const SceneRenderInfo&      sceneRenderInfo,
+                                                                  HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl);
+
+        std::vector<ShaderInputBinding> GenPerObjGpuRsrcBinding(const SceneRenderInfo&      sceneRenderInfo,
+                                                                HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl,
+                                                                uint32_t                    objIdx);
+
+        void* GenPushConstants(const SceneRenderInfo& sceneRenderInfo, uint32_t& bytesCnt);
     };
 }

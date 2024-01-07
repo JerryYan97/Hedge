@@ -241,51 +241,6 @@ namespace Hedge
         // Update UBO data and point light storage data.
         m_frameGpuRenderRsrcController.SwitchToFrame(m_acqSwapchainImgIdx);
 
-        // The scene information data.
-        uint32_t fragPushConstantDataBytesCnt = sizeof(float) * 4 + sizeof(uint32_t);
-        void* pFragPushConstantData = malloc(fragPushConstantDataBytesCnt);
-        memset(pFragPushConstantData, 0, fragPushConstantDataBytesCnt);
-        memcpy(pFragPushConstantData, sceneRenderInfo.cameraPos, sizeof(float) * 3);
-
-        uint32_t ptLightsCnt = sceneRenderInfo.pointLightsPositions.size();
-        memcpy(static_cast<char*>(pFragPushConstantData) + sizeof(float) * 4, &ptLightsCnt, sizeof(ptLightsCnt));
-
-        HGpuBuffer* pSceneInfoUbo = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
-                                                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                              VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-                                                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                                                              pFragPushConstantData, fragPushConstantDataBytesCnt);
-        free(pFragPushConstantData);
-
-        // The point light data
-        uint32_t pointLightPosRadianceBytesCnt = sizeof(HVec3) * sceneRenderInfo.pointLightsPositions.size();
-        
-        HGpuBuffer* pPtLightsPosStorageBuffer = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-            (void*)sceneRenderInfo.pointLightsPositions.data(), pointLightPosRadianceBytesCnt
-        );
-
-        ShaderInputBinding ptLightsPosBinding{ HGPU_BUFFER, pPtLightsPosStorageBuffer };
-
-        HGpuBuffer* pPtLightsRadianceStorageBuffer = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-            (void*)sceneRenderInfo.pointLightsRadiances.data(), pointLightPosRadianceBytesCnt
-        );
-
-        ShaderInputBinding ptLightsRadianceBinding{ HGPU_BUFFER, pPtLightsRadianceStorageBuffer };
-
-        // Image based lightning bindings
-        // Diffuse cubemap light map
-        ShaderInputBinding diffuseLightCubemapBinding{ HGPU_IMG, (void*)sceneRenderInfo.diffuseCubemapGpuImg };
-
-        // Prefilter environment cubemap
-        ShaderInputBinding prefilterEnvCubemapBinding{ HGPU_IMG, (void*)sceneRenderInfo.prefilterEnvCubemapGpuImg };
-
-        // Environment BRDF
-        ShaderInputBinding envBrdfBinding{ HGPU_IMG, (void*)sceneRenderInfo.envBrdfGpuImg };
-
         // Fill the command buffer
         VkCommandBuffer curCmdBuffer = m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx];
 
@@ -295,101 +250,42 @@ namespace Hedge
         }
         VK_CHECK(vkBeginCommandBuffer(curCmdBuffer, &beginInfo));
 
-        m_pRenderers[m_activeRendererIdx]->CmdTransImgLayout(curCmdBuffer,
-                                                             m_frameColorRenderResults[m_acqSwapchainImgIdx],
-                                                             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                                             VK_ACCESS_NONE,
-                                                             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                                                             VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                                                             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        Util::CmdTransImgLayout(curCmdBuffer,
+                                m_frameColorRenderResults[m_acqSwapchainImgIdx],
+                                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                VK_ACCESS_NONE,
+                                VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-        m_pRenderers[m_activeRendererIdx]->CmdTransImgLayout(curCmdBuffer,
-                                                             m_frameDepthRenderResults[m_acqSwapchainImgIdx],
-                                                             VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-                                                             VK_ACCESS_NONE,
-                                                             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                                                             VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                                                             VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+        Util::CmdTransImgLayout(curCmdBuffer,
+                                m_frameDepthRenderResults[m_acqSwapchainImgIdx],
+                                VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+                                VK_ACCESS_NONE,
+                                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 
-        uint32_t objsCnt = sceneRenderInfo.modelMats.size();
-        if (objsCnt != 0)
+        HRenderContext renderCtx{};
         {
-            for (uint32_t objIdx = 0; objIdx < objsCnt; objIdx++)
-            {
-                // The model matrix and view-perspective matrix UBO data.
-                uint32_t vertUboDataBytesCnt = 32 * sizeof(float);
-                void* pVertUboData = malloc(vertUboDataBytesCnt);
+            renderCtx.renderArea.offset = { 0, 0 };
+            renderCtx.renderArea.extent = m_pGuiManager->GetRenderExtent();
 
-                HMat4x4 modelMat = sceneRenderInfo.modelMats[objIdx];
-                HMat4x4 vpMat    = sceneRenderInfo.vpMat;
-
-                memcpy(pVertUboData, modelMat.eles, sizeof(HMat4x4));
-                memcpy(static_cast<char*>(pVertUboData) + sizeof(HMat4x4), vpMat.eles, sizeof(HMat4x4));
-
-                HGpuBuffer* pVertUbo = m_frameGpuRenderRsrcController.CreateInitTmpGpuBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                                                             VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-                                                                                             VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                                                                                             pVertUboData, vertUboDataBytesCnt);
-
-                free(pVertUboData);
-                ShaderInputBinding vertUboBinding{ HGPU_BUFFER, pVertUbo };
-
-                // Base color
-                ShaderInputBinding baseColorBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelBaseColors[objIdx] };
-
-                // Normal map
-                ShaderInputBinding normalMapBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelNormalTexs[objIdx] };
-
-                // Metallic roughness
-                ShaderInputBinding metallicRoughnessBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelMetallicRoughnessTexs[objIdx] };
-
-                // Occlusion
-                ShaderInputBinding occlusionBinding{ HGPU_IMG, (void*)sceneRenderInfo.modelOcclusionTexs[objIdx] };
-
-                HRenderContext renderCtx{};
-                {
-                    renderCtx.pIdxBuffer = sceneRenderInfo.objsIdxBuffers[objIdx];
-                    renderCtx.idxCnt = sceneRenderInfo.idxCounts[objIdx];
-                    renderCtx.pVertBuffer = sceneRenderInfo.objsVertBuffers[objIdx];
-                    renderCtx.renderArea.offset = { 0, 0 };
-                    renderCtx.renderArea.extent = m_pGuiManager->GetRenderExtent();
-
-                    renderCtx.pPushConstantData = pFragPushConstantData;
-                    renderCtx.pushConstantDataBytesCnt = fragPushConstantDataBytesCnt;
-                    
-                    renderCtx.bindings.push_back(vertUboBinding);
-                    renderCtx.bindings.push_back(diffuseLightCubemapBinding);
-                    renderCtx.bindings.push_back(prefilterEnvCubemapBinding);
-                    renderCtx.bindings.push_back(envBrdfBinding);
-                    renderCtx.bindings.push_back(baseColorBinding);
-                    renderCtx.bindings.push_back(normalMapBinding);
-                    renderCtx.bindings.push_back(metallicRoughnessBinding);
-                    renderCtx.bindings.push_back(occlusionBinding);
-                    renderCtx.bindings.push_back(ptLightsPosBinding);
-                    renderCtx.bindings.push_back(ptLightsRadianceBinding);
-
-                    renderCtx.pColorAttachmentImg = m_frameColorRenderResults[m_acqSwapchainImgIdx];
-                    renderCtx.pDepthAttachmentImg = m_frameDepthRenderResults[m_acqSwapchainImgIdx];
-                }
-
-                // Add the static mesh gpu rsrc into the frame resource control
-                m_frameGpuRenderRsrcController.AddGpuBufferReferControl(renderCtx.pIdxBuffer);
-                m_frameGpuRenderRsrcController.AddGpuBufferReferControl(renderCtx.pVertBuffer);
-                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelBaseColors[objIdx]);
-                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelNormalTexs[objIdx]);
-                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelMetallicRoughnessTexs[objIdx]);
-                m_frameGpuRenderRsrcController.AddGpuImgReferControl(sceneRenderInfo.modelOcclusionTexs[objIdx]);
-
-                // Record the rendering instructions
-                m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer, &renderCtx);
-            }
-
-            
+            renderCtx.pColorAttachmentImg = m_frameColorRenderResults[m_acqSwapchainImgIdx];
+            renderCtx.pDepthAttachmentImg = m_frameDepthRenderResults[m_acqSwapchainImgIdx];
         }
 
+        // Create per frame resources. Record the rendering instructions
+        m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer,
+                                                          &renderCtx,
+                                                          sceneRenderInfo,
+                                                          &m_frameGpuRenderRsrcController);
+
         // ImGui needs the Shader Read Only layout -- Note: It waits for all commands so it has some overhead.
-        m_pRenderers[m_activeRendererIdx]->CmdTransImgLayout(curCmdBuffer,
-                                                             m_frameColorRenderResults[m_acqSwapchainImgIdx],
+        // NOTE: This should be moved to other places instead of putting it in the renderer... I should put it in an
+        //       util.
+        Util::CmdTransImgLayout(curCmdBuffer,
+                                m_frameColorRenderResults[m_acqSwapchainImgIdx],
                                                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                              VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                              VK_ACCESS_SHADER_READ_BIT,

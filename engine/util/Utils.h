@@ -5,6 +5,7 @@
 namespace Hedge
 {
     constexpr uint32_t VertFloatNum = 3 + 3 + 2;
+    struct HGpuImg;
 
     std::string SaveToFolderDialog();
 
@@ -16,6 +17,18 @@ namespace Hedge
     std::string GetFileName(const std::string& pathName);
 
     std::string GetFileDir(const std::string& pathName);
+
+    namespace Util
+    {
+        // Vulkan cmds wrap
+        void CmdTransImgLayout(VkCommandBuffer& cmdBuf,
+                               HGpuImg* pGpuImg,
+                               VkImageLayout targetLayout,
+                               VkAccessFlags srcFlags,
+                               VkAccessFlags dstFlags,
+                               VkPipelineStageFlags srcPipelineStg,
+                               VkPipelineStageFlags dstPipelineStg);
+    }    
 }
 
 // https://stackoverflow.com/a/36522355

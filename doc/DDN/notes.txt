@@ -18,3 +18,7 @@ https://stackoverflow.com/questions/7724569/debug-vs-release-in-cmake
 
 Vulkan descriptor abstraction programming pattern. It looks like it maybe useful someday:
 https://vkguide.dev/docs/extra-chapter/abstracting_descriptors/
+
+
+I need to come up a way to handle the user/game specific control component.
+Load function from dll: https://stackoverflow.com/questions/8696653/dynamically-load-a-function-from-a-dll

@@ -4,6 +4,7 @@
 
 // NOTE: [[vk::binding(X[, Y])]] -- X: binding number, Y: descriptor set.
 
+// An IBL check is not so necessary since the performance of IBL rendering is pretty good.
 struct SceneInfo
 {
     float3 cameraPos;
@@ -35,10 +36,15 @@ struct SceneInfo
 [[vk::binding(7, 0)]] Texture2D i_occlusionTexture;
 [[vk::binding(7, 0)]] SamplerState i_occlusionSamplerState;
 
-[[vk::binding(8, 0)]] RWBuffer<float3> i_pointLightsPos;
-[[vk::binding(9, 0)]] RWBuffer<float3> i_pointLightsRadience;
+[[vk::binding(8, 0)]] StructuredBuffer<float3> i_pointLightsPos;
+[[vk::binding(9, 0)]] StructuredBuffer<float3> i_pointLightsRadience;
 
 [[vk::push_constant]] SceneInfo i_sceneInfo;
+
+float PointLightAttenuation(float dist)
+{
+    return (1.0 / (dist * dist));
+}
 
 float4 main(
     float4 i_pixelWorldPos     : POSITION0,
@@ -87,5 +93,38 @@ float4 main(
     // Point lights radiance contributions
     float3 pointLightsRadiance = float3(0.0, 0.0, 0.0);
 
-    return float4(iblRadiance + pointLightsRadiance, 1.0);
+    for(int i = 0; i < i_sceneInfo.ptLightCnt; i++)
+    {
+        float3 lightPos = i_pointLightsPos[i];
+        float3 lightRadiance = i_pointLightsRadience[i];
+        float3 wi       = normalize(lightPos - i_pixelWorldPos.xyz);
+		float3 H	    = normalize(wi + V);
+		float  dist     = length(lightPos - i_pixelWorldPos.xyz);
+
+        float attenuation = PointLightAttenuation(dist);
+        lightRadiance = lightRadiance * attenuation;
+        float lightNormalCosTheta = max(dot(N, wi), 0.0);
+
+        float NDF = DistributionGGX(N, H, roughness);
+        float G   = GeometrySmithDirectLight(N, V, wi, roughness);
+        float3 F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
+
+        float3 NFG = NDF * F * G;
+        float denominator = 4.0 * NoV * lightNormalCosTheta  + 0.0001;
+
+        float3 specular = NFG / denominator;
+
+        float3 kD = float3(1.0, 1.0, 1.0) - F; // The amount of light goes into the material.
+		kD *= (1.0 - metalic);
+
+        pointLightsRadiance += (kD * (baseColor / 3.14159265359) + specular) * lightRadiance * lightNormalCosTheta;
+    }
+
+    float3 color = iblRadiance + pointLightsRadiance;
+
+    // Gamma Correction
+    color = color / (color + float3(1.0, 1.0, 1.0));
+    color = pow(color, float3(1.0/2.2, 1.0/2.2, 1.0/2.2)); 
+
+    return float4(color, 1.0);
 }
