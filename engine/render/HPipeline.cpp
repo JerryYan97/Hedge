@@ -616,6 +616,8 @@ namespace Hedge
             else
             {
                 HGpuImg* pGpuImg = static_cast<HGpuImg*>(std::get<2>(binding));
+                pGpuImg->gpuImgDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
                 writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 writeDescriptorSet.pImageInfo = &pGpuImg->gpuImgDescriptorInfo;
             }

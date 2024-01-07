@@ -57,19 +57,19 @@ float4 main(
     float3 tangent = normalize(i_pixelWorldTangent.xyz);
     float3 biTangent = normalize(cross(N, tangent));
 
-    float2 roughnessMetalic = i_metallicRoughnessTexture.Sample(i_metallicRoughnessSamplerState, i_pixelWorldUv).yz;
+    float2 metallicRoughness = i_metallicRoughnessTexture.Sample(i_metallicRoughnessSamplerState, i_pixelWorldUv).xy;
     float3 baseColor = i_baseColorTexture.Sample(i_baseColorSamplerState, i_pixelWorldUv).xyz;
     float3 normalSampled = i_normalTexture.Sample(i_normalSamplerState, i_pixelWorldUv).xyz;
     float occlusion = i_occlusionTexture.Sample(i_occlusionSamplerState, i_pixelWorldUv).x;
 
-    normalSampled = normalSampled * 2.0 - 1.0;
+    normalSampled = normalize(normalSampled * 2.0 - 1.0);
     N = tangent * normalSampled.x + biTangent * normalSampled.y + N * normalSampled.z;
 
     float NoV = saturate(dot(N, V));
     float3 R = 2 * NoV * N - V;
 
-    float metalic = roughnessMetalic[1];
-    float roughness = roughnessMetalic[0];
+    float metalic = metallicRoughness[0];
+    float roughness = metallicRoughness[1];
 
     float3 F0 = float3(0.04, 0.04, 0.04);
     F0 = lerp(F0, baseColor, float3(metalic, metalic, metalic));
@@ -93,6 +93,11 @@ float4 main(
     // Point lights radiance contributions
     float3 pointLightsRadiance = float3(0.0, 0.0, 0.0);
 
+    float attenuation = 0.0;
+    float lightNormalCosTheta = 0.0;
+    float3 kD = float3(0.0, 0.0, 0.0);
+    float3 F = float3(0.0, 0.0, 0.0);
+
     for(int i = 0; i < i_sceneInfo.ptLightCnt; i++)
     {
         float3 lightPos = i_pointLightsPos[i];
@@ -101,20 +106,20 @@ float4 main(
 		float3 H	    = normalize(wi + V);
 		float  dist     = length(lightPos - i_pixelWorldPos.xyz);
 
-        float attenuation = PointLightAttenuation(dist);
+        attenuation = PointLightAttenuation(dist);
         lightRadiance = lightRadiance * attenuation;
-        float lightNormalCosTheta = max(dot(N, wi), 0.0);
+        lightNormalCosTheta = max(dot(N, wi), 0.0);
 
         float NDF = DistributionGGX(N, H, roughness);
         float G   = GeometrySmithDirectLight(N, V, wi, roughness);
-        float3 F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
+        F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
 
         float3 NFG = NDF * F * G;
         float denominator = 4.0 * NoV * lightNormalCosTheta  + 0.0001;
 
         float3 specular = NFG / denominator;
 
-        float3 kD = float3(1.0, 1.0, 1.0) - F; // The amount of light goes into the material.
+        kD = float3(1.0, 1.0, 1.0) - F; // The amount of light goes into the material.
 		kD *= (1.0 - metalic);
 
         pointLightsRadiance += (kD * (baseColor / 3.14159265359) + specular) * lightRadiance * lightNormalCosTheta;
@@ -126,5 +131,9 @@ float4 main(
     color = color / (color + float3(1.0, 1.0, 1.0));
     color = pow(color, float3(1.0/2.2, 1.0/2.2, 1.0/2.2)); 
 
+    // return float4(metalic, metalic, metalic, 1.0);
+
     return float4(color, 1.0);
+    // return float4(N * 0.5 + 0.5, 1.0);
+    // return float4(lightNormalCosTheta, lightNormalCosTheta, lightNormalCosTheta, 1.0);
 }

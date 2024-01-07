@@ -529,12 +529,18 @@ namespace Hedge
 
             HGpuImgCreateInfo gpuImgCreateInfo = gpuImgCreateInfoTemplate;
             gpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
-            gpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_SRGB;
+            gpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
 
             m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(gpuImgCreateInfo, m_assetPathName);
 
             VkBufferImageCopy baseColorCopy = bufToImgCopyTemplate;
-            g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataFloat.data(), sizeof(float) * m_dataFloat.size());
+
+            m_dataUInt8.push_back(255 * m_dataFloat[0]);
+            m_dataUInt8.push_back(255 * m_dataFloat[1]);
+            m_dataUInt8.push_back(255 * m_dataFloat[2]);
+            m_dataUInt8.push_back(255 * m_dataFloat[3]);
+
+            g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataUInt8.data(), sizeof(uint8_t) * m_dataUInt8.size());
             g_pGpuRsrcManager->TransImageLayout(m_pGpuImg,
                                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                 VK_ACCESS_NONE,
