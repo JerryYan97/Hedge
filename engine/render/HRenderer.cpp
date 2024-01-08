@@ -31,41 +31,6 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    /*
-    void HRenderer::CmdTransImgLayout(
-        VkCommandBuffer& cmdBuf,
-        HGpuImg* pGpuImg,
-        VkImageLayout targetLayout,
-        VkAccessFlags srcFlags,
-        VkAccessFlags dstFlags,
-        VkPipelineStageFlags srcPipelineStg,
-        VkPipelineStageFlags dstPipelineStg)
-    {
-        VkImageMemoryBarrier toTargetBarrier{};
-        {
-            toTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            toTargetBarrier.image = pGpuImg->gpuImg;
-            toTargetBarrier.subresourceRange = pGpuImg->imgSubresRange;
-            toTargetBarrier.srcAccessMask = srcFlags;
-            toTargetBarrier.dstAccessMask = dstFlags;
-            toTargetBarrier.oldLayout = pGpuImg->curImgLayout;
-            toTargetBarrier.newLayout = targetLayout;
-        }
-
-        vkCmdPipelineBarrier(
-            cmdBuf,
-            srcPipelineStg,
-            dstPipelineStg,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &toTargetBarrier);
-
-        pGpuImg->curImgLayout = targetLayout;
-    }
-    */
-
-    // ================================================================================================================
     HBasicRenderer::HBasicRenderer(VkDevice device)
         : HRenderer(device)
     {

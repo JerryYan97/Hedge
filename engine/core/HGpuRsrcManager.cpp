@@ -425,12 +425,6 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    /*
-    HGpuBuffer* HGpuRsrcManager::CreateGpuBuffer(
-        VkBufferUsageFlags       usage,
-        VmaAllocationCreateFlags vmaFlags,
-        uint32_t                 bytesNum)
-    */
     HGpuBuffer* HGpuRsrcManager::CreateGpuBuffer(
         VkBufferUsageFlags       usage,
         VmaAllocationCreateFlags vmaFlags,
