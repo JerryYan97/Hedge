@@ -214,6 +214,8 @@ namespace Hedge
             GenViewMat(camComponent.m_view, transComponent.m_pos, camComponent.m_up, viewMat);
             GenPerspectiveProjMat(camComponent.m_near, camComponent.m_far, camComponent.m_fov, camComponent.m_aspect, persMat);
             MatrixMul4x4(persMat, viewMat, renderInfo.vpMat.eles);
+
+            memcpy(renderInfo.cameraPos, transComponent.m_pos, sizeof(float) * 3);
         }
 
         auto pointLightsView = m_registry.view<PointLightComponent>();

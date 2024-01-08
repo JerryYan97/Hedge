@@ -93,10 +93,18 @@ float4 main(
     // Point lights radiance contributions
     float3 pointLightsRadiance = float3(0.0, 0.0, 0.0);
 
+    // For future debugging purpose
+    /*
     float attenuation = 0.0;
     float lightNormalCosTheta = 0.0;
     float3 kD = float3(0.0, 0.0, 0.0);
     float3 F = float3(0.0, 0.0, 0.0);
+    float3 lightRadiance = float3(0.0, 0.0, 0.0);
+    float3 specular = float3(0.0, 0.0, 0.0);
+    float3 NFG = float3(0.0, 0.0, 0.0);
+    float NDF = 0.0;
+    float G = 0.0;
+    */
 
     for(int i = 0; i < i_sceneInfo.ptLightCnt; i++)
     {
@@ -106,20 +114,20 @@ float4 main(
 		float3 H	    = normalize(wi + V);
 		float  dist     = length(lightPos - i_pixelWorldPos.xyz);
 
-        attenuation = PointLightAttenuation(dist);
+        float attenuation = PointLightAttenuation(dist);
         lightRadiance = lightRadiance * attenuation;
-        lightNormalCosTheta = max(dot(N, wi), 0.0);
+        float lightNormalCosTheta = max(dot(N, wi), 0.0);
 
         float NDF = DistributionGGX(N, H, roughness);
         float G   = GeometrySmithDirectLight(N, V, wi, roughness);
-        F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
+        float3 F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
 
         float3 NFG = NDF * F * G;
         float denominator = 4.0 * NoV * lightNormalCosTheta  + 0.0001;
 
         float3 specular = NFG / denominator;
 
-        kD = float3(1.0, 1.0, 1.0) - F; // The amount of light goes into the material.
+        float3 kD = float3(1.0, 1.0, 1.0) - F; // The amount of light goes into the material.
 		kD *= (1.0 - metalic);
 
         pointLightsRadiance += (kD * (baseColor / 3.14159265359) + specular) * lightRadiance * lightNormalCosTheta;
@@ -131,9 +139,5 @@ float4 main(
     color = color / (color + float3(1.0, 1.0, 1.0));
     color = pow(color, float3(1.0/2.2, 1.0/2.2, 1.0/2.2)); 
 
-    // return float4(metalic, metalic, metalic, 1.0);
-
     return float4(color, 1.0);
-    // return float4(N * 0.5 + 0.5, 1.0);
-    // return float4(lightNormalCosTheta, lightNormalCosTheta, lightNormalCosTheta, 1.0);
 }
