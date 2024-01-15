@@ -45,12 +45,17 @@ namespace Hedge
                 if (ImGui::MenuItem("Open Project..."))
                 {
                     std::string ymlNamePath = SelectYmlDialog();
+                    raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
+                    raiiManager.GetHedgeEditorRenderManager()->InitAllInUseGpuRsrc();
                     raiiManager.GetHedgeEditor()->OpenGameProject(ymlNamePath);
+                    m_pRenderResultImgView = raiiManager.GetHedgeEditorRenderManager()->GetCurrentRenderImgView();
+                    raiiManager.GetHedgeEditorRenderManager()->SkipThisFrame();
                 }
                 if (ImGui::MenuItem("Save Project to..."))
                 {
                     std::string projFolderStr = SaveToFolderDialog();
-                    raiiManager.GetHedgeEditor()->CreateGameProject(projFolderStr, "TestProject");
+                    raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
+                    raiiManager.GetHedgeEditor()->GameProjectSaveAs(projFolderStr);
                 }
                 ImGui::EndMenu();
             }
@@ -107,7 +112,11 @@ namespace Hedge
 
         // Editor GUI
         UpperMenuBar();
-        m_pLayout->BeginEndLayout();
+        if (raiiManager.GetHedgeEditorRenderManager()->IsThisFrameSkipped() == false)
+        {
+            m_pLayout->BeginEndLayout();
+        }
+        
         BottomMenuBar();
     }
 

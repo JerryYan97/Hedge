@@ -156,6 +156,7 @@ namespace Hedge
         uint64_t LoadAsset(const std::string& assetNamePath);
 
         void ReleaseAsset(uint64_t guid);
+        void ReleaseAllAssets();
 
         // The reference count is not tracked in the 'GetAssetPtr' function.
         bool GetAssetPtr(uint64_t guid, HAsset** pPtr);
@@ -172,6 +173,9 @@ namespace Hedge
         };
         std::unordered_map<uint64_t, AssetWrap> m_assetsMap;
 
-        std::string m_assetFolderPath; // E.g. xxx\\assets\\
+        /*
+        E.g. xxx\\assets\\
+        */
+        std::string m_assetFolderPath;
     };
 }

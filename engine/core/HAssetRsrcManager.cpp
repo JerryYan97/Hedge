@@ -115,6 +115,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HAssetRsrcManager::ReleaseAllAssets()
+    {
+        CleanAllAssets();
+    }
+
+    // ================================================================================================================
     void HAssetRsrcManager::CleanAllAssets()
     {
         for (auto itr : m_assetsMap)

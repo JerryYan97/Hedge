@@ -95,10 +95,16 @@ namespace Hedge
         // GUI
         uint32_t GetCurSwapchainFrameIdx() { return m_acqSwapchainImgIdx; }
 
+        // For editor open new project to reload HGpuRsrc
+        void ReleaseInUseHGpuRsrc();
+        void InitRenderTargetHGpuRsrc();
+
         HBaseGuiManager* m_pGuiManager;
 
         // Render
         uint32_t m_activeRendererIdx;
+
+        bool m_skipSubmitThisFrameCommandBuffer;
 
     private:
         void CreateSwapchainCmdBuffers();

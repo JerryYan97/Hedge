@@ -18,8 +18,9 @@ namespace Hedge
         HedgeEditor();
         virtual ~HedgeEditor();
 
-        // Put current scene into the target folder
-        void CreateGameProject(const std::string& rootDir, const std::string& projName);
+        // Put current scene into the target folder. Close the current project. Open the project in the target folder.
+        // The project name will be the folder name but the user can change it afterward.
+        void GameProjectSaveAs(const std::string& rootDir);
 
         void OpenGameProject(const std::string& pathName);
 
@@ -37,6 +38,8 @@ namespace Hedge
         virtual SceneRenderInfo GetActiveSceneRenderInfo() override;
 
         std::string GetProjectDir() { return m_rootDir; }
+
+        void ReleaseCurrentProjectRsrc();
 
     protected:
         virtual void RegisterCustomSerializeClass() override {};

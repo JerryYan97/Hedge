@@ -29,6 +29,8 @@ namespace Hedge
             void              (*CheckVkResultFn)(VkResult err));
 
         void StartNewFrame();
+        
+        void EndFrameWithoutDraw();
 
         void RecordGuiDraw(
             VkRenderPass    guiRenderPass, 

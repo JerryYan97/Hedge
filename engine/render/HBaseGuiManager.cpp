@@ -126,6 +126,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HBaseGuiManager::EndFrameWithoutDraw()
+    {
+        ImGui::EndFrame();
+    }
+
+    // ================================================================================================================
     void HBaseGuiManager::RecordGuiDraw(
         VkRenderPass    guiRenderPass,
         VkFramebuffer   swapchainFramebuffer,

@@ -184,17 +184,36 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HedgeEditor::CreateGameProject(
-        const std::string& rootDir, 
-        const std::string& projName)
+    void HedgeEditor::GameProjectSaveAs(
+        const std::string& rootDir)
     {
-        m_projName = projName;
-        m_projFilePath = rootDir + "\\" + projName + ".yml";
+        const std::string folderName = GetNamePathFolderName(rootDir);
+
+        // Copy and paste the current project.
+        CopyFolder(m_rootDir, rootDir);
+
+        // Cleanup current scene, resource managers.
+        g_pGpuRsrcManager->WaitDeviceIdle();
+        
+        for (HScene* pScene : m_pScenes)
+        {
+            delete pScene;
+        }
+        m_pScenes.clear();
+
+        g_pAssetRsrcManager->ReleaseAllAssets();
+        g_pGpuRsrcManager->CleanupAllRsrc();
+
+        m_projName = folderName;
+        m_projFilePath = rootDir + "\\" + folderName + ".yml";
         m_rootDir = rootDir;
 
         raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
 
+        OpenGameProject(m_projFilePath);
+
         // Save the scene configuration:
+        /*
         std::filesystem::create_directory(rootDir + "\\scene");
         std::string scenePathName = rootDir + "\\scene\\testScene.yml";
         GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
@@ -223,12 +242,14 @@ namespace Hedge
         ymlProjEmitter << YAML::Value << "testScene.yml";
 
         ymlProjEmitter << YAML::EndMap;
+        */
     }
 
     // ================================================================================================================
-    void HedgeEditor::OpenGameProject(
-        const std::string& pathName)
+    void HedgeEditor::ReleaseCurrentProjectRsrc()
     {
+        g_pGpuRsrcManager->WaitDeviceIdle();
+
         // Close the current project
         for (auto itr : m_pScenes)
         {
@@ -236,6 +257,16 @@ namespace Hedge
         }
         m_pScenes.clear();
 
+        HedgeEditorRenderManager* pEditorRenderManager = (HedgeEditorRenderManager*)g_pRenderManager;
+        pEditorRenderManager->ReleaseAllInUseGpuRsrc();
+        g_pAssetRsrcManager->ReleaseAllAssets();
+        g_pGpuRsrcManager->CleanupAllRsrc();
+    }
+
+    // ================================================================================================================
+    void HedgeEditor::OpenGameProject(
+        const std::string& pathName)
+    {
         m_projFilePath = pathName;
         m_rootDir = Hedge::GetFileDir(pathName);
         g_pAssetRsrcManager->UpdateAssetFolderPath(m_rootDir);

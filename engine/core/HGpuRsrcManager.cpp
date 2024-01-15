@@ -474,9 +474,25 @@ namespace Hedge
         pGpuBuffer->gpuBufferDescriptorInfo.offset = 0;
         pGpuBuffer->gpuBufferDescriptorInfo.range = bytesNum;
 
-        m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, {1, dbgMsg } });
+        m_gpuBuffersImgs.insert({ (void*)pGpuBuffer, {1, dbgMsg, HGPU_BUFFER} });
 
         return pGpuBuffer;
+    }
+
+    // ================================================================================================================
+    void HGpuRsrcManager::CleanupAllRsrc()
+    {
+        for (auto& itr : m_gpuBuffersImgs)
+        {
+            if (std::get<2>(itr.second) == HGPU_BUFFER)
+            {
+                DestroyGpuBufferResource((HGpuBuffer*)itr.first);
+            }
+            else
+            {
+                DestroyGpuImgResource((HGpuImg*)itr.first);
+            }
+        }
     }
 
     // ================================================================================================================
@@ -712,7 +728,7 @@ namespace Hedge
 
         // std::cout << "Gpu Img Addr: " << pGpuImg->gpuImg << ". Dbg Msg: " << dbgMsg << std::endl;
 
-        m_gpuBuffersImgs.insert({ (void*)pGpuImg, {1, dbgMsg} });
+        m_gpuBuffersImgs.insert({ (void*)pGpuImg, {1, dbgMsg, HGPU_IMG} });
 
         return pGpuImg;
     }

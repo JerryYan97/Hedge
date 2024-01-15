@@ -39,5 +39,5 @@ void main(int argc, char** argv)
         g_pRenderManager->FinalizeSceneAndSwapBuffers();
     }
 
-    g_pGpuRsrcManager->WaitDeviceIdel();
+    g_pGpuRsrcManager->WaitDeviceIdle();
 }

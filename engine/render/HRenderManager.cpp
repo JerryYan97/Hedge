@@ -27,7 +27,8 @@ namespace Hedge
         HGpuRsrcManager* pGpuRsrcManager)
         : // m_curSwapchainFrameIdx(0),
           m_pGuiManager(pGuiManager),
-          m_pGpuRsrcManager(pGpuRsrcManager)
+          m_pGpuRsrcManager(pGpuRsrcManager),
+          m_skipSubmitThisFrameCommandBuffer(false)
     {
         // Create vulkan instance and possible debug initialization.
         m_pGpuRsrcManager->CreateVulkanAppInstDebugger();
@@ -63,7 +64,6 @@ namespace Hedge
                             &m_renderPass,
                             CheckVkResult);
 
-        // TODO: Let image resource also create and destroy in the gpu rsrc manager instead of passing in the vma allocator.
         // Create a basic PBR renderer
         VkDevice* pDevice = m_pGpuRsrcManager->GetLogicalDevice();
         HRenderer* pPbrRenderer = new HBasicRenderer(*pDevice);
@@ -296,10 +296,22 @@ namespace Hedge
     // ================================================================================================================
     void HRenderManager::FinalizeSceneAndSwapBuffers()
     {
+        if (m_skipSubmitThisFrameCommandBuffer == true)
+        {
+            vkResetCommandBuffer(m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx], 0);
+
+            VkCommandBufferBeginInfo beginInfo{};
+            {
+                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            }
+
+            vkBeginCommandBuffer(m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx], &beginInfo);
+        }
+
         m_pGuiManager->RecordGuiDraw(m_renderPass,
-                                     m_swapchainFramebuffers[m_acqSwapchainImgIdx],
-                                     m_swapchainImageExtent,
-                                     m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx]);
+            m_swapchainFramebuffers[m_acqSwapchainImgIdx],
+            m_swapchainImageExtent,
+            m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx]);
 
         VK_CHECK(vkEndCommandBuffer(m_swapchainRenderCmdBuffers[m_acqSwapchainImgIdx]));
 
@@ -318,11 +330,11 @@ namespace Hedge
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores = &m_swapchainRenderFinishedSemaphores[m_acqSwapchainImgIdx];
         }
-        
-        VK_CHECK(vkQueueSubmit(*m_pGpuRsrcManager->GetGfxQueue(), 
-                               1, 
-                               &submitInfo, 
-                               m_inFlightFences[m_acqSwapchainImgIdx]));
+
+        VK_CHECK(vkQueueSubmit(*m_pGpuRsrcManager->GetGfxQueue(),
+            1,
+            &submitInfo,
+            m_inFlightFences[m_acqSwapchainImgIdx]));
 
         // Put the swapchain into the present info and wait for the graphics queue previously before presenting.
         VkPresentInfoKHR presentInfo{};
@@ -346,7 +358,19 @@ namespace Hedge
             throw std::runtime_error("failed to present swap chain image!");
         }
 
-        // m_curSwapchainFrameIdx = (m_curSwapchainFrameIdx + 1) % m_swapchainImgCnt;
+        m_skipSubmitThisFrameCommandBuffer = false;
+        /*
+        if (m_skipSubmitThisFrameCommandBuffer == false)
+        {
+            
+        }
+        else
+        {
+            m_pGuiManager->EndFrameWithoutDraw();
+            m_skipSubmitThisFrameCommandBuffer = false;
+            vkResetFences(*m_pGpuRsrcManager->GetLogicalDevice(), 1, &m_inFlightFences[m_acqSwapchainImgIdx]);
+        }
+        */
     }
 
     // ================================================================================================================
@@ -381,6 +405,9 @@ namespace Hedge
         VkExtent2D desiredRenderTargetExtent = m_pGuiManager->GetRenderExtent();
         HGpuImgCreateInfo colorRenderTargetInfo = CreateColorTargetHGpuImgInfo(desiredRenderTargetExtent);
         HGpuImgCreateInfo depthRenderTargetInfo = CreateDepthTargetHGpuImgInfo(desiredRenderTargetExtent);
+
+        m_frameColorRenderResults.resize(m_swapchainImgCnt);
+        m_frameDepthRenderResults.resize(m_swapchainImgCnt);
 
         for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
         {
@@ -691,7 +718,7 @@ namespace Hedge
             glfwWaitEvents();
         }
 
-        m_pGpuRsrcManager->WaitDeviceIdel();
+        m_pGpuRsrcManager->WaitDeviceIdle();
         CleanupSwapchain();
         CreateSwapchain();
         CreateSwapchainImageViews();
@@ -769,6 +796,28 @@ namespace Hedge
         }
 
         return depthRenderTarget;
+    }
+
+    // ================================================================================================================
+    void HRenderManager::ReleaseInUseHGpuRsrc()
+    {
+        m_frameGpuRenderRsrcController.CleanupRsrc();
+
+        for (uint32_t i = 0; i < m_swapchainImgCnt; i++)
+        {
+            m_pGpuRsrcManager->DereferGpuImg(m_frameColorRenderResults[i]);
+            m_pGpuRsrcManager->DereferGpuImg(m_frameDepthRenderResults[i]);
+        }
+
+        m_frameColorRenderResults.clear();
+        m_frameDepthRenderResults.clear();
+    }
+
+    // ================================================================================================================
+    void HRenderManager::InitRenderTargetHGpuRsrc()
+    {
+        m_frameGpuRenderRsrcController.Init(m_swapchainImgCnt, m_pGpuRsrcManager);
+        CreateRenderTargets();
     }
 
     // ================================================================================================================

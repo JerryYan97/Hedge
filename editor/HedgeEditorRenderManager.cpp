@@ -23,4 +23,16 @@ namespace Hedge
 
         pGuiManager->GenerateImGuiData(GetCurrentRenderImgView(), GetCurrentRenderImgExtent(), GetCurSwapchainFrameIdx());
     }
+
+    // ================================================================================================================
+    void HedgeEditorRenderManager::ReleaseAllInUseGpuRsrc()
+    {
+        ReleaseInUseHGpuRsrc();
+    }
+
+    // ================================================================================================================
+    void HedgeEditorRenderManager::InitAllInUseGpuRsrc()
+    {
+        InitRenderTargetHGpuRsrc();
+    }
 }

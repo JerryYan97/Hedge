@@ -98,7 +98,7 @@ namespace Hedge
         VkCommandPool* GetGfxCmdPool() { return &m_gfxCmdPool; }
         // VmaAllocator* GetVmaAllocator() { return &m_vmaAllocator; }
 
-        void WaitDeviceIdel() { vkDeviceWaitIdle(m_vkDevice); };
+        void WaitDeviceIdle() { vkDeviceWaitIdle(m_vkDevice); };
 
         // GPU resource manage functions. The users should derefer the buffer or image when it is not needed.
         // Add one more refer counter of this buffer or image
@@ -130,6 +130,8 @@ namespace Hedge
         void WaitAndDestroyTheFence(VkFence fence);
         void WaitTheFence(VkFence fence);
 
+        void CleanupAllRsrc();
+
     private:
         void HGpuRsrcManager::DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
         void HGpuRsrcManager::DestroyGpuImgResource(const HGpuImg* const pGpuImg);
@@ -153,7 +155,7 @@ namespace Hedge
         VkQueue  m_presentQueue;
 
         // std::unordered_map<void*, uint32_t> m_gpuBuffersImgs;
-        std::unordered_map<void*, std::tuple<uint32_t, std::string>> m_gpuBuffersImgs;
+        std::unordered_map<void*, std::tuple<uint32_t, std::string, HGpuRsrcType>> m_gpuBuffersImgs;
 #ifndef NDEBUG
         // Debug mode
         void ValidateDebugExtAndValidationLayer();
