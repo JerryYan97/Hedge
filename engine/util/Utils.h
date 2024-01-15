@@ -18,6 +18,13 @@ namespace Hedge
 
     std::string GetFileDir(const std::string& pathName);
 
+    // At least we reduce the size of compiled file by including that for only once.
+    void CopyFolder(const std::string& srcDir, const std::string& dstDir);
+
+    std::string GetPostFix(const std::string& namePath);
+    std::string GetNamePathFolderName(const std::string& assetNamePath);
+    std::vector<int> FindLocations(std::string sample, char findIt);
+
     namespace Util
     {
         // Vulkan cmds wrap

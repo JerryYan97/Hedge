@@ -28,7 +28,7 @@ namespace Hedge
 
     protected:
         HAssetRsrcManager* m_pAssetRsrcManager;
-        const std::string  m_assetPathName;      // Absolute path name.
+        std::string        m_assetPathName;           // Absolute path name. Not ended with '.yml'.
 
     private:
         const uint64_t    m_guid;
@@ -172,6 +172,6 @@ namespace Hedge
         };
         std::unordered_map<uint64_t, AssetWrap> m_assetsMap;
 
-        std::string m_assetFolderPath;
+        std::string m_assetFolderPath; // E.g. xxx\\assets\\
     };
 }

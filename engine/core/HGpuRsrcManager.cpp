@@ -104,8 +104,11 @@ namespace Hedge
           m_presentQueueFamilyIdx(0),
           m_gfxQueue(VK_NULL_HANDLE),
           m_computeQueue(VK_NULL_HANDLE),
-          m_presentQueue(VK_NULL_HANDLE),
-          m_dbgMsger(VK_NULL_HANDLE)
+#ifndef NDEBUG
+          m_dbgMsger(VK_NULL_HANDLE),
+#endif
+          m_presentQueue(VK_NULL_HANDLE)
+
     {}
 
     // ================================================================================================================
