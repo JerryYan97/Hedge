@@ -12,6 +12,7 @@ Hedge::GlobalVariablesRAIIManager raiiManager;
 Hedge::HFrameListener* g_pFrameListener = raiiManager.GetGame();
 Hedge::HRenderManager* g_pRenderManager = raiiManager.GetGameRenderManager();
 Hedge::HGpuRsrcManager* g_pGpuRsrcManager = raiiManager.GetGpuRsrcManager();
+Hedge::HAssetRsrcManager* g_pAssetRsrcManager = raiiManager.GetAssetRsrcManager();
 
 namespace Hedge
 {
@@ -187,8 +188,10 @@ namespace Hedge
     {
         delete m_pGameGuiManager;
         delete m_pGameRenderManager;
-        delete m_pGpuRsrcManager;
+
         delete m_pGameTemplate;
+        delete m_pAssetRsrcManager;
+        delete m_pGpuRsrcManager;
     }
 
     // ================================================================================================================

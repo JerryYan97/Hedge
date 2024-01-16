@@ -101,8 +101,18 @@ namespace Hedge
     void HedgeEditor::GenCMakeFile(
         bool isDebug)
     {
+        std::string buildType;
+        if (isDebug)
+        {
+            buildType = "Debug";
+        }
+        else
+        {
+            buildType = "Release";
+        }
+
         // Generate cmake file
-        std::string cmakeFileFolder = m_rootDir + "\\build";
+        std::string cmakeFileFolder = m_rootDir + "\\" + buildType + "Build";
         CreateDirectoryA(cmakeFileFolder.c_str(), NULL);
 
         std::string cmakeStr = GenGameCMakeFileStr(isDebug);
@@ -118,12 +128,12 @@ namespace Hedge
     {
         if (m_rootDir.empty() == false)
         {
-            SaveGameConfig();
+            // SaveGameConfig();
 
             GenCMakeFile(true);
 
             // Delete the game solution if it exists
-            std::string cmakeFileFolder = m_rootDir + "\\build";
+            std::string cmakeFileFolder = m_rootDir + "\\DebugBuild";
             std::filesystem::remove_all((cmakeFileFolder + "/build"));
 
             // Build game solution
@@ -132,7 +142,7 @@ namespace Hedge
             cmakeBuildSolCmd += (cmakeFileFolder + "/build");
             cmakeBuildSolCmd += " -S ";
             cmakeBuildSolCmd += cmakeFileFolder;
-            cmakeBuildSolCmd += " -G \"Visual Studio 16 2019\"";
+            cmakeBuildSolCmd += " -G \"Visual Studio 17 2022\"";
             std::system(cmakeBuildSolCmd.c_str());
         }
     }
@@ -143,12 +153,12 @@ namespace Hedge
     {
         if (m_rootDir.empty() == false)
         {
-            SaveGameConfig();
+            // SaveGameConfig();
 
             GenCMakeFile(false);
 
             // Delete the game solution if it exists
-            std::string cmakeFileFolder = m_rootDir + "\\build";
+            std::string cmakeFileFolder = m_rootDir + "\\ReleaseBuild";
             std::filesystem::remove_all((cmakeFileFolder + "\\build"));
 
             // Build game in release mode by ninja
@@ -173,13 +183,21 @@ namespace Hedge
             std::filesystem::copy(m_rootDir + "\\HedgeGame.exe", tarDir + "\\HedgeGame.exe");
 
             // Copy resource folders
-            const auto copyOptions = std::filesystem::copy_options::directories_only;
+            // const auto copyOptions = std::filesystem::copy_options::directories_only;
             if (std::filesystem::exists(tarDir + "\\scene"))
             {
                 std::filesystem::remove_all(tarDir + "\\scene");
             }
             std::filesystem::create_directory(tarDir + "\\scene");
             std::filesystem::copy(m_rootDir + "\\scene", tarDir + "\\scene");
+
+            if (std::filesystem::exists(tarDir + "\\assets"));
+            {
+                std::filesystem::remove_all(tarDir + "assets");
+            }
+            std::filesystem::copy(m_rootDir + "\\assets",
+                                  tarDir + "\\assets",
+                                  std::filesystem::copy_options::recursive);
         }
     }
 

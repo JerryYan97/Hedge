@@ -4,6 +4,7 @@
 #include "../core/HGpuRsrcManager.h"
 #include "../render/HRenderManager.h"
 #include "../render/HBaseGuiManager.h"
+#include "../scene/HScene.h"
 
 namespace Hedge
 {
@@ -21,14 +22,14 @@ namespace Hedge
         virtual void AppStarts() override;
 
         virtual HScene& GetActiveScene() override { return *m_pScene; }
-        virtual SceneRenderInfo& GetActiveSceneRenderInfo() override { return m_pScenes[m_activeScene]->GetSceneRenderInfo(); }
+        virtual SceneRenderInfo GetActiveSceneRenderInfo() override { return m_pScene->GetSceneRenderInfo(); }
 
     protected:
         virtual void RegisterCustomSerializeClass() override {};
 
         std::string m_gameDir;
         std::string m_gameName;
-        HScene* m_pScene;
+        HScene*     m_pScene;
     };
 
     class HGameGuiManager : public HBaseGuiManager
