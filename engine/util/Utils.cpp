@@ -191,7 +191,7 @@ namespace Hedge
         const std::string& srcDir,
         const std::string& dstDir)
     {
-        std::filesystem::copy(srcDir, dstDir);
+        std::filesystem::copy(srcDir, dstDir, std::filesystem::copy_options::recursive);
     }
 
     // ================================================================================================================

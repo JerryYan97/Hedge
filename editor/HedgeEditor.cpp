@@ -48,7 +48,7 @@ namespace Hedge
     void HedgeEditor::AppStarts()
     {
         std::string defaultProjDir(getenv("HEDGE_LIB"));
-        defaultProjDir += "\\DefaultProject\\DefaultProject.yml";
+        defaultProjDir += "\\DefaultProject\\Project.yml";
         OpenGameProject(defaultProjDir);
     }
 
@@ -187,62 +187,13 @@ namespace Hedge
     void HedgeEditor::GameProjectSaveAs(
         const std::string& rootDir)
     {
+        // NOTE: Assume that we have already cleaned up the rsrc managed.
         const std::string folderName = GetNamePathFolderName(rootDir);
 
         // Copy and paste the current project.
         CopyFolder(m_rootDir, rootDir);
 
-        // Cleanup current scene, resource managers.
-        g_pGpuRsrcManager->WaitDeviceIdle();
-        
-        for (HScene* pScene : m_pScenes)
-        {
-            delete pScene;
-        }
-        m_pScenes.clear();
-
-        g_pAssetRsrcManager->ReleaseAllAssets();
-        g_pGpuRsrcManager->CleanupAllRsrc();
-
-        m_projName = folderName;
-        m_projFilePath = rootDir + "\\" + folderName + ".yml";
-        m_rootDir = rootDir;
-
-        raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
-
-        OpenGameProject(m_projFilePath);
-
-        // Save the scene configuration:
-        /*
-        std::filesystem::create_directory(rootDir + "\\scene");
-        std::string scenePathName = rootDir + "\\scene\\testScene.yml";
-        GetSerializer().SerializeScene(scenePathName, *m_pScenes[m_activeScene]);
-
-        // Save the project configuration:
-        std::ofstream projConfigFileHandle(m_projFilePath.c_str());
-        YAML::Emitter ymlProjEmitter(projConfigFileHandle);
-
-        // MISC project config
-        ymlProjEmitter << YAML::BeginMap;
-
-        // Engine version
-        ymlProjEmitter << YAML::Key << "Engine Version Major";
-        ymlProjEmitter << YAML::Value << HEDGE_ENGINE_MAJOR_VERSION;
-        ymlProjEmitter << YAML::Key << "Engine Version Minor";
-        ymlProjEmitter << YAML::Value << HEDGE_ENGINE_MINOR_VERSION;
-
-        // Project name, packaged game name
-        ymlProjEmitter << YAML::Key << "Project Name";
-        ymlProjEmitter << YAML::Value << "Test Project";
-        ymlProjEmitter << YAML::Key << "Game Name";
-        ymlProjEmitter << YAML::Value << "TestGame";
-
-        // First scene
-        ymlProjEmitter << YAML::Key << "First Scene";
-        ymlProjEmitter << YAML::Value << "testScene.yml";
-
-        ymlProjEmitter << YAML::EndMap;
-        */
+        OpenGameProject(rootDir + "\\Project.yml");
     }
 
     // ================================================================================================================

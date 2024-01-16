@@ -55,7 +55,10 @@ namespace Hedge
                 {
                     std::string projFolderStr = SaveToFolderDialog();
                     raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
+                    raiiManager.GetHedgeEditorRenderManager()->InitAllInUseGpuRsrc();
                     raiiManager.GetHedgeEditor()->GameProjectSaveAs(projFolderStr);
+                    m_pRenderResultImgView = raiiManager.GetHedgeEditorRenderManager()->GetCurrentRenderImgView();
+                    raiiManager.GetHedgeEditorRenderManager()->SkipThisFrame();
                 }
                 ImGui::EndMenu();
             }
