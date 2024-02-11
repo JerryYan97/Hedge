@@ -184,6 +184,8 @@ namespace Hedge
         {
             // The surface is imcompatiable with the swapchain (resize window).
             RecreateSwapchain();
+
+            // TODO: We may want to acquire the next image again.
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         {

@@ -75,6 +75,8 @@ namespace Hedge
         std::unordered_map<uint32_t, HEntity*>& GetEntityHashTable() { return m_entitiesHashTable; }
 
         bool IsEmpty() { return m_entitiesHashTable.empty(); }
+
+        void GetAllEntitiesNamesHashes(std::vector<std::pair<std::string, uint32_t>>& entities);
         
     private:
         void CreateDummyBlackTextures();

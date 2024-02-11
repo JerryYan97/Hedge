@@ -37,14 +37,20 @@ namespace Hedge
         uint32_t GetClassNameHash() { return m_entityClassNameHash; }
         std::string& GetEntityInstName() { return m_customName; }
 
+        void GetComponentsNamesHashes(std::vector<uint32_t>& output) { output = m_componentsNamesHashes; }
+
+        uint32_t GetEntityHandle() { return m_entityHandle; }
+
     protected:
         template<typename Type, typename... Args>
         void AddComponent(Args &&...args);
 
         template<typename T>
         T& GetComponent();
-
-        uint32_t GetEntityHandle() { return m_entityHandle; }
+        
+        virtual void InitComponentsNamesHashes() = 0;
+        
+        std::vector<uint32_t> m_componentsNamesHashes;
 
     private:
         uint32_t m_entityClassNameHash;
@@ -66,6 +72,9 @@ namespace Hedge
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
         static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
         static HEntity* CreateEntity() { return new HCubeEntity(); };
+
+    protected:
+        virtual void InitComponentsNamesHashes() override;
     };
 
     class HCameraEntity : public HEntity
@@ -74,7 +83,7 @@ namespace Hedge
         HCameraEntity()
             : HEntity("HCameraEntity", "DefaultCameraInst"),
               m_isHold(false)
-        {};
+        {}
 
         ~HCameraEntity();
 
@@ -85,6 +94,9 @@ namespace Hedge
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis);
         static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
         static HEntity* CreateEntity() { return new HCameraEntity(); };
+
+    protected:
+        virtual void InitComponentsNamesHashes() override;
 
     private:
         void OnMouseMiddleButtonEvent(HEvent& ievent);
@@ -114,6 +126,9 @@ namespace Hedge
         static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
         static HEntity* CreateEntity() { return new HPointLightEntity(); };
 
+    protected:
+        virtual void InitComponentsNamesHashes() override;
+
     private:
     };
 
@@ -130,6 +145,9 @@ namespace Hedge
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis) {}
         static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis) {}
         static HEntity* CreateEntity() { return new HImageBasedLightingEntity(); };
+
+    protected:
+        virtual void InitComponentsNamesHashes() override {};
 
     private:
     };

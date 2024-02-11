@@ -9,6 +9,8 @@ namespace DearImGuiExt
 
 namespace Hedge
 {
+    class HEntity;
+
     class HedgeEditorGuiManager : public HBaseGuiManager
     {
     public:
@@ -30,6 +32,13 @@ namespace Hedge
         static void SceneObjectsListWindow();
         static void ObjectPropertiesWindow();
 
+        static void DrawProperties(HEntity* pEntity);
+        static void DrawTransformComponentProperties(HEntity* pEntity);
+        static void DrawStaticMeshComponentProperties(HEntity* pEntity);
+        static void DrawCameraComponentProperties(HEntity* pEntity);
+        static void DrawPointLightComponentProperties(HEntity* pEntity);
+        static void DrawImageBasedLightingComponentProperties(HEntity* pEntity);
+
         // GUI
         void UpperMenuBar();
         void BottomMenuBar();
@@ -39,5 +48,8 @@ namespace Hedge
         uint32_t                    m_frameIdx;
         DearImGuiExt::CustomLayout* m_pLayout;
         DearImGuiExt::CustomLayoutNode* m_pRenderWindowNode;
+
+        HEntity* m_pSelectedEntity;
+        int m_selectedId;
     };
 }

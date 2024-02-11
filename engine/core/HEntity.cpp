@@ -28,7 +28,10 @@ namespace Hedge
           m_entityHandle(0),
           m_entityClassNameHash(crc32(className.c_str())),
           m_customName(instName)
-    {}
+    {
+        // NOTE: We cannot call virutal function in the constructor.
+        // InitComponentsNamesHashes();
+    }
 
     // ================================================================================================================
     HEntity::~HEntity()
@@ -41,6 +44,7 @@ namespace Hedge
     {
         m_pScene         = pScene;
         m_entityHandle   = handle;
+        InitComponentsNamesHashes();
     }
 
     // ================================================================================================================
@@ -125,6 +129,13 @@ namespace Hedge
         // Static Mesh Component
         StaticMeshComponent& meshComponent = pCubeEntity->GetComponent<StaticMeshComponent>();
         meshComponent.Deseralize(node["StaticMeshComponent"]);
+    }
+
+    // ================================================================================================================
+    void HCubeEntity::InitComponentsNamesHashes()
+    {
+        m_componentsNamesHashes.push_back(crc32("TransformComponent"));
+        m_componentsNamesHashes.push_back(crc32("StaticMeshComponent"));
     }
 
     // ================================================================================================================
@@ -375,6 +386,13 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HCameraEntity::InitComponentsNamesHashes()
+    {
+        m_componentsNamesHashes.push_back(crc32("TransformComponent"));
+        m_componentsNamesHashes.push_back(crc32("CameraComponent"));
+    }
+
+    // ================================================================================================================
     void HPointLightEntity::OnDefineEntity(
         HEventManager& eventManager)
     {
@@ -431,5 +449,12 @@ namespace Hedge
         // Point light Component
         auto& pointLightComponent = pPtLightEntity->GetComponent<PointLightComponent>();
         pointLightComponent.Deseralize(node["PointLightComponent"]);
+    }
+
+    // ================================================================================================================
+    void HPointLightEntity::InitComponentsNamesHashes()
+    {
+        m_componentsNamesHashes.push_back(crc32("TransformComponent"));
+        m_componentsNamesHashes.push_back(crc32("PointLightComponent"));
     }
 }

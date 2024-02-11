@@ -11,12 +11,12 @@
 
 #include <filesystem>
 
-Hedge::GlobalVariablesRAIIManager raiiManager;
+Hedge::GlobalVariablesRAIIManager g_raiiManager;
 
-Hedge::HFrameListener* g_pFrameListener = raiiManager.GetHedgeEditor();
-Hedge::HRenderManager* g_pRenderManager = raiiManager.GetHedgeEditorRenderManager();
-Hedge::HGpuRsrcManager* g_pGpuRsrcManager = raiiManager.GetGpuRsrcManager();
-Hedge::HAssetRsrcManager* g_pAssetRsrcManager = raiiManager.GetAssetRsrcManager();
+Hedge::HFrameListener* g_pFrameListener = g_raiiManager.GetHedgeEditor();
+Hedge::HRenderManager* g_pRenderManager = g_raiiManager.GetHedgeEditorRenderManager();
+Hedge::HGpuRsrcManager* g_pGpuRsrcManager = g_raiiManager.GetGpuRsrcManager();
+Hedge::HAssetRsrcManager* g_pAssetRsrcManager = g_raiiManager.GetAssetRsrcManager();
 
 namespace Hedge
 {
@@ -244,7 +244,7 @@ namespace Hedge
         YAML::Node config = YAML::LoadFile(pathName.c_str());
         m_projName = config["Project Name"].as<std::string>();
         m_gameName = config["Game Name"].as<std::string>();
-        raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
+        g_raiiManager.GetHedgeEditorRenderManager()->SetWindowTitle(m_projName);
 
         // Load in the active scene aka first scene
         std::string firstSceneName = config["First Scene"].as<std::string>();

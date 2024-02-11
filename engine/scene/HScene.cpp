@@ -251,4 +251,14 @@ namespace Hedge
 
         return renderInfo;
     }
+
+    // ================================================================================================================
+    void HScene::GetAllEntitiesNamesHashes(
+        std::vector<std::pair<std::string, uint32_t>>& entities)
+    {
+        for (const auto& itr : m_entitiesHashTable)
+        {
+            entities.push_back({itr.second->GetEntityInstName(), itr.first});
+        }
+    }
 }

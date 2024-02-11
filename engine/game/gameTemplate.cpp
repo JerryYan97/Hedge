@@ -7,12 +7,12 @@
 #include "imgui.h"
 #include <map>
 
-Hedge::GlobalVariablesRAIIManager raiiManager;
+Hedge::GlobalVariablesRAIIManager g_raiiManager;
 
-Hedge::HFrameListener* g_pFrameListener = raiiManager.GetGame();
-Hedge::HRenderManager* g_pRenderManager = raiiManager.GetGameRenderManager();
-Hedge::HGpuRsrcManager* g_pGpuRsrcManager = raiiManager.GetGpuRsrcManager();
-Hedge::HAssetRsrcManager* g_pAssetRsrcManager = raiiManager.GetAssetRsrcManager();
+Hedge::HFrameListener* g_pFrameListener = g_raiiManager.GetGame();
+Hedge::HRenderManager* g_pRenderManager = g_raiiManager.GetGameRenderManager();
+Hedge::HGpuRsrcManager* g_pGpuRsrcManager = g_raiiManager.GetGpuRsrcManager();
+Hedge::HAssetRsrcManager* g_pAssetRsrcManager = g_raiiManager.GetAssetRsrcManager();
 
 namespace Hedge
 {
@@ -42,7 +42,7 @@ namespace Hedge
         // Read in the game settings
         YAML::Node config = YAML::LoadFile(exePath + "/gameConfig.yml");
         m_gameName = config["Game Name"].as<std::string>();
-        raiiManager.GetGameRenderManager()->SetWindowTitle(m_gameName);
+        g_raiiManager.GetGameRenderManager()->SetWindowTitle(m_gameName);
 
         std::string firstSceneName = config["First Scene"].as<std::string>();
 

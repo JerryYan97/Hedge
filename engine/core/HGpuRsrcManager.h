@@ -133,8 +133,8 @@ namespace Hedge
         void CleanupAllRsrc();
 
     private:
-        void HGpuRsrcManager::DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
-        void HGpuRsrcManager::DestroyGpuImgResource(const HGpuImg* const pGpuImg);
+        void DestroyGpuBufferResource(const HGpuBuffer* const pGpuBuffer);
+        void DestroyGpuImgResource(const HGpuImg* const pGpuImg);
 
         // Vulkan core objects
         VkInstance       m_vkInst;

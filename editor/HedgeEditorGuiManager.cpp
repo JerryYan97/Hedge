@@ -6,14 +6,19 @@
 #include "HedgeEditor.h"
 #include "Utils.h"
 #include "UtilMath.h"
+#include "../scene/HScene.h"
+#include "../core/HEntity.h"
+#include "../core/HComponent.h"
 
-extern Hedge::GlobalVariablesRAIIManager raiiManager;
+extern Hedge::GlobalVariablesRAIIManager g_raiiManager;
+extern Hedge::HFrameListener* g_pFrameListener;
 
 namespace Hedge
 {
     // ================================================================================================================
     HedgeEditorGuiManager::HedgeEditorGuiManager()
-        : m_pLayout(CreateGuiLayout())
+        : m_pLayout(CreateGuiLayout()),
+          m_pSelectedEntity(nullptr)
     {}
 
     // ================================================================================================================
@@ -45,20 +50,20 @@ namespace Hedge
                 if (ImGui::MenuItem("Open Project..."))
                 {
                     std::string ymlNamePath = SelectYmlDialog();
-                    raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
-                    raiiManager.GetHedgeEditorRenderManager()->InitAllInUseGpuRsrc();
-                    raiiManager.GetHedgeEditor()->OpenGameProject(ymlNamePath);
-                    m_pRenderResultImgView = raiiManager.GetHedgeEditorRenderManager()->GetCurrentRenderImgView();
-                    raiiManager.GetHedgeEditorRenderManager()->SkipThisFrame();
+                    g_raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
+                    g_raiiManager.GetHedgeEditorRenderManager()->InitAllInUseGpuRsrc();
+                    g_raiiManager.GetHedgeEditor()->OpenGameProject(ymlNamePath);
+                    m_pRenderResultImgView = g_raiiManager.GetHedgeEditorRenderManager()->GetCurrentRenderImgView();
+                    g_raiiManager.GetHedgeEditorRenderManager()->SkipThisFrame();
                 }
                 if (ImGui::MenuItem("Save Project to..."))
                 {
                     std::string projFolderStr = SaveToFolderDialog();
-                    raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
-                    raiiManager.GetHedgeEditorRenderManager()->InitAllInUseGpuRsrc();
-                    raiiManager.GetHedgeEditor()->GameProjectSaveAs(projFolderStr);
-                    m_pRenderResultImgView = raiiManager.GetHedgeEditorRenderManager()->GetCurrentRenderImgView();
-                    raiiManager.GetHedgeEditorRenderManager()->SkipThisFrame();
+                    g_raiiManager.GetHedgeEditor()->ReleaseCurrentProjectRsrc();
+                    g_raiiManager.GetHedgeEditorRenderManager()->InitAllInUseGpuRsrc();
+                    g_raiiManager.GetHedgeEditor()->GameProjectSaveAs(projFolderStr);
+                    m_pRenderResultImgView = g_raiiManager.GetHedgeEditorRenderManager()->GetCurrentRenderImgView();
+                    g_raiiManager.GetHedgeEditorRenderManager()->SkipThisFrame();
                 }
                 ImGui::EndMenu();
             }
@@ -75,14 +80,14 @@ namespace Hedge
                 if (ImGui::MenuItem("Package Debug Game"))
                 {
                     // Put game.exe under the project folder for debug purpose.
-                    raiiManager.GetHedgeEditor()->BuildDebugGame();
+                    g_raiiManager.GetHedgeEditor()->BuildDebugGame();
                 }
 
                 if (ImGui::MenuItem("Package Release Game..."))
                 {
                     // Put game.exe under the target folder for shipping.
                     std::string projFolderStr = SaveToFolderDialog();
-                    raiiManager.GetHedgeEditor()->BuildAndReleaseGame(projFolderStr);
+                    g_raiiManager.GetHedgeEditor()->BuildAndReleaseGame(projFolderStr);
                 }
 
                 ImGui::EndMenu();
@@ -115,7 +120,7 @@ namespace Hedge
 
         // Editor GUI
         UpperMenuBar();
-        if (raiiManager.GetHedgeEditorRenderManager()->IsThisFrameSkipped() == false)
+        if (g_raiiManager.GetHedgeEditorRenderManager()->IsThisFrameSkipped() == false)
         {
             m_pLayout->BeginEndLayout();
         }
@@ -150,7 +155,7 @@ namespace Hedge
     // TODO: Figure out the image four corners override the border problem. I may need to submit a fix
     void HedgeEditorGuiManager::SceneRenderWindow()
     {
-        HedgeEditorGuiManager* pGui = raiiManager.GetHedgeEditorGuiManager();
+        HedgeEditorGuiManager* pGui = g_raiiManager.GetHedgeEditorGuiManager();
 
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
             ImGuiWindowFlags_NoMove |
@@ -158,7 +163,7 @@ namespace Hedge
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         VkDescriptorSet my_image_texture = 0;
 
         if (ImGui::Begin("Scene Render Window", nullptr, flags))
@@ -169,8 +174,8 @@ namespace Hedge
                     static_cast<float>(pGui->m_renderResultImgExtent.height)));
         }
         ImGui::End();
-        ImGui::PopStyleVar(3);
-        // ImGui::PopStyleVar(2);
+        // ImGui::PopStyleVar(3);
+        ImGui::PopStyleVar(2);
     }
 
     // ================================================================================================================
@@ -182,11 +187,22 @@ namespace Hedge
             ImGuiWindowFlags_NoMove |
             ImGuiWindowFlags_NoDecoration;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("AssetWindow", nullptr, TestWindowFlag);
+        
+        if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
+        {
+            if (ImGui::BeginTabItem("Assets"))
+            {
 
-        if (ImGui::TreeNode("Basic trees"))
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+
+        /*
+        if (ImGui::TreeNode("Assets"))
         {
             for (int i = 0; i < 5; i++)
             {
@@ -200,9 +216,9 @@ namespace Hedge
             }
             ImGui::TreePop();
         }
-
+        */
         ImGui::End();
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar(1);
     }
 
     // ================================================================================================================
@@ -214,28 +230,36 @@ namespace Hedge
             ImGuiWindowFlags_NoMove |
             ImGuiWindowFlags_NoDecoration;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("SceneObjectsListWindow", nullptr, TestWindowFlag);
 
         ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-        if (ImGui::TreeNode("Basic trees"))
+
+        HScene& scene = g_pFrameListener->GetActiveScene();
+        std::vector<std::pair<std::string, uint32_t>> nameHashVec;
+        scene.GetAllEntitiesNamesHashes(nameHashVec);
+
+        HedgeEditorGuiManager* pEditorGuiManager = g_raiiManager.GetHedgeEditorGuiManager();
+
+        if (ImGui::TreeNodeEx("Scene Graph", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < nameHashVec.size(); i++)
             {
-                if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
+                std::string sceneInstStr;
+                sceneInstStr = nameHashVec[i].first + " (" + std::to_string(nameHashVec[i].second) + ")";
+
+                if (ImGui::Selectable(sceneInstStr.c_str(), pEditorGuiManager->m_selectedId == i))
                 {
-                    ImGui::Text("blah blah");
-                    ImGui::SameLine();
-                    if (ImGui::SmallButton("button")) {}
-                    ImGui::TreePop();
+                    pEditorGuiManager->m_selectedId = i;
+                    pEditorGuiManager->m_pSelectedEntity = scene.GetEntity(nameHashVec[i].second);
                 }
             }
             ImGui::TreePop();
         }
 
         ImGui::End();
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar(1);
     }
 
     // ================================================================================================================
@@ -247,27 +271,27 @@ namespace Hedge
             ImGuiWindowFlags_NoMove |
             ImGuiWindowFlags_NoDecoration;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
+        // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("ObjectPropertiesWindow", nullptr, TestWindowFlag);
 
-        if (ImGui::TreeNode("Basic trees"))
+        HedgeEditorGuiManager* pEditorGuiManager = g_raiiManager.GetHedgeEditorGuiManager();
+
+        if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
         {
-            for (int i = 0; i < 5; i++)
+            if (ImGui::BeginTabItem("Properties"))
             {
-                if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
+                if (pEditorGuiManager->m_pSelectedEntity != nullptr)
                 {
-                    ImGui::Text("blah blah");
-                    ImGui::SameLine();
-                    if (ImGui::SmallButton("button")) {}
-                    ImGui::TreePop();
+                    DrawProperties(pEditorGuiManager->m_pSelectedEntity);
                 }
+                ImGui::EndTabItem();
             }
-            ImGui::TreePop();
+            ImGui::EndTabBar();
         }
 
         ImGui::End();
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar(1);
     }
 
     // ================================================================================================================
@@ -322,6 +346,119 @@ namespace Hedge
 
             HEvent mEvent(args, "KEY_D");
             eventManager.SendEvent(mEvent, &scene);
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::DrawProperties(
+        HEntity* pEntity)
+    {
+        std::vector<uint32_t> componentsName;
+        pEntity->GetComponentsNamesHashes(componentsName);
+
+        for (uint32_t componentNameHash : componentsName)
+        {
+            switch (componentNameHash) {
+            case crc32("TransformComponent"):
+                DrawTransformComponentProperties(pEntity);
+                break;
+            case crc32("StaticMeshComponent"):
+                DrawStaticMeshComponentProperties(pEntity);
+                break;
+            case crc32("CameraComponent"):
+                DrawCameraComponentProperties(pEntity);
+                break;
+            case crc32("PointLightComponent"):
+                DrawPointLightComponentProperties(pEntity);
+                break;
+            case crc32("ImageBasedLightingComponent"):
+                DrawImageBasedLightingComponentProperties(pEntity);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::DrawTransformComponentProperties(
+        HEntity* pEntity)
+    {
+        if (ImGui::TreeNodeEx("Transform Component", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            HScene& scene = g_pFrameListener->GetActiveScene();
+
+            TransformComponent transComponent = scene.EntityGetComponent<TransformComponent>(pEntity->GetEntityHandle());
+
+            std::string posStr;
+            posStr += ("(" + std::to_string(transComponent.m_pos[0]) + ", " +
+                             std::to_string(transComponent.m_pos[1]) + ", " +
+                             std::to_string(transComponent.m_pos[2]) + ")");
+            ImGui::Text("Translation: ");
+            ImGui::SameLine();
+            ImGui::Text(posStr.c_str());
+
+            std::string rotStr;
+            rotStr += ("(" + std::to_string(transComponent.m_rot[0]) + ", " +
+                             std::to_string(transComponent.m_rot[1]) + ", " +
+                             std::to_string(transComponent.m_rot[2]) + ")");
+            ImGui::Text("Rotation: ");
+            ImGui::SameLine();
+            ImGui::Text(rotStr.c_str());
+            
+            std::string scaleStr;
+            scaleStr += ("(" + std::to_string(transComponent.m_scale[0]) + ", " +
+                               std::to_string(transComponent.m_scale[1]) + ", " +
+                               std::to_string(transComponent.m_scale[2]) + ")");
+            ImGui::Text("Scale: ");
+            ImGui::SameLine();
+            ImGui::Text(scaleStr.c_str());
+
+            ImGui::TreePop();
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::DrawStaticMeshComponentProperties(
+        HEntity* pEntity)
+    {
+        if (ImGui::TreeNodeEx("Static Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            HScene& scene = g_pFrameListener->GetActiveScene();
+            ImGui::TreePop();
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::DrawCameraComponentProperties(
+        HEntity* pEntity)
+    {
+        if (ImGui::TreeNodeEx("Camera Component", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            HScene& scene = g_pFrameListener->GetActiveScene();
+            ImGui::TreePop();
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::DrawPointLightComponentProperties(
+        HEntity* pEntity)
+    {
+        if (ImGui::TreeNodeEx("Point Light Component", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            HScene& scene = g_pFrameListener->GetActiveScene();
+            ImGui::TreePop();
+        }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::DrawImageBasedLightingComponentProperties(
+        HEntity* pEntity)
+    {
+        if (ImGui::TreeNodeEx("Image Based Lighting Component", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            HScene& scene = g_pFrameListener->GetActiveScene();
+            ImGui::TreePop();
         }
     }
 }
