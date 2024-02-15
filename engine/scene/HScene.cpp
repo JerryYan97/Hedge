@@ -93,12 +93,7 @@ namespace Hedge
             VkClearColorValue clearColorVal{ 0.f, 0.f, 0.f, 1.f };
             g_pGpuRsrcManager->CleanColorGpuImage(m_pDummyBlackCubemap, &clearColorVal);
 
-            g_pGpuRsrcManager->TransImageLayout(m_pDummyBlackCubemap,
-                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                VK_ACCESS_NONE,
-                                                VK_ACCESS_NONE,
-                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+            g_pGpuRsrcManager->TransImageLayout(m_pDummyBlackCubemap, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
 
         // 2D black texture
@@ -143,12 +138,7 @@ namespace Hedge
             VkClearColorValue clearColorVal{ 0.f, 0.f, 0.f, 1.f };
             g_pGpuRsrcManager->CleanColorGpuImage(m_pDummyBlack2dImg, &clearColorVal);
 
-            g_pGpuRsrcManager->TransImageLayout(m_pDummyBlack2dImg,
-                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                VK_ACCESS_NONE,
-                                                VK_ACCESS_NONE,
-                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+            g_pGpuRsrcManager->TransImageLayout(m_pDummyBlack2dImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     }
 

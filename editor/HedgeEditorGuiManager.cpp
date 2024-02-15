@@ -152,7 +152,6 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    // TODO: Figure out the image four corners override the border problem. I may need to submit a fix
     void HedgeEditorGuiManager::SceneRenderWindow()
     {
         HedgeEditorGuiManager* pGui = g_raiiManager.GetHedgeEditorGuiManager();

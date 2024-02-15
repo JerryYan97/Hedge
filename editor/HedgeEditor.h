@@ -49,12 +49,17 @@ namespace Hedge
         void SaveGameConfig();
         void GenCMakeFile(bool isDebug);
 
+        void LoadEditorRsrcs();
+
         std::vector<HScene*> m_pScenes;
         uint32_t             m_activeScene;
         std::string          m_projFilePath;
         std::string          m_rootDir;
         std::string          m_projName;
         std::string          m_gameName;
+
+        HGpuImg*        m_pAssetIconImg;
+        VkDescriptorSet m_assetIconDescSet;
     };
 
     class GlobalVariablesRAIIManager

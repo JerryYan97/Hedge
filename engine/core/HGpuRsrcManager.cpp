@@ -557,11 +557,7 @@ namespace Hedge
     // ================================================================================================================
     void HGpuRsrcManager::TransImageLayout(
         HGpuImg*      pTargetImg,
-        VkImageLayout targetLayout,
-        VkAccessFlags srcAccess,
-        VkAccessFlags dstAccess,
-        VkPipelineStageFlags srcPipelineStg,
-        VkPipelineStageFlags dstPipelineStg)
+        VkImageLayout targetLayout)
     {
         if (targetLayout == pTargetImg->curImgLayout)
         {
@@ -583,16 +579,16 @@ namespace Hedge
             toTargetBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
             toTargetBarrier.image = pTargetImg->gpuImg;
             toTargetBarrier.subresourceRange = pTargetImg->imgSubresRange;
-            toTargetBarrier.srcAccessMask = srcAccess;
-            toTargetBarrier.dstAccessMask = dstAccess;
+            toTargetBarrier.srcAccessMask = VK_ACCESS_NONE;
+            toTargetBarrier.dstAccessMask = VK_ACCESS_NONE;
             toTargetBarrier.oldLayout = pTargetImg->curImgLayout;
             toTargetBarrier.newLayout = targetLayout;
         }
 
         vkCmdPipelineBarrier(
             cmdBuffer,
-            srcPipelineStg,
-            dstPipelineStg,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
             0,
             0, nullptr,
             0, nullptr,

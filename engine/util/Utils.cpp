@@ -295,4 +295,74 @@ namespace Hedge
 
         pGpuImg->curImgLayout = targetLayout;
     }
+
+    // ================================================================================================================
+    VkExtent3D Util::Depth1Extent3D(
+        uint32_t width,
+        uint32_t height)
+    {
+        VkExtent3D extent3D{};
+        extent3D.width = width;
+        extent3D.height = height;
+        extent3D.depth = 1;
+
+        return extent3D;
+    }
+
+    // ================================================================================================================
+    VkImageSubresourceRange Util::ImgSubRsrcRangeTexColor2D()
+    {
+        VkImageSubresourceRange imgSubRsrcRange{};
+        {
+            imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imgSubRsrcRange.baseArrayLayer = 0;
+            imgSubRsrcRange.layerCount = 1;
+            imgSubRsrcRange.baseMipLevel = 0;
+            imgSubRsrcRange.levelCount = 1;
+        }
+        return imgSubRsrcRange;
+    }
+
+    // ================================================================================================================
+    VkSamplerCreateInfo Util::LinearRepeatSamplerInfo()
+    {
+        VkSamplerCreateInfo samplerInfo{};
+        {
+            samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            samplerInfo.minLod = -1000;
+            samplerInfo.maxLod = 1000;
+            samplerInfo.maxAnisotropy = 1.0f;
+        }
+        return samplerInfo;
+    }
+
+    // ================================================================================================================
+    VkBufferImageCopy Util::BufferImg2DCopy(
+        uint32_t width,
+        uint32_t height)
+    {
+        VkBufferImageCopy bufToImgCopy{};
+        {
+            VkExtent3D extent{};
+            {
+                extent.width = width;
+                extent.height = height;
+                extent.depth = 1;
+            }
+
+            bufToImgCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            bufToImgCopy.imageSubresource.mipLevel = 0;
+            bufToImgCopy.imageSubresource.baseArrayLayer = 0;
+            bufToImgCopy.imageSubresource.layerCount = 1;
+            bufToImgCopy.imageExtent = extent;
+        }
+
+        return bufToImgCopy;
+    }
 }

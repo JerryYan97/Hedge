@@ -4,6 +4,7 @@
 #include "core/HEntity.h"
 #include "core/HAssetRsrcManager.h"
 #include "Utils.h"
+#include "stb_image.h"
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
@@ -23,13 +24,17 @@ namespace Hedge
     // ================================================================================================================
     HedgeEditor::HedgeEditor()
         : HFrameListener(),
-          m_activeScene(0)
+          m_activeScene(0),
+          m_pAssetIconImg(nullptr),
+          m_assetIconDescSet(VK_NULL_HANDLE)
     {
     }
 
     // ================================================================================================================
     HedgeEditor::~HedgeEditor()
     {
+        g_pGpuRsrcManager->DereferGpuImg(m_pAssetIconImg);
+
         for (auto pScene : m_pScenes)
         {
             delete pScene;
@@ -47,9 +52,11 @@ namespace Hedge
     // ================================================================================================================
     void HedgeEditor::AppStarts()
     {
+        LoadEditorRsrcs();
+
         std::string defaultProjDir(getenv("HEDGE_LIB"));
         defaultProjDir += "\\DefaultProject\\Project.yml";
-        OpenGameProject(defaultProjDir);
+        OpenGameProject(defaultProjDir);        
     }
 
     // ================================================================================================================
@@ -257,6 +264,46 @@ namespace Hedge
     HScene& HedgeEditor::GetActiveScene()
     {
         return *m_pScenes[m_activeScene];
+    }
+
+    // ================================================================================================================
+    void HedgeEditor::LoadEditorRsrcs()
+    {
+        std::string editorRsrcDir(getenv("HEDGE_LIB"));
+        editorRsrcDir += "\\EditorRsrcs";
+
+        std::string editorAssetIconAssetName = editorRsrcDir + "\\AssetIcon.png";
+
+        int iconWidth = 0;
+        int iconHeight = 0;
+        int iconComponent = 0;
+
+        unsigned char* iconData = stbi_load(editorAssetIconAssetName.c_str(),
+                                            &iconWidth, &iconHeight, &iconComponent, 0);
+
+        HGpuImgCreateInfo iconImgCreateInfo{};
+        {
+            iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                                           VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+            iconImgCreateInfo.hasSampler = true;
+            iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
+            iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
+            iconImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
+            iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+        }
+        m_pAssetIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Asset Icon PNG");
+
+        g_pGpuRsrcManager->SendDataToImage(m_pAssetIconImg,
+                                           Util::BufferImg2DCopy(iconWidth, iconHeight),
+                                           (void*)iconData, iconWidth * iconHeight * 4);
+
+        g_pGpuRsrcManager->TransImageLayout(m_pAssetIconImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        HedgeEditorGuiManager* pEditorGui = g_raiiManager.GetHedgeEditorGuiManager();
+
+        pEditorGui->AddTextureToImGUI(&m_assetIconDescSet, m_pAssetIconImg);
     }
 
     // ================================================================================================================

@@ -212,4 +212,13 @@ namespace Hedge
             m_guiImgDescriptors[frameIdx] = *img_ds;
         }
     }
+
+    // ================================================================================================================
+    void HBaseGuiManager::AddTextureToImGUI(
+        VkDescriptorSet* img_ds,
+        HGpuImg*         pGpuImg)
+    {
+        *img_ds = ImGui_ImplVulkan_AddTexture(pGpuImg->gpuImgSampler, pGpuImg->gpuImgView,
+                                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
 }

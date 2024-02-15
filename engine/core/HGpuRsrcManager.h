@@ -119,12 +119,7 @@ namespace Hedge
 
         void CleanColorGpuImage(HGpuImg* pTargetImg, VkClearColorValue* pClearColorVal);
         
-        void TransImageLayout(HGpuImg* pTargetImg,
-                              VkImageLayout targetLayout,
-                              VkAccessFlags srcAccess,
-                              VkAccessFlags dstAccess,
-                              VkPipelineStageFlags srcPipelineStg,
-                              VkPipelineStageFlags dstPipelineStg);
+        void TransImageLayout(HGpuImg* pTargetImg, VkImageLayout targetLayout);
 
         VkFence CreateFence();
         void WaitAndDestroyTheFence(VkFence fence);

@@ -36,7 +36,12 @@ namespace Hedge
                                VkAccessFlags dstFlags,
                                VkPipelineStageFlags srcPipelineStg,
                                VkPipelineStageFlags dstPipelineStg);
-    }    
+
+        VkExtent3D Depth1Extent3D(uint32_t width, uint32_t height);
+        VkImageSubresourceRange ImgSubRsrcRangeTexColor2D();
+        VkSamplerCreateInfo LinearRepeatSamplerInfo();
+        VkBufferImageCopy BufferImg2DCopy(uint32_t width, uint32_t height); // TODO: Extend in the future.
+    }
 }
 
 // https://stackoverflow.com/a/36522355

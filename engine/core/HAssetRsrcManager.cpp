@@ -485,12 +485,7 @@ namespace Hedge
             m_dataUInt8.push_back(255 * m_dataFloat[3]);
 
             g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataUInt8.data(), sizeof(uint8_t) * m_dataUInt8.size());
-            g_pGpuRsrcManager->TransImageLayout(m_pGpuImg,
-                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                VK_ACCESS_NONE,
-                                                VK_ACCESS_NONE,
-                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+            g_pGpuRsrcManager->TransImageLayout(m_pGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
         else
         {

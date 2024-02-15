@@ -43,6 +43,8 @@ namespace Hedge
             VkImageView* pTextureImgView,
             uint32_t frameIdx);
 
+        void AddTextureToImGUI(VkDescriptorSet* img_ds, HGpuImg* pGpuImg);
+
         void ImGUIWindowDataArrange();
 
         virtual void GenerateImGuiData() = 0;
