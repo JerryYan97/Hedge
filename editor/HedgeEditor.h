@@ -57,9 +57,6 @@ namespace Hedge
         std::string          m_rootDir;
         std::string          m_projName;
         std::string          m_gameName;
-
-        HGpuImg*        m_pAssetIconImg;
-        VkDescriptorSet m_assetIconDescSet;
     };
 
     class GlobalVariablesRAIIManager

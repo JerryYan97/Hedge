@@ -52,6 +52,8 @@ namespace Hedge
 
         virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) = 0;
 
+        virtual void AppStart() {}
+
     protected:
         std::vector<VkDescriptorSet> m_guiImgDescriptors;
         std::vector<VkSampler>       m_guiImgSamplers;

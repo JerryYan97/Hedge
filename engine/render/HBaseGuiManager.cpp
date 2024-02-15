@@ -100,7 +100,6 @@ namespace Hedge
             VK_CHECK(vkDeviceWaitIdle(*pDevice));
             ImGui_ImplVulkan_DestroyFontUploadObjects();
         }
-
     }
 
     // ================================================================================================================

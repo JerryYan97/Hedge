@@ -26,6 +26,10 @@ namespace Hedge
 
         virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) override;
 
+        virtual void AppStart() override;
+
+    protected:        
+
     private:
         static void SceneRenderWindow();
         static void AssetWindow();
@@ -39,6 +43,8 @@ namespace Hedge
         static void DrawPointLightComponentProperties(HEntity* pEntity);
         static void DrawImageBasedLightingComponentProperties(HEntity* pEntity);
 
+        void LoadEditorGuiRsrc();
+
         // GUI
         void UpperMenuBar();
         void BottomMenuBar();
@@ -51,5 +57,8 @@ namespace Hedge
 
         HEntity* m_pSelectedEntity;
         int m_selectedId;
+
+        HGpuImg* m_pAssetIconImg;
+        VkDescriptorSet m_assetIconDescSet;
     };
 }

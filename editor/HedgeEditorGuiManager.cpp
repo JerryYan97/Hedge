@@ -10,20 +10,26 @@
 #include "../core/HEntity.h"
 #include "../core/HComponent.h"
 
+#include "stb_image.h"
+
 extern Hedge::GlobalVariablesRAIIManager g_raiiManager;
 extern Hedge::HFrameListener* g_pFrameListener;
+extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
 
 namespace Hedge
 {
     // ================================================================================================================
     HedgeEditorGuiManager::HedgeEditorGuiManager()
         : m_pLayout(CreateGuiLayout()),
-          m_pSelectedEntity(nullptr)
+          m_pSelectedEntity(nullptr),
+          m_pAssetIconImg(nullptr),
+          m_assetIconDescSet(VK_NULL_HANDLE)
     {}
 
     // ================================================================================================================
     HedgeEditorGuiManager::~HedgeEditorGuiManager()
     {
+        g_pGpuRsrcManager->DereferGpuImg(m_pAssetIconImg);
         delete m_pLayout;
     }
 
@@ -190,10 +196,39 @@ namespace Hedge
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::Begin("AssetWindow", nullptr, TestWindowFlag);
         
+        HedgeEditorGuiManager* pEditorGuiManager = g_raiiManager.GetHedgeEditorGuiManager();
+
         if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
         {
             if (ImGui::BeginTabItem("Assets"))
             {
+                for (int i = 0; i < 8; i++)
+                {
+                    // UV coordinates are often (0.0f, 0.0f) and (1.0f, 1.0f) to display an entire textures.
+                    // Here are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
+                    // Read about UV coordinates here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+                    ImGui::PushID(i);
+                    if (i > 0)
+                    {
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(i - 1.0f, i - 1.0f));
+                    }
+
+                    ImVec2 size = ImVec2(64.0f, 64.0f);                         // Size of the image we want to make visible
+                    ImVec2 uv0 = ImVec2(0.0f, 0.0f);                            // UV coordinates for lower-left
+                    ImVec2 uv1 = ImVec2(1.f, 1.f);    // UV coordinates for (32,32) in our texture
+                    ImVec4 bg_col = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);             // Black background
+                    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);           // No tint
+                    if (ImGui::ImageButton("", (ImTextureID)pEditorGuiManager->m_assetIconDescSet, size, uv0, uv1, bg_col, tint_col))
+                    {
+                        std::cout << "Asset button pushed" << std::endl;
+                    }
+                    if (i > 0)
+                    {
+                        ImGui::PopStyleVar();
+                    }
+                    ImGui::PopID();
+                    ImGui::SameLine();
+                }
 
                 ImGui::EndTabItem();
             }
@@ -459,5 +494,49 @@ namespace Hedge
             HScene& scene = g_pFrameListener->GetActiveScene();
             ImGui::TreePop();
         }
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::AppStart()
+    {
+        LoadEditorGuiRsrc();
+    }
+
+    // ================================================================================================================
+    void HedgeEditorGuiManager::LoadEditorGuiRsrc()
+    {
+        std::string editorRsrcDir(getenv("HEDGE_LIB"));
+        editorRsrcDir += "\\EditorRsrcs";
+
+        std::string editorAssetIconAssetName = editorRsrcDir + "\\AssetIcon.png";
+
+        int iconWidth = 0;
+        int iconHeight = 0;
+        int iconComponent = 0;
+
+        unsigned char* iconData = stbi_load(editorAssetIconAssetName.c_str(),
+            &iconWidth, &iconHeight, &iconComponent, 0);
+
+        HGpuImgCreateInfo iconImgCreateInfo{};
+        {
+            iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+            iconImgCreateInfo.hasSampler = true;
+            iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
+            iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
+            iconImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
+            iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+        }
+        m_pAssetIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Asset Icon PNG");
+
+        g_pGpuRsrcManager->SendDataToImage(m_pAssetIconImg,
+            Util::BufferImg2DCopy(iconWidth, iconHeight),
+            (void*)iconData, iconWidth * iconHeight * 4);
+
+        g_pGpuRsrcManager->TransImageLayout(m_pAssetIconImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        AddTextureToImGUI(&m_assetIconDescSet, m_pAssetIconImg);
     }
 }
