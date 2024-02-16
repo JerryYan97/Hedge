@@ -60,5 +60,10 @@ namespace Hedge
 
         HGpuImg* m_pAssetIconImg;
         VkDescriptorSet m_assetIconDescSet;
+
+        HGpuImg* m_pFolderIconImg;
+        VkDescriptorSet m_folderIconDescSet;
+
+        std::string m_currentAssetDir;
     };
 }

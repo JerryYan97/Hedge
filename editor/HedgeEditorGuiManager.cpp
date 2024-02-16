@@ -1,4 +1,5 @@
 #include "HedgeEditorGuiManager.h"
+#include "../core/HAssetRsrcManager.h"
 
 #include "imgui.h"
 #include "CustomDearImGuiLayout.h"
@@ -9,6 +10,8 @@
 #include "../scene/HScene.h"
 #include "../core/HEntity.h"
 #include "../core/HComponent.h"
+
+#include <filesystem>
 
 #include "stb_image.h"
 
@@ -30,6 +33,7 @@ namespace Hedge
     HedgeEditorGuiManager::~HedgeEditorGuiManager()
     {
         g_pGpuRsrcManager->DereferGpuImg(m_pAssetIconImg);
+        g_pGpuRsrcManager->DereferGpuImg(m_pFolderIconImg);
         delete m_pLayout;
     }
 
@@ -184,6 +188,31 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    bool IsHAssetPackage(
+        std::string& pathStr)
+    {
+        bool isHAssetPackage = false;
+        for (const auto& entry : std::filesystem::directory_iterator(pathStr))
+        {
+            if (entry.is_regular_file())
+            {
+                std::string fileName = entry.path().filename().string();
+                if (fileName.size() > 3)
+                {
+                    std::string lastThree = fileName.substr(fileName.size() - 3);
+                    if (lastThree.compare("yml") == 0)
+                    {
+                        isHAssetPackage = true;
+                        break;
+                    }
+                }
+            }
+            
+        }
+        return isHAssetPackage;
+    }
+
+    // ================================================================================================================
     void HedgeEditorGuiManager::AssetWindow()
     {
         constexpr ImGuiWindowFlags TestWindowFlag = ImGuiWindowFlags_NoSavedSettings |
@@ -197,36 +226,60 @@ namespace Hedge
         ImGui::Begin("AssetWindow", nullptr, TestWindowFlag);
         
         HedgeEditorGuiManager* pEditorGuiManager = g_raiiManager.GetHedgeEditorGuiManager();
+        std::string assetFolderPath = g_raiiManager.GetAssetRsrcManager()->GetAssetFolderPath();
+        
 
         if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
         {
             if (ImGui::BeginTabItem("Assets"))
             {
-                for (int i = 0; i < 8; i++)
+                for(const auto& entry : std::filesystem::directory_iterator(assetFolderPath))
                 {
                     // UV coordinates are often (0.0f, 0.0f) and (1.0f, 1.0f) to display an entire textures.
                     // Here are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
                     // Read about UV coordinates here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
-                    ImGui::PushID(i);
-                    if (i > 0)
-                    {
-                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(i - 1.0f, i - 1.0f));
-                    }
+                    // ImGui::PushID(i);
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3.f, 3.f));
 
                     ImVec2 size = ImVec2(64.0f, 64.0f);                         // Size of the image we want to make visible
                     ImVec2 uv0 = ImVec2(0.0f, 0.0f);                            // UV coordinates for lower-left
                     ImVec2 uv1 = ImVec2(1.f, 1.f);    // UV coordinates for (32,32) in our texture
                     ImVec4 bg_col = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);             // Black background
                     ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);           // No tint
-                    if (ImGui::ImageButton("", (ImTextureID)pEditorGuiManager->m_assetIconDescSet, size, uv0, uv1, bg_col, tint_col))
+                    
+                    ImGui::BeginGroup();
+
+                    if (entry.is_regular_file())
                     {
-                        std::cout << "Asset button pushed" << std::endl;
+                        if (ImGui::ImageButton("", (ImTextureID)pEditorGuiManager->m_assetIconDescSet, size, uv0, uv1, bg_col, tint_col))
+                        {
+                            std::cout << "Asset file button pushed" << std::endl;
+                        }
                     }
-                    if (i > 0)
+                    else if (entry.is_directory())
                     {
-                        ImGui::PopStyleVar();
+                        if (IsHAssetPackage(entry.path().string()))
+                        {
+                            if (ImGui::ImageButton("", (ImTextureID)pEditorGuiManager->m_assetIconDescSet, size, uv0, uv1, bg_col, tint_col))
+                            {
+                                std::cout << "HAsset button pushed" << std::endl;
+                            }
+                        }
+                        else
+                        {
+                            if (ImGui::ImageButton("", (ImTextureID)pEditorGuiManager->m_folderIconDescSet, size, uv0, uv1, bg_col, tint_col))
+                            {
+                                std::cout << "Folder button pushed" << std::endl;
+                            }
+                        }
                     }
-                    ImGui::PopID();
+
+                    ImGui::Text(entry.path().filename().string().c_str());
+
+                    ImGui::EndGroup();
+
+                    ImGui::PopStyleVar();
+                    // ImGui::PopID();
                     ImGui::SameLine();
                 }
 
@@ -235,22 +288,6 @@ namespace Hedge
             ImGui::EndTabBar();
         }
 
-        /*
-        if (ImGui::TreeNode("Assets"))
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i))
-                {
-                    ImGui::Text("blah blah");
-                    ImGui::SameLine();
-                    if (ImGui::SmallButton("button")) {}
-                    ImGui::TreePop();
-                }
-            }
-            ImGui::TreePop();
-        }
-        */
         ImGui::End();
         ImGui::PopStyleVar(1);
     }
@@ -508,35 +545,72 @@ namespace Hedge
         std::string editorRsrcDir(getenv("HEDGE_LIB"));
         editorRsrcDir += "\\EditorRsrcs";
 
-        std::string editorAssetIconAssetName = editorRsrcDir + "\\AssetIcon.png";
-
-        int iconWidth = 0;
-        int iconHeight = 0;
-        int iconComponent = 0;
-
-        unsigned char* iconData = stbi_load(editorAssetIconAssetName.c_str(),
-            &iconWidth, &iconHeight, &iconComponent, 0);
-
-        HGpuImgCreateInfo iconImgCreateInfo{};
+        // Load editor's asset icon image
         {
-            iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-            iconImgCreateInfo.hasSampler = true;
-            iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
-            iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
-            iconImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
-            iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
-            iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            std::string editorAssetIconAssetName = editorRsrcDir + "\\AssetIcon.png";
+
+            int iconWidth = 0;
+            int iconHeight = 0;
+            int iconComponent = 0;
+
+            unsigned char* iconData = stbi_load(editorAssetIconAssetName.c_str(),
+                &iconWidth, &iconHeight, &iconComponent, 0);
+
+            HGpuImgCreateInfo iconImgCreateInfo{};
+            {
+                iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                iconImgCreateInfo.hasSampler = true;
+                iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
+                iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
+                iconImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+                iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
+                iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+                iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            }
+            m_pAssetIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Asset Icon PNG");
+
+            g_pGpuRsrcManager->SendDataToImage(m_pAssetIconImg,
+                Util::BufferImg2DCopy(iconWidth, iconHeight),
+                (void*)iconData, iconWidth * iconHeight * 4);
+
+            g_pGpuRsrcManager->TransImageLayout(m_pAssetIconImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            AddTextureToImGUI(&m_assetIconDescSet, m_pAssetIconImg);
         }
-        m_pAssetIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Asset Icon PNG");
+        
+        // Load editor's folder icon image
+        {
+            std::string editorFolderIconAssetName = editorRsrcDir + "\\FolderIcon.png";
 
-        g_pGpuRsrcManager->SendDataToImage(m_pAssetIconImg,
-            Util::BufferImg2DCopy(iconWidth, iconHeight),
-            (void*)iconData, iconWidth * iconHeight * 4);
+            int iconWidth = 0;
+            int iconHeight = 0;
+            int iconComponent = 0;
 
-        g_pGpuRsrcManager->TransImageLayout(m_pAssetIconImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            unsigned char* iconData = stbi_load(editorFolderIconAssetName.c_str(),
+                &iconWidth, &iconHeight, &iconComponent, 0);
 
-        AddTextureToImGUI(&m_assetIconDescSet, m_pAssetIconImg);
+            HGpuImgCreateInfo iconImgCreateInfo{};
+            {
+                iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
+                    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                iconImgCreateInfo.hasSampler = true;
+                iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
+                iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
+                iconImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+                iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
+                iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+                iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            }
+            m_pFolderIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Folder Icon PNG");
+
+            g_pGpuRsrcManager->SendDataToImage(m_pFolderIconImg,
+                Util::BufferImg2DCopy(iconWidth, iconHeight),
+                (void*)iconData, iconWidth * iconHeight * 4);
+
+            g_pGpuRsrcManager->TransImageLayout(m_pFolderIconImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            AddTextureToImGUI(&m_folderIconDescSet, m_pFolderIconImg);
+        }
     }
 }
