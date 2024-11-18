@@ -1,0 +1,4 @@
+asset type: HStaticMeshAsset
+src file: cube.gltf
+materials:
+  - M_Basic_Wall

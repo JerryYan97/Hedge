@@ -26,3 +26,6 @@ I may need to check more videos on how people use lua into their game engine to 
 
 I need to come up a way to handle the user/game specific control component.
 Load function from dll: https://stackoverflow.com/questions/8696653/dynamically-load-a-function-from-a-dll
+
+I need to change the game dev setup to the unreal dev setup.
+A game dev env includes: game engine source code, game engine editor source code and the game's custom source code. It also includes game engine's custom assets like img, shader scripts...
