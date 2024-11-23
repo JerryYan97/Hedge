@@ -39,6 +39,10 @@ add_dependencies(HedgeEngine glfw)
 
 if(NOT DEFINED EDITOR_BUILD)
     # Build for game
+    # Check whether use game templates
+    if(NOT DEFINED USE_GAME_TEMPLATE)
+        set(USE_GAME_TEMPLATE ON)
+    endif()
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/game)
     if(DEFINED ENV{HEDGE_LIB})
         set_target_properties(yaml-cpp PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG $ENV{HEDGE_LIB})
