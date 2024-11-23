@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 set(GAME_NAME "Pong")
 project(Pong VERSION 0.1 LANGUAGES CXX)
 
-# add_executable(${GAME_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/Pong.cpp)
 add_executable(${GAME_NAME})
+set(USE_GAME_TEMPLATE OFF)
 
 add_subdirectory(../../engine ./build/engine)
 add_subdirectory(./code)

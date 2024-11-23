@@ -1,0 +1,6 @@
+Milestone 1:
+- Render HUD Entity: Two texts show player and oppoent scores.
+- A Camera and a Cube with IBL.
+
+Milestone 2:
+- 

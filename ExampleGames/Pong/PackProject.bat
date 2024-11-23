@@ -1,4 +1,5 @@
 @echo off
+REM Do necessary steps to prepare and copy files to executable folder so that we can debug the game.
 REM The first argument is the game binary directory
 set gameBinDir=%1
 
