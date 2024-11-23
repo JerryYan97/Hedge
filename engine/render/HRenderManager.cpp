@@ -386,6 +386,7 @@ namespace Hedge
     {
         // Init glfw window.
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         m_pGlfwWindow = glfwCreateWindow(1280, 640, "Untitled -- No root directory", nullptr, nullptr);
         glfwSetFramebufferSizeCallback(m_pGlfwWindow, HRenderManager::GlfwFramebufferResizeCallback);
 

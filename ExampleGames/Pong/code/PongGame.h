@@ -25,7 +25,7 @@ namespace Hedge
         virtual SceneRenderInfo GetActiveSceneRenderInfo() override { return m_pScene->GetSceneRenderInfo(); }
 
     protected:
-        virtual void RegisterCustomSerializeClass() override {};
+        virtual void RegisterCustomSerializeClass() override;
 
         std::string m_gameDir;
         std::string m_gameName;

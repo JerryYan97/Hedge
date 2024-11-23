@@ -32,6 +32,13 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HPongGame::RegisterCustomSerializeClass()
+    {
+        HSerializer& serializer = GetSerializer();
+        
+    }
+
+    // ================================================================================================================
     void HPongGame::AppStarts()
     {
         m_pScene = new HScene();
@@ -45,6 +52,9 @@ namespace Hedge
         g_raiiManager.GetGameRenderManager()->SetWindowTitle(m_gameName);
 
         std::string firstSceneName = config["First Scene"].as<std::string>();
+
+        // Register Pone Game's Entity and Component types
+
 
         // Read in the first scene
         std::string firstSceneNamePath = exePath + "/scene/" + firstSceneName;
