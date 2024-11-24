@@ -53,7 +53,7 @@ namespace Hedge
 
         std::string firstSceneName = config["First Scene"].as<std::string>();
 
-        // Register Pone Game's Entity and Component types
+        // Register Pong Game's Entity and Component types
 
 
         // Read in the first scene
@@ -69,6 +69,18 @@ namespace Hedge
     // ================================================================================================================
     HGameGuiManager::~HGameGuiManager()
     {}
+
+    // ================================================================================================================
+    void HGameGuiManager::CustomFontInit()
+    {
+        std::string exePathName = GetExePath();
+        std::string exePath = GetFileDir(exePathName);
+        ImGuiIO& io = ImGui::GetIO();
+
+        std::string fontPath = exePath + "/assets/fonts/Roboto-Medium.ttf";
+
+        m_pHighResFont = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 30);
+    }
 
     // ================================================================================================================
     VkExtent2D HGameGuiManager::GetRenderExtent()
@@ -138,15 +150,57 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HGameGuiManager::GenerateHUDEntityImGuiData()
+    {
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
+                                        ImGuiWindowFlags_NoMove |
+                                        ImGuiWindowFlags_NoSavedSettings |
+                                        ImGuiWindowFlags_NoBackground |
+                                        ImGuiWindowFlags_AlwaysAutoResize;
+
+        int offset = viewport->WorkSize.x / 5.5f;
+
+        ImGui::SetNextWindowPos(ImVec2(offset + viewport->WorkSize.x / 2.f,
+                                       viewport->WorkSize.y / 8.f));
+        if (ImGui::Begin("Player Game Score", nullptr, flags))
+        {
+            int playerScore = 0;
+
+            ImGui::PushFont(m_pHighResFont);
+            ImGui::Text("Player: %d", playerScore);
+            ImGui::PopFont();
+        }
+        ImGui::End();
+
+        ImGui::SetNextWindowPos(ImVec2(offset,
+                                       viewport->WorkSize.y / 8.f));
+        if (ImGui::Begin("Opponent Game Score", nullptr, flags))
+        {
+            int opponentScore = 0;
+
+            ImGui::PushFont(m_pHighResFont);
+            ImGui::Text("Computer: %d", opponentScore);
+            ImGui::PopFont();
+        }
+        ImGui::End();
+    }
+
+    // ================================================================================================================
     void HGameGuiManager::GenerateImGuiData(
         VkImageView* resultImgView,
         VkExtent2D resultImgExtent,
         uint32_t frameIdx)
     {
+        GenerateHUDEntityImGuiData();
+
         // Create a large image and window covers the whole screen
         static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
                                         ImGuiWindowFlags_NoMove |
-                                        ImGuiWindowFlags_NoSavedSettings;
+                                        ImGuiWindowFlags_NoSavedSettings |
+                                        ImGuiWindowFlags_NoResize |
+                                        ImGuiWindowFlags_NoBringToFrontOnFocus;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);

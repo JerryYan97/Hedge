@@ -44,6 +44,8 @@ namespace Hedge
         // Setup Dear ImGui style
         ImGui::StyleColorsDark();
 
+        CustomFontInit();
+
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForVulkan(pWindow, true);
         ImGui_ImplVulkan_InitInfo initInfo{};

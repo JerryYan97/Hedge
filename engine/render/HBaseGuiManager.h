@@ -55,6 +55,8 @@ namespace Hedge
         virtual void AppStart() {}
 
     protected:
+        virtual void CustomFontInit() {}
+
         std::vector<VkDescriptorSet> m_guiImgDescriptors;
         std::vector<VkSampler>       m_guiImgSamplers;
         uint32_t m_swapchainImgCnt;

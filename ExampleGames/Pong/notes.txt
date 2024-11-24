@@ -1,6 +1,35 @@
 Milestone 1:
-- Render HUD Entity: Two texts show player and oppoent scores.
-- A Camera and a Cube with IBL.
+- Render HUD Entity: Two texts show player and oppoent scores. (Done)
+- A Camera and a Cube with IBL. (Done)
+
+* Implement UI entity and component
+* Make custom ImGUI Rendering
 
 Milestone 2:
-- 
+- Revert Rendering to just diffuse.
+- Render Two score board and a ball (In the middle).
+- Integrate Input Handler. Be able to customize input and control a board.
+- Basic final version HUD/interaction: Press ESC to leave, UP-DOWN to control board -- All rules texts.
+
+Milestone 3:
+- Properly integrate PBR and IBL. (Normal, Occlusion, ...)
+- Render the Top and Bottom Walls (With texture/normal... Maybe I can use the LearnOpenGL one)
+
+Milestone 4:
+- Simple physics to make ball bounces work
+- Update UI score accordingly.
+- Respawn ball in the middle after each turn. Ball init dir random.
+
+Milestone 5:
+- Simple AI opponent to follow the ball.
+- Proper gameplay: Pop-up win/lose after 5-10 turns. Ask whether wants to continue.
+- Video recording and publish on Itch.io
+
+Milestone 6+:
+- Music
+- More interesting gameplay:
+---- More fancy obstacles to make bounces more unpredictable.
+---- Ball speed changes
+- More Rendering Tech:
+---- SSAO
+---- Motion Blur

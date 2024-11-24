@@ -6,6 +6,8 @@
 #include "../render/HBaseGuiManager.h"
 #include "../scene/HScene.h"
 
+struct ImFont;
+
 namespace Hedge
 {
     class HScene;
@@ -43,6 +45,14 @@ namespace Hedge
 
         virtual VkExtent2D GetRenderExtent() override;
         virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) override;
+
+    protected:
+        virtual void CustomFontInit() override;
+
+    private:
+        void GenerateHUDEntityImGuiData();
+
+        ImFont* m_pHighResFont = nullptr;
     };
 
     class HGameRenderManager : public HRenderManager
