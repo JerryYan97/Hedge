@@ -251,4 +251,22 @@ namespace Hedge
             entities.push_back({itr.second->GetEntityInstName(), itr.first});
         }
     }
+
+    // ================================================================================================================
+    void HScene::PreRenderTick()
+    {
+        for (auto& itr : m_entitiesHashTable)
+        {
+            itr.second->PreRenderTick(-1.f);
+        }
+    }
+
+    // ================================================================================================================
+    void HScene::PostRenderTick()
+    {
+        for (auto& itr : m_entitiesHashTable)
+        {
+            itr.second->PostRenderTick(-1.f);
+        }
+    }
 }

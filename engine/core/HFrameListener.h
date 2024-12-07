@@ -25,6 +25,9 @@ namespace Hedge
         virtual SceneRenderInfo GetActiveSceneRenderInfo() = 0;
         virtual void AppStarts() = 0;
 
+        void EntitiesPreRenderTick();
+        void EntitiesPostRenderTick();
+
         HEventManager& GetEventManager() { return m_eventManager; }
         HSerializer& GetSerializer() { return m_serializer; }
 

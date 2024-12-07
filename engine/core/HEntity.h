@@ -82,7 +82,11 @@ namespace Hedge
     public:
         HCameraEntity()
             : HEntity("HCameraEntity", "DefaultCameraInst"),
-              m_isHold(false)
+              m_isHold(false),
+              m_holdStartPos{ 0.0f, 0.0f },
+              m_holdStartView{ 0.0f, 0.0f, 0.0f },
+              m_holdStartUp{ 0.0f, 0.0f, 0.0f },
+              m_holdRight{ 0.0f, 0.0f, 0.0f }
         {}
 
         ~HCameraEntity();

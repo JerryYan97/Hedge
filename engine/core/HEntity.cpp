@@ -166,11 +166,13 @@ namespace Hedge
 
         AddComponent<CameraComponent>(view, up, fov, aspect, 0.1f, 100.f);
 
+        /*
         eventManager.RegisterListener("MOUSE_MIDDLE_BUTTON", GetEntityHandle());
         eventManager.RegisterListener("KEY_W", GetEntityHandle());
         eventManager.RegisterListener("KEY_S", GetEntityHandle());
         eventManager.RegisterListener("KEY_A", GetEntityHandle());
         eventManager.RegisterListener("KEY_D", GetEntityHandle());
+        */
     }
 
     // ================================================================================================================
@@ -314,6 +316,8 @@ namespace Hedge
     bool HCameraEntity::OnEvent(
         HEvent& ievent)
     {
+        return true;
+        /*
         switch (ievent.GetEventType()) {
         case crc32("MOUSE_MIDDLE_BUTTON"):
             OnMouseMiddleButtonEvent(ievent);
@@ -334,6 +338,7 @@ namespace Hedge
             return false;
         }
         return true;
+        */
     }
 
     // ================================================================================================================

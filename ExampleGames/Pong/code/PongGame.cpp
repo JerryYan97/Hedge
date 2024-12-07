@@ -54,7 +54,7 @@ namespace Hedge
         std::string firstSceneName = config["First Scene"].as<std::string>();
 
         // Register Pong Game's Entity and Component types
-
+        
 
         // Read in the first scene
         std::string firstSceneNamePath = exePath + "/scene/" + firstSceneName;
@@ -99,7 +99,32 @@ namespace Hedge
         HScene& scene,
         HEventManager& eventManager)
     {
+        // TODO: May put this to parent class
+        std::vector<CustomizedCommand> commands = m_inputHandler.HandleInput();
+
+        for (auto& command : commands)
+        {
+            HEventArguments args;
+            for (uint32_t i = 0; i < command.m_payloadFloats.size(); ++i)
+            {
+                std::string num = std::to_string(i);
+                std::string name = "FLOAT_" + num;
+                args[crc32(name.c_str())] = command.m_payloadFloats[i];
+            }
+
+            for (uint32_t i = 0; i < command.m_payloadInts.size(); ++i)
+            {
+                std::string num = std::to_string(i);
+                std::string name = "INT_" + num;
+                args[crc32(name.c_str())] = command.m_payloadInts[i];
+            }
+
+            HEvent mEvent(args, "IMGUI_INPUT");
+            eventManager.SendEvent(mEvent, &scene);
+        }
+
         // Middle mouse event generation and passing
+        /*
         {
             HEventArguments args;
             bool isDown = ImGui::IsMouseDown(ImGuiPopupFlags_MouseButtonMiddle);
@@ -147,6 +172,7 @@ namespace Hedge
             HEvent mEvent(args, "KEY_D");
             eventManager.SendEvent(mEvent, &scene);
         }
+        */
     }
 
     // ================================================================================================================

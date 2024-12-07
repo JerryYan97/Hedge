@@ -2,8 +2,8 @@ Milestone 1:
 - Render HUD Entity: Two texts show player and oppoent scores. (Done)
 - A Camera and a Cube with IBL. (Done)
 
-* Implement UI entity and component
-* Make custom ImGUI Rendering
+* Implement UI entity and component (No Need, just PongGame hardcoded)
+* Make custom ImGUI Rendering (Done)
 
 Milestone 2:
 - Revert Rendering to just diffuse.

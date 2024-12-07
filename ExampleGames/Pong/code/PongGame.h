@@ -52,6 +52,8 @@ namespace Hedge
     private:
         void GenerateHUDEntityImGuiData();
 
+        void SetupMainGameInputHandling();
+
         ImFont* m_pHighResFont = nullptr;
     };
 

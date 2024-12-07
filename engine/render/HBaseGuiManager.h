@@ -1,5 +1,6 @@
 #pragma once
 #include "HRenderer.h"
+#include "../input/InputHandler.h"
 #include <GLFW/glfw3.h>
 
 namespace Hedge
@@ -60,6 +61,8 @@ namespace Hedge
         std::vector<VkDescriptorSet> m_guiImgDescriptors;
         std::vector<VkSampler>       m_guiImgSamplers;
         uint32_t m_swapchainImgCnt;
+
+        ImGuiInputHandler m_inputHandler;
 
     private:
         // Input information.

@@ -1,6 +1,7 @@
 #include "HFrameListener.h"
 #include "HEntity.h"
 #include "Utils.h"
+#include "../scene/HScene.h"
 
 namespace Hedge
 {
@@ -29,5 +30,19 @@ namespace Hedge
 
         // Register custom entity classes
         RegisterCustomSerializeClass();
+    }
+
+    // ================================================================================================================
+    void HFrameListener::EntitiesPreRenderTick()
+    {
+        HScene& activeScene = GetActiveScene();
+        activeScene.PreRenderTick();
+    }
+
+    // ================================================================================================================
+    void HFrameListener::EntitiesPostRenderTick()
+    {
+        HScene& activeScene = GetActiveScene();
+        activeScene.PostRenderTick();
     }
 }
