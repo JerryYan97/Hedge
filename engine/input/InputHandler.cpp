@@ -13,11 +13,6 @@ namespace Hedge
     // ================================================================================================================
     ImGuiInputHandler::~ImGuiInputHandler()
     {
-        for (auto& itr : m_commandGenerators)
-        {
-            delete itr;
-        }
-
         m_commandGenerators.clear();
     }
 
@@ -85,6 +80,16 @@ namespace Hedge
         {
             frameInputs.push_back(ImGuiInput(InputEnum::PRESS_D));
         }
+
+        if (ImGui::IsKeyDown(ImGuiKey_UpArrow))
+        {
+            frameInputs.push_back(ImGuiInput(InputEnum::PRESS_UP));
+        }
+
+        if (ImGui::IsKeyDown(ImGuiKey_DownArrow))
+        {
+            frameInputs.push_back(ImGuiInput(InputEnum::PRESS_DOWN));
+        }
         
         if(abs(io.MouseDelta.x) > 0.f || abs(io.MouseDelta.y) > 0.f)
         {
@@ -121,14 +126,28 @@ namespace Hedge
     bool CommandGenerator::CheckKeyCombination(
         const std::unordered_set<InputEnum>& curInputStates)
     {
-        for (const auto& itr : m_keycombination)
+        if (m_isKeyCombAnd)
         {
-            if (curInputStates.count(itr) == 0)
+            for (const auto& itr : m_keycombination)
             {
-                return false;
+                if (curInputStates.count(itr) == 0)
+                {
+                    return false;
+                }
             }
+            return true;
         }
-        return true;
+        else
+        {
+            for (const auto& itr : m_keycombination)
+            {
+                if (curInputStates.count(itr) > 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     // ================================================================================================================

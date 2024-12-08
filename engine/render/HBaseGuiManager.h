@@ -55,6 +55,9 @@ namespace Hedge
 
         virtual void AppStart() {}
 
+        void AddOrUpdateCommandGenerator(CommandGenerator* pCommandGenerator) { m_inputHandler.AddOrUpdateCommandGenerator(pCommandGenerator); }
+        void RemoveCommandGenerator(CommandGenerator* pCommandGenerator) { m_inputHandler.RemoveCommandGenerator(pCommandGenerator); }
+
     protected:
         virtual void CustomFontInit() {}
 

@@ -11,6 +11,8 @@ namespace Hedge
         PRESS_S,
         PRESS_A,
         PRESS_D,
+        PRESS_UP,
+        PRESS_DOWN,
         PRESS_MOUSE_MIDDLE_BUTTON,
         MOUSE_MOVE
     };
@@ -24,25 +26,25 @@ namespace Hedge
 
         ~ImGuiInput() {}
 
-        void AddInt(uint32_t iInt) { m_payloadInts.push_back(iInt); }
+        void AddInt(int iInt) { m_payloadInts.push_back(iInt); }
         void AddFloat(float iFloat) { m_payloadFloats.push_back(iFloat); }
 
-        std::vector<uint32_t> GetInts() { return m_payloadInts; }
-        std::vector<float>    GetFloats() { return m_payloadFloats; }
-        InputEnum             GetInputEnum() const { return m_inputEnum; }
+        std::vector<int>   GetInts() { return m_payloadInts; }
+        std::vector<float> GetFloats() { return m_payloadFloats; }
+        InputEnum          GetInputEnum() const { return m_inputEnum; }
 
     protected:
-        InputEnum             m_inputEnum;
-        std::vector<uint32_t> m_payloadInts;
-        std::vector<float>    m_payloadFloats;
+        InputEnum          m_inputEnum;
+        std::vector<int>   m_payloadInts;
+        std::vector<float> m_payloadFloats;
     };
 
     // Assmue that a command doesn't have any behavior. It's like a blob of binary data and different components can interpret it differently.
     struct CustomizedCommand
     {
-        uint32_t              m_commandTypeUID;
-        std::vector<uint32_t> m_payloadInts;
-        std::vector<float>    m_payloadFloats;
+        uint32_t           m_commandTypeUID;
+        std::vector<int>   m_payloadInts;
+        std::vector<float> m_payloadFloats;
     };
 
     // If we want to change the key combination of a command, we should reuse the CommandGenerator since each command
@@ -69,6 +71,7 @@ namespace Hedge
         std::unordered_set<InputEnum> m_keycombination;
         static uint32_t               m_commandTypeUIDCounter;
         uint32_t                      m_cmdGenCmdTypeUID; 
+        bool                          m_isKeyCombAnd = true; // If true, the key combination is AND, otherwise OR.
     };
 
     // Input Handler is not responsible for the life cycle of the command generators, because we design for game engine and
@@ -80,7 +83,13 @@ namespace Hedge
         ~ImGuiInputHandler();
 
         void AddOrUpdateCommandGenerator(CommandGenerator* pCommandGenerator);
-        void RemoveCommandGenerator(CommandGenerator* pCommandGenerator){ m_commandGenerators.erase(pCommandGenerator); }
+        void RemoveCommandGenerator(CommandGenerator* pCommandGenerator)
+        { 
+            if (m_commandGenerators.count(pCommandGenerator))
+            {
+                m_commandGenerators.erase(pCommandGenerator);
+            }
+        }
 
         std::vector<CustomizedCommand> HandleInput();
 

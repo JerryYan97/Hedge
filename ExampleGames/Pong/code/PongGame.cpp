@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "UtilMath.h"
 #include "imgui.h"
+#include "MainGameHUDEntity.h"
 #include <map>
 
 Hedge::GlobalVariablesRAIIManager g_raiiManager;
@@ -13,6 +14,7 @@ Hedge::HFrameListener* g_pFrameListener = g_raiiManager.GetGame();
 Hedge::HRenderManager* g_pRenderManager = g_raiiManager.GetGameRenderManager();
 Hedge::HGpuRsrcManager* g_pGpuRsrcManager = g_raiiManager.GetGpuRsrcManager();
 Hedge::HAssetRsrcManager* g_pAssetRsrcManager = g_raiiManager.GetAssetRsrcManager();
+Hedge::HGameGuiManager* g_pGuiManager = g_raiiManager.GetGameGuiManager();
 
 namespace Hedge
 {
@@ -35,7 +37,9 @@ namespace Hedge
     void HPongGame::RegisterCustomSerializeClass()
     {
         HSerializer& serializer = GetSerializer();
-        
+        serializer.RegisterAClass(crc32("HMainGameEntity"), { PongGame::HMainGameEntity::Seralize,
+                                                              PongGame::HMainGameEntity::Deseralize,
+                                                              PongGame::HMainGameEntity::CreateEntity });
     }
 
     // ================================================================================================================
@@ -105,6 +109,8 @@ namespace Hedge
         for (auto& command : commands)
         {
             HEventArguments args;
+            args[crc32("CMD_TYPE")] = command.m_commandTypeUID;
+
             for (uint32_t i = 0; i < command.m_payloadFloats.size(); ++i)
             {
                 std::string num = std::to_string(i);
@@ -277,11 +283,19 @@ namespace Hedge
     GlobalVariablesRAIIManager::~GlobalVariablesRAIIManager()
     {
         delete m_pGameGuiManager;
+        g_pGuiManager = nullptr;
+
         delete m_pGameRenderManager;
+        g_pRenderManager = nullptr;
 
         delete m_pGameTemplate;
+        g_pFrameListener = nullptr;
+
         delete m_pAssetRsrcManager;
+        g_pAssetRsrcManager = nullptr;
+
         delete m_pGpuRsrcManager;
+        g_pGpuRsrcManager = nullptr;
     }
 
     // ================================================================================================================

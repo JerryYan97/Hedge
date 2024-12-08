@@ -33,4 +33,5 @@ Scene Entities:
         far: 100
         near: 0.100000001
         isActive: true
-  
+  DefaultMainGameInst:
+    Type: HMainGameEntity
