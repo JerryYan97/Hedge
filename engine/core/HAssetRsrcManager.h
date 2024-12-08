@@ -69,6 +69,7 @@ namespace Hedge
 
     private:
         void LoadGltfRawGeo(const std::string& namePath);
+        void LoadObjRawGeo(const std::string& namePath);
 
         // Note: for a model, it's possible that it has multiple sections or sub-models.
         //       (Helmet's glass, top and mouth cover, etc)

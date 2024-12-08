@@ -1,8 +1,9 @@
-#include "MainGameHUDEntity.h"
+#include "MainGameEntity.h"
 #include "PongGame.h"
 #include "Utils.h"
 
 extern Hedge::HGameGuiManager* g_pGuiManager;
+extern Hedge::HFrameListener* g_pFrameListener;
 
 namespace PongGame
 {
@@ -47,6 +48,9 @@ namespace PongGame
             {
                 int move = std::any_cast<int>(args[crc32("INT_0")]);
                 std::cout << "Board move command received: " << std::to_string(move) << std::endl;
+
+                // HScene& scene = g_pFrameListener->GetActiveScene();
+                // scene.GetEntity();
             }
         }
         return true;

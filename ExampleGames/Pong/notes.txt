@@ -6,13 +6,14 @@ Milestone 1:
 * Make custom ImGUI Rendering (Done)
 
 Milestone 2:
-- Revert Rendering to just diffuse.
+- Revert Rendering to just diffuse. (Maybe Unnecessary -- Point light also looks ok)
 - Render Two score board and a ball (In the middle).
 - Integrate Input Handler. Be able to customize input and control a board.
 - Basic final version HUD/interaction: Press ESC to leave, UP-DOWN to control board -- All rules texts.
 
 Milestone 3:
-- Properly integrate PBR and IBL. (Normal, Occlusion, ...)
+- Spawn Two Boards and Ball through the MainGameEntity.
+- Properly integrate PBR and IBL. (Normal, Occlusion, ..., maybe unnecessary, a pt light looks ok)
 - Render the Top and Bottom Walls (With texture/normal... Maybe I can use the LearnOpenGL one)
 
 Milestone 4:
@@ -30,6 +31,8 @@ Milestone 6+:
 - More interesting gameplay:
 ---- More fancy obstacles to make bounces more unpredictable.
 ---- Ball speed changes
+---- Rotating Camera
+---- Interesting Background Decoration <--> Football Gate.
 - More Rendering Tech:
 ---- SSAO
 ---- Motion Blur

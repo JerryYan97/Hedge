@@ -328,6 +328,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HStaticMeshAsset::LoadObjRawGeo(const std::string& namePath)
+    {
+
+    }
+
+    // ================================================================================================================
     void HStaticMeshAsset::LoadAssetFromDisk()
     {
         // Read the configuration file

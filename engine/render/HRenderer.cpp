@@ -200,6 +200,27 @@ namespace Hedge
         uint32_t objsCnt = sceneRenderInfo.modelMats.size();
         if (objsCnt != 0)
         {
+            vkCmdBeginRendering(cmdBuf, &renderInfo);
+            vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelines[0]->GetVkPipeline());
+
+            VkViewport viewport{};
+            {
+                viewport.x = 0.f;
+                viewport.y = 0.f;
+                viewport.width = pRenderCtx->renderArea.extent.width;
+                viewport.height = pRenderCtx->renderArea.extent.height;
+                viewport.minDepth = 0.f;
+                viewport.maxDepth = 1.f;
+            }
+            vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
+
+            VkRect2D scissor{};
+            {
+                scissor.offset = { 0, 0 };
+                scissor.extent = pRenderCtx->renderArea.extent;
+            }
+            vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+
             for (uint32_t objIdx = 0; objIdx < objsCnt; objIdx++)
             {
                 std::vector<ShaderInputBinding> perObjGpuRsrcBindings = GenPerObjGpuRsrcBinding(sceneRenderInfo,
@@ -209,29 +230,7 @@ namespace Hedge
                 std::vector<ShaderInputBinding> bindings = perFrameGpuRsrcBindings;
                 bindings.insert(bindings.end(), perObjGpuRsrcBindings.begin(), perObjGpuRsrcBindings.end());
 
-                vkCmdBeginRendering(cmdBuf, &renderInfo);
-
                 m_pPipelines[0]->CmdBindDescriptors(cmdBuf, bindings);
-
-                vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelines[0]->GetVkPipeline());
-
-                VkViewport viewport{};
-                {
-                    viewport.x = 0.f;
-                    viewport.y = 0.f;
-                    viewport.width = pRenderCtx->renderArea.extent.width;
-                    viewport.height = pRenderCtx->renderArea.extent.height;
-                    viewport.minDepth = 0.f;
-                    viewport.maxDepth = 1.f;
-                }
-                vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
-
-                VkRect2D scissor{};
-                {
-                    scissor.offset = { 0, 0 };
-                    scissor.extent = pRenderCtx->renderArea.extent;
-                }
-                vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
                 VkDeviceSize vbOffset = 0;
                 vkCmdBindVertexBuffers(cmdBuf, 0, 1, &sceneRenderInfo.objsVertBuffers[objIdx]->gpuBuffer, &vbOffset);
@@ -243,7 +242,6 @@ namespace Hedge
                     pushConstantBytesCnt,
                     pPushConstantData);
                 vkCmdDrawIndexed(cmdBuf, sceneRenderInfo.idxCounts[objIdx], 1, 0, 0, 0);
-                vkCmdEndRendering(cmdBuf);
 
                 // Add the static mesh gpu rsrc into the frame resource control
                 pFrameGpuRsrcControl->AddGpuBufferReferControl(sceneRenderInfo.objsIdxBuffers[objIdx]);
@@ -253,6 +251,8 @@ namespace Hedge
                 pFrameGpuRsrcControl->AddGpuImgReferControl(sceneRenderInfo.modelMetallicRoughnessTexs[objIdx]);
                 pFrameGpuRsrcControl->AddGpuImgReferControl(sceneRenderInfo.modelOcclusionTexs[objIdx]);
             }
+
+            vkCmdEndRendering(cmdBuf);
         }
 
         free(pPushConstantData);

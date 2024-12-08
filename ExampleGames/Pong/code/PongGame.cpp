@@ -5,7 +5,7 @@
 #include "Utils.h"
 #include "UtilMath.h"
 #include "imgui.h"
-#include "MainGameHUDEntity.h"
+#include "MainGameEntity.h"
 #include <map>
 
 Hedge::GlobalVariablesRAIIManager g_raiiManager;

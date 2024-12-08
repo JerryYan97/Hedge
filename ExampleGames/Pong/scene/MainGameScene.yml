@@ -3,9 +3,18 @@ Scene Entities:
     Type: HCubeEntity
     Components:
       TransformComponent:
-        POS: [0, 0, 2]
+        POS: [4, 0, 10]
         ROT: [0, 0, 0]
-        SCALE: [1, 1, 1]
+        SCALE: [0.1, 1, 0.5]
+      StaticMeshComponent:
+        Asset Name: SM_Cube
+  PlayerBoardInst:
+    Type: HCubeEntity
+    Components:
+      TransformComponent:
+        POS: [-4, 0, 10]
+        ROT: [0, 0, 0]
+        SCALE: [0.1, 1, 0.5]
       StaticMeshComponent:
         Asset Name: SM_Cube
   DefaultPointLightInst:
@@ -22,12 +31,12 @@ Scene Entities:
     Type: HCameraEntity
     Components:
       TransformComponent:
-        POS: [5.03847122, 2.29094577, 3.53006411]
+        POS: [0, 0, 0]
         ROT: [0, 0, 0]
         SCALE: [1, 1, 1]
       CameraComponent:
-        View: [-0.919259131, -0.275637269, -0.281045794]
-        Up: [-0.263593137, 0.961261749, -0.0805885717]
+        View: [0, 0, 1]
+        Up: [0, 1, 0]
         fov: 0.820304751
         aspect: 1.41176474
         far: 100

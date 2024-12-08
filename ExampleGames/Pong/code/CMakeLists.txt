@@ -6,8 +6,8 @@ target_sources(
     ${CMAKE_CURRENT_SOURCE_DIR}/PongPhysicsComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BlockingBoardEntity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BlockingBoardEntity.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/MainGameHUDEntity.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/MainGameHUDEntity.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/MainGameEntity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MainGameEntity.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PongGame.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PongGame.h
     ${CMAKE_CURRENT_SOURCE_DIR}/UserControlComponent.cpp
