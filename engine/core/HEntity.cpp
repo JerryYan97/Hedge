@@ -129,6 +129,8 @@ namespace Hedge
         // Static Mesh Component
         StaticMeshComponent& meshComponent = pCubeEntity->GetComponent<StaticMeshComponent>();
         meshComponent.Deseralize(node["StaticMeshComponent"]);
+
+        pCubeEntity->m_customName = name;
     }
 
     // ================================================================================================================
@@ -388,6 +390,8 @@ namespace Hedge
         // Camera Component
         auto& camComponent = pCameraEntity->GetComponent<CameraComponent>();
         camComponent.Deseralize(node["CameraComponent"]);
+
+        pCameraEntity->m_customName = name;
     }
 
     // ================================================================================================================
@@ -454,6 +458,8 @@ namespace Hedge
         // Point light Component
         auto& pointLightComponent = pPtLightEntity->GetComponent<PointLightComponent>();
         pointLightComponent.Deseralize(node["PointLightComponent"]);
+
+        pPtLightEntity->m_customName = name;
     }
 
     // ================================================================================================================

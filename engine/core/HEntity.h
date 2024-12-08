@@ -41,22 +41,23 @@ namespace Hedge
 
         uint32_t GetEntityHandle() { return m_entityHandle; }
 
+        template<typename T>
+        T& GetComponent();
+
     protected:
         template<typename Type, typename... Args>
         void AddComponent(Args &&...args);
-
-        template<typename T>
-        T& GetComponent();
         
         virtual void InitComponentsNamesHashes() = 0;
         
         std::vector<uint32_t> m_componentsNamesHashes;
+        
+        std::string m_customName;
 
     private:
         uint32_t m_entityClassNameHash;
         uint32_t m_entityHandle;
         HScene*  m_pScene;
-        std::string m_customName;
     };
 
     class HCubeEntity : public HEntity

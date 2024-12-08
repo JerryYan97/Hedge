@@ -81,9 +81,11 @@ namespace Hedge
         std::string exePath = GetFileDir(exePathName);
         ImGuiIO& io = ImGui::GetIO();
 
-        std::string fontPath = exePath + "/assets/fonts/Roboto-Medium.ttf";
+        std::string titleFontPath = exePath + "/assets/fonts/Roboto-Medium.ttf";
+        std::string ruleFontPath = exePath + "/assets/fonts/DroidSans.ttf";
 
-        m_pHighResFont = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 30);
+        m_pHighResFont = io.Fonts->AddFontFromFileTTF(titleFontPath.c_str(), 30);
+        m_pRuleTxtFont = io.Fonts->AddFontFromFileTTF(ruleFontPath.c_str(), 15);
     }
 
     // ================================================================================================================
@@ -214,6 +216,17 @@ namespace Hedge
 
             ImGui::PushFont(m_pHighResFont);
             ImGui::Text("Computer: %d", opponentScore);
+            ImGui::PopFont();
+        }
+        ImGui::End();
+
+        ImGui::SetNextWindowPos(ImVec2(viewport->WorkSize.x / 100.f,
+                                       viewport->WorkSize.y / 100.f));
+        if (ImGui::Begin("Rule Desc", nullptr, flags))
+        {
+            ImGui::PushFont(m_pRuleTxtFont);
+            ImGui::Text("Press ESC to exit.");
+            ImGui::Text("Press UP and Down to move the board.");
             ImGui::PopFont();
         }
         ImGui::End();

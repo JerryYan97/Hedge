@@ -55,6 +55,7 @@ namespace Hedge
         void SetupMainGameInputHandling();
 
         ImFont* m_pHighResFont = nullptr;
+        ImFont* m_pRuleTxtFont = nullptr;
     };
 
     class HGameRenderManager : public HRenderManager
