@@ -1,4 +1,4 @@
 asset type: HStaticMeshAsset
-src file: uvNormalSphere.obj
+src file: uvSphere.gltf
 materials:
   - M_Basic_Wall

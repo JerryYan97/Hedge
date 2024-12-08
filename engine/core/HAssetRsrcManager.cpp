@@ -10,6 +10,9 @@
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "tiny_gltf.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+
 extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
 
 namespace Hedge
@@ -330,6 +333,18 @@ namespace Hedge
     // ================================================================================================================
     void HStaticMeshAsset::LoadObjRawGeo(const std::string& namePath)
     {
+        tinyobj::ObjReaderConfig readerConfig;
+        tinyobj::ObjReader objReader;
+
+        objReader.ParseFromFile(namePath, readerConfig);
+
+        auto& shapes = objReader.GetShapes();
+        auto& attrib = objReader.GetAttrib();
+
+        // We assume that this test only has one shape
+        assert(shapes.size() == 1, "This application only accepts one shape!");
+
+
 
     }
 
@@ -360,6 +375,11 @@ namespace Hedge
         {
             std::string gltfAbsPathName = m_assetPathName + "\\" + rawGeometryFileName;
             LoadGltfRawGeo(gltfAbsPathName);
+        }
+        else if (postFix.compare("obj") == 0)
+        {
+            std::string objAbsPathName = m_assetPathName + "\\" + rawGeometryFileName;
+            LoadObjRawGeo(objAbsPathName);
         }
         else
         {

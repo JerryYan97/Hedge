@@ -1,4 +1,4 @@
-Milestone 1:
+Milestone 1: (Done)
 - Render HUD Entity: Two texts show player and oppoent scores. (Done)
 - A Camera and a Cube with IBL. (Done)
 
@@ -7,8 +7,8 @@ Milestone 1:
 
 Milestone 2:
 - Revert Rendering to just diffuse. (Maybe Unnecessary -- Point light also looks ok)
-- Render Two score board and a ball (In the middle).
-- Integrate Input Handler. Be able to customize input and control a board.
+- Render Two boards and a ball (In the middle -- an obj loader -- No Need. Just Blender output). (Done)
+- Integrate Input Handler. Be able to customize input and control a board. 
 - Basic final version HUD/interaction: Press ESC to leave, UP-DOWN to control board -- All rules texts.
 
 Milestone 3:

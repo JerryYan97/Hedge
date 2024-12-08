@@ -2,7 +2,7 @@
 #include "PongGame.h"
 #include "Utils.h"
 
-extern Hedge::HGameGuiManager* g_pGuiManager;
+extern Hedge::HBaseGuiManager* g_pGuiManager;
 extern Hedge::HFrameListener* g_pFrameListener;
 
 namespace PongGame

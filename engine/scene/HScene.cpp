@@ -3,9 +3,11 @@
 #include "../core/HComponent.h"
 #include "../util/UtilMath.h"
 #include "../core/HAssetRsrcManager.h"
+#include "../render/HBaseGuiManager.h"
 
 extern Hedge::HAssetRsrcManager* g_pAssetRsrcManager;
 extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;
+extern Hedge::HBaseGuiManager* g_pGuiManager;
 
 namespace Hedge
 {
@@ -198,6 +200,9 @@ namespace Hedge
         {
             auto& camComponent = cameraEntityView.get<CameraComponent>(entity);
             auto& transComponent = m_registry.get<TransformComponent>(entity);
+
+            // Update active camera's aspect ratio
+            camComponent.m_aspect = (float)g_pGuiManager->GetRenderExtent().width / (float)g_pGuiManager->GetRenderExtent().height;
 
             float viewMat[16] = {};
             float persMat[16] = {};
