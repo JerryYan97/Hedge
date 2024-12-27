@@ -24,6 +24,7 @@ namespace Hedge
         virtual void AppStarts() override;
 
         virtual HScene& GetActiveScene() override { return *m_pScene; }
+        virtual HScene* GetActiveScenePtr() { return m_pScene; }
         virtual SceneRenderInfo GetActiveSceneRenderInfo() override { return m_pScene->GetSceneRenderInfo(); }
 
     protected:
@@ -48,6 +49,11 @@ namespace Hedge
 
         void SetPlayerScore(uint32_t score) { m_playerScore = score; }
         void SetOpponentScore(uint32_t score) { m_opponentScore = score; }
+        void ShowPauseGameGui(bool isPlayerWin)
+        {
+            m_showPauseGameGui = true;
+            m_isPlayerWin = isPlayerWin;
+        }
 
     protected:
         virtual void CustomFontInit() override;
@@ -62,6 +68,9 @@ namespace Hedge
 
         ImFont* m_pHighResFont = nullptr;
         ImFont* m_pRuleTxtFont = nullptr;
+
+        bool m_showPauseGameGui = false;
+        bool m_isPlayerWin = false;
     };
 
     class HGameRenderManager : public HRenderManager

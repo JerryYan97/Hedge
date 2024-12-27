@@ -95,9 +95,9 @@ namespace Hedge
     {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         uint32_t newWidth = std::max(static_cast<uint32_t>(viewport->WorkSize.x),
-            static_cast<uint32_t>(64));
+                                     static_cast<uint32_t>(64));
         uint32_t newHeight = std::max(static_cast<uint32_t>(viewport->WorkSize.y),
-            static_cast<uint32_t>(64));
+                                      static_cast<uint32_t>(64));
 
         return VkExtent2D{ newWidth, newHeight };
     }
@@ -132,57 +132,6 @@ namespace Hedge
             HEvent mEvent(args, "IMGUI_INPUT");
             eventManager.SendEvent(mEvent, &scene);
         }
-
-        // Middle mouse event generation and passing
-        /*
-        {
-            HEventArguments args;
-            bool isDown = ImGui::IsMouseDown(ImGuiPopupFlags_MouseButtonMiddle);
-            args[crc32("IS_DOWN")] = isDown;
-
-            if (isDown)
-            {
-                HFVec2 pos;
-                ImVec2 imPos = ImGui::GetMousePos();
-                pos.ele[0] = imPos[0];
-                pos.ele[1] = imPos[1];
-                args[crc32("POS")] = pos;
-            }
-
-            HEvent mEvent(args, "MOUSE_MIDDLE_BUTTON");
-            eventManager.SendEvent(mEvent, &scene);
-        }
-
-        // Key WASD event generation and passing
-        {
-            HEventArguments args;
-            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_W);
-
-            HEvent mEvent(args, "KEY_W");
-            eventManager.SendEvent(mEvent, &scene);
-        }
-        {
-            HEventArguments args;
-            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_S);
-
-            HEvent mEvent(args, "KEY_S");
-            eventManager.SendEvent(mEvent, &scene);
-        }
-        {
-            HEventArguments args;
-            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_A);
-
-            HEvent mEvent(args, "KEY_A");
-            eventManager.SendEvent(mEvent, &scene);
-        }
-        {
-            HEventArguments args;
-            args[crc32("IS_DOWN")] = ImGui::IsKeyDown(ImGuiKey_D);
-
-            HEvent mEvent(args, "KEY_D");
-            eventManager.SendEvent(mEvent, &scene);
-        }
-        */
     }
 
     // ================================================================================================================
@@ -228,6 +177,38 @@ namespace Hedge
             ImGui::PopFont();
         }
         ImGui::End();
+
+        if (m_showPauseGameGui)
+        {
+            ImGui::SetNextWindowPos(ImVec2(viewport->WorkSize.x / 2.5f + viewport->WorkSize.x / 60.f,
+                                           viewport->WorkSize.y / 2.5f));
+            if (ImGui::Begin("Pause Game Win - GUI", nullptr, flags))
+            {
+                ImGui::PushFont(m_pHighResFont);
+                if (m_isPlayerWin)
+                {
+                    ImGui::Text("Player Win!");
+                }
+                else
+                {
+                    ImGui::Text("Computer Win!");
+                }
+                
+                ImGui::PopFont();
+            }
+            ImGui::End();
+
+            ImGui::SetNextWindowPos(ImVec2(viewport->WorkSize.x / 2.5f,
+                                           viewport->WorkSize.y / 2.f));
+            if (ImGui::Begin("Pause Game GUI", nullptr, flags))
+            {
+                ImGui::PushFont(m_pHighResFont);
+                ImGui::Text("Press R to play again.");
+                ImGui::Text("Press ESC to exit.");
+                ImGui::PopFont();
+            }
+            ImGui::End();
+        }
     }
 
     // ================================================================================================================

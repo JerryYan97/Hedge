@@ -90,6 +90,11 @@ namespace Hedge
         {
             frameInputs.push_back(ImGuiInput(InputEnum::PRESS_DOWN));
         }
+
+        if (ImGui::IsKeyDown(ImGuiKey_Escape))
+        {
+            frameInputs.push_back(ImGuiInput(InputEnum::PRESS_ESC));
+        }
         
         if(abs(io.MouseDelta.x) > 0.f || abs(io.MouseDelta.y) > 0.f)
         {

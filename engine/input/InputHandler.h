@@ -12,7 +12,9 @@ namespace Hedge
         PRESS_A,
         PRESS_D,
         PRESS_UP,
+        PRESS_R,
         PRESS_DOWN,
+        PRESS_ESC,
         PRESS_MOUSE_MIDDLE_BUTTON,
         MOUSE_MOVE
     };

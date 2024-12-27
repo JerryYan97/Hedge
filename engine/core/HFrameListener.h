@@ -25,9 +25,12 @@ namespace Hedge
         virtual HScene& GetActiveScene() = 0;
         virtual SceneRenderInfo GetActiveSceneRenderInfo() = 0;
         virtual void AppStarts() = 0;
+        virtual bool GameShouldClose() { return m_gameShouldClose; }
 
         void EntitiesPreRenderTick();
         void EntitiesPostRenderTick();
+
+        void SetCloseGame() { m_gameShouldClose = true; }
 
         HEventManager& GetEventManager() { return m_eventManager; }
         HSerializer& GetSerializer() { return m_serializer; }
@@ -42,6 +45,8 @@ namespace Hedge
     private:
         HEventManager m_eventManager;
         HSerializer   m_serializer;
+
+        bool m_gameShouldClose = false;
 
         std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTimeStamp;
         double m_elapsedSec;
