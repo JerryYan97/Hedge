@@ -7,7 +7,8 @@ namespace Hedge
 {
     // ================================================================================================================
     HFrameListener::HFrameListener()
-        :m_eventManager()
+        :m_eventManager(),
+         m_elapsedSec(-1.0)
     {}
 
     // ================================================================================================================
@@ -36,13 +37,26 @@ namespace Hedge
     void HFrameListener::EntitiesPreRenderTick()
     {
         HScene& activeScene = GetActiveScene();
-        activeScene.PreRenderTick();
+        std::chrono::time_point<std::chrono::high_resolution_clock> currentTimeStamp = std::chrono::high_resolution_clock::now();
+
+        if (m_elapsedSec < 0.0)
+        {
+            m_elapsedSec = 0.0;
+        }
+        else
+        {
+            std::chrono::duration<double> elapsed_seconds = currentTimeStamp - m_lastTimeStamp;
+            m_elapsedSec = elapsed_seconds.count();
+        }
+        
+        activeScene.PreRenderTick(m_elapsedSec);
+        m_lastTimeStamp = currentTimeStamp;
     }
 
     // ================================================================================================================
     void HFrameListener::EntitiesPostRenderTick()
     {
         HScene& activeScene = GetActiveScene();
-        activeScene.PostRenderTick();
+        activeScene.PostRenderTick(m_elapsedSec);
     }
 }

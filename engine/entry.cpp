@@ -26,8 +26,12 @@ void main(int argc, char** argv)
         g_pRenderManager->SendIOEvents(g_pFrameListener->GetActiveScene(),
                                        g_pFrameListener->GetEventManager());
 
+        g_pFrameListener->EntitiesPreRenderTick();
+
         // Render current scene (Generate scene rendering command buffer)
         g_pRenderManager->RenderCurrentScene(g_pFrameListener->GetActiveSceneRenderInfo());
+
+        g_pFrameListener->EntitiesPostRenderTick();
 
         // Frame listener frame end
         g_pFrameListener->FrameEnded();

@@ -67,7 +67,9 @@ namespace Hedge
 
     // ================================================================================================================
     HGameGuiManager::HGameGuiManager()
-        : HBaseGuiManager()
+        : HBaseGuiManager(),
+          m_playerScore(0),
+          m_opponentScore(0)
     {}
 
     // ================================================================================================================
@@ -200,10 +202,8 @@ namespace Hedge
                                        viewport->WorkSize.y / 8.f));
         if (ImGui::Begin("Player Game Score", nullptr, flags))
         {
-            int playerScore = 0;
-
             ImGui::PushFont(m_pHighResFont);
-            ImGui::Text("Player: %d", playerScore);
+            ImGui::Text("Player: %d", m_playerScore);
             ImGui::PopFont();
         }
         ImGui::End();
@@ -212,10 +212,8 @@ namespace Hedge
                                        viewport->WorkSize.y / 8.f));
         if (ImGui::Begin("Opponent Game Score", nullptr, flags))
         {
-            int opponentScore = 0;
-
             ImGui::PushFont(m_pHighResFont);
-            ImGui::Text("Computer: %d", opponentScore);
+            ImGui::Text("Computer: %d", m_opponentScore);
             ImGui::PopFont();
         }
         ImGui::End();

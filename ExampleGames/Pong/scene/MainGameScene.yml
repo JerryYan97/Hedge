@@ -17,6 +17,24 @@ Scene Entities:
         SCALE: [0.1, 1, 0.5]
       StaticMeshComponent:
         Asset Name: SM_Cube
+  TopWallInst:
+    Type: HCubeEntity
+    Components:
+      TransformComponent:
+        POS: [0, 4.0, 10]
+        ROT: [0, 0, 0]
+        SCALE: [8, 1, 2]
+      StaticMeshComponent:
+        Asset Name: SM_Cube
+  BottomWallInst:
+    Type: HCubeEntity
+    Components:
+      TransformComponent:
+        POS: [0, -4.0, 10]
+        ROT: [0, 0, 0]
+        SCALE: [8, 1, 2]
+      StaticMeshComponent:
+        Asset Name: SM_Cube
   PongBallInst:
     Type: HCubeEntity
     Components:

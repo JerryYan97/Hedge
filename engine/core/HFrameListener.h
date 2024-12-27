@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include "../logging/HLogger.h"
 #include "HSerializer.h"
 #include "HEvent.h"
@@ -41,5 +42,8 @@ namespace Hedge
     private:
         HEventManager m_eventManager;
         HSerializer   m_serializer;
+
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTimeStamp;
+        double m_elapsedSec;
     };
 }

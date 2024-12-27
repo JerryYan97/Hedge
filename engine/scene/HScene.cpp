@@ -258,20 +258,20 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HScene::PreRenderTick()
+    void HScene::PreRenderTick(double deltaSec)
     {
         for (auto& itr : m_entitiesHashTable)
         {
-            itr.second->PreRenderTick(-1.f);
+            itr.second->PreRenderTick(deltaSec);
         }
     }
 
     // ================================================================================================================
-    void HScene::PostRenderTick()
+    void HScene::PostRenderTick(double deltaSec)
     {
         for (auto& itr : m_entitiesHashTable)
         {
-            itr.second->PostRenderTick(-1.f);
+            itr.second->PostRenderTick(deltaSec);
         }
     }
 }

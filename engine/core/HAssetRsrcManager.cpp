@@ -354,7 +354,7 @@ namespace Hedge
         // Read the configuration file
         std::string assetConfigFileNamePath = m_assetPathName + "\\" + GetNamePathFolderName(m_assetPathName) + ".yml";
         YAML::Node config = YAML::LoadFile(assetConfigFileNamePath.c_str());
-         
+
         // Load other assets according to the configuation file
         // E.g. The material asset on this static mesh asset.
         YAML::Node materials = config["materials"];

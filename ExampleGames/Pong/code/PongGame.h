@@ -46,6 +46,9 @@ namespace Hedge
         virtual VkExtent2D GetRenderExtent() override;
         virtual void SendIOEvents(HScene& scene, HEventManager& eventManager) override;
 
+        void SetPlayerScore(uint32_t score) { m_playerScore = score; }
+        void SetOpponentScore(uint32_t score) { m_opponentScore = score; }
+
     protected:
         virtual void CustomFontInit() override;
 
@@ -53,6 +56,9 @@ namespace Hedge
         void GenerateHUDEntityImGuiData();
 
         void SetupMainGameInputHandling();
+
+        uint32_t m_playerScore;
+        uint32_t m_opponentScore;
 
         ImFont* m_pHighResFont = nullptr;
         ImFont* m_pRuleTxtFont = nullptr;

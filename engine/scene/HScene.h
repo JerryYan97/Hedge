@@ -78,8 +78,8 @@ namespace Hedge
 
         void GetAllEntitiesNamesHashes(std::vector<std::pair<std::string, uint32_t>>& entities);
         
-        void PreRenderTick();
-        void PostRenderTick();
+        void PreRenderTick(double deltaSec);
+        void PostRenderTick(double deltaSec);
 
     private:
         void CreateDummyBlackTextures();

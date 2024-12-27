@@ -5,26 +5,27 @@ Milestone 1: (Done)
 * Implement UI entity and component (No Need, just PongGame hardcoded)
 * Make custom ImGUI Rendering (Done)
 
-Milestone 2:
+Milestone 2: (Done)
 - Revert Rendering to just diffuse. (Maybe Unnecessary -- Point light also looks ok)
 - Render Two boards and a ball (In the middle -- an obj loader -- No Need. Just Blender output). (Done)
 - Integrate Input Handler. Be able to customize input and control a board. (Done)
-- Basic final version HUD/interaction: Press ESC to leave, UP-DOWN to control board -- All rules texts.
+- Basic final version HUD/interaction: Press ESC to leave, UP-DOWN to control board -- All rules texts. (Done)
 
+(Playable Game First, Nice Graphics Second)
 Milestone 3:
-- Spawn Two Boards and Ball through the MainGameEntity.
-- Properly integrate PBR and IBL. (Normal, Occlusion, ..., maybe unnecessary, a pt light looks ok)
-- Render the Top and Bottom Walls (With texture/normal... Maybe I can use the LearnOpenGL one)
-
-Milestone 4:
+- Render the Top and Bottom Walls
 - Simple physics to make ball bounces work
 - Update UI score accordingly.
 - Respawn ball in the middle after each turn. Ball init dir random.
 
-Milestone 5:
+Milestone 4:
 - Simple AI opponent to follow the ball.
 - Proper gameplay: Pop-up win/lose after 5-10 turns. Ask whether wants to continue.
 - Video recording and publish on Itch.io
+
+Milestone 5:
+- Properly integrate PBR and IBL. (Normal, Occlusion, ..., maybe unnecessary, a pt light looks ok, I also need post-processing like SSAO and Tone Mapping.)
+- Render the Top and Bottom Walls with texture/normal... Maybe I can use the LearnOpenGL one. I need to properly integrate normal map parsing in the shader
 
 Milestone 6+:
 - Music
