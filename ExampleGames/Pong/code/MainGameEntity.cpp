@@ -36,6 +36,8 @@ namespace PongGame
     void HMainGameEntity::OnDefineEntity(HEventManager& eventManager)
     {
         g_pGuiManager->AddOrUpdateCommandGenerator(&m_boardMoveCommandGenerator);
+        g_pGuiManager->AddOrUpdateCommandGenerator(&m_exitGameCommandGenerator);
+        
         eventManager.RegisterListener("IMGUI_INPUT", GetEntityHandle());
         m_ballSpeed = 3.f;
         RandomGenerateBallDir();
@@ -274,6 +276,10 @@ namespace PongGame
         TransformComponent& playerTransComponent = pPlayerBoard->GetComponent<TransformComponent>();
         playerTransComponent.m_pos[1] = 0.f;
 
+        HEntity* pOpponentBoard = scene.GetEntity(m_opponentBoardHandle);
+        TransformComponent& opponentTransComponent = pOpponentBoard->GetComponent<TransformComponent>();
+        opponentTransComponent.m_pos[1] = 0.f;
+
         m_lastCollisionType = CollisionType::NONE;
 
         RandomGenerateBallDir();
@@ -333,6 +339,9 @@ namespace PongGame
             }
         }
 
+        // Update the opponent board movement
+        AiMovement(deltaTime);
+
         // Check if the ball is out of bounds. If so, reset the ball position and update the score board.
         if (m_ballHandle != 0)
         {
@@ -359,6 +368,8 @@ namespace PongGame
                         pGuiManager->ShowPauseGameGui(m_playerScore == 1);
                     }
 
+                    g_pGuiManager->AddOrUpdateCommandGenerator(&m_restartGameCommandGenerator);
+
                     m_playerScore = 0;
                     m_opponentScore = 0;
 
@@ -379,15 +390,15 @@ namespace PongGame
     bool HMainGameEntity::OnEvent(HEvent& ievent)
     {
         if (ievent.GetEventType() == crc32("IMGUI_INPUT")) {
-            if (m_pauseGame)
-            {
-                return true;
-            }
-
             HEventArguments& args = ievent.GetArgs();
             uint32_t cmdType = std::any_cast<uint32_t>(args[crc32("CMD_TYPE")]);
             if (cmdType == m_boardMoveCommandGenerator.GetCmdTypeUID())
             {
+                if (m_pauseGame)
+                {
+                    return true;
+                }
+
                 int move = std::any_cast<int>(args[crc32("INT_0")]);
                 std::cout << "Board move command received: " << std::to_string(move) << std::endl;
 
@@ -399,7 +410,52 @@ namespace PongGame
                     transComponent.m_pos[1] += move * 0.1f;
                 }
             }
+
+            if (cmdType == m_exitGameCommandGenerator.GetCmdTypeUID())
+            {
+                g_pFrameListener->SetCloseGame();
+            }
+
+            if (cmdType == m_restartGameCommandGenerator.GetCmdTypeUID())
+            {
+                m_pauseGame = false;
+                HGameGuiManager* pGuiManager = dynamic_cast<HGameGuiManager*>(g_pGuiManager);
+                pGuiManager->HidePauseGameGui();
+                g_pGuiManager->RemoveCommandGenerator(&m_restartGameCommandGenerator);
+            }
         }
         return true;
+    }
+
+    // ================================================================================================================
+    void HMainGameEntity::AiMovement(float deltaTime)
+    {
+        const float AI_SPEED_FACTOR = 3.f;
+
+        if (m_opponentBoardHandle != 0)
+        {
+            HScene& scene = g_pFrameListener->GetActiveScene();
+            HEntity* pOpponentBoard = scene.GetEntity(m_opponentBoardHandle);
+            TransformComponent& transComponent = pOpponentBoard->GetComponent<TransformComponent>();
+
+            if (m_ballHandle != 0)
+            {
+                HEntity* pBall = scene.GetEntity(m_ballHandle);
+                TransformComponent& ballTransComponent = pBall->GetComponent<TransformComponent>();
+
+                float dist = std::abs(ballTransComponent.m_pos[1] - transComponent.m_pos[1]);
+
+                float offset = AI_SPEED_FACTOR * deltaTime * dist;
+
+                if (ballTransComponent.m_pos[1] > transComponent.m_pos[1])
+                {
+                    transComponent.m_pos[1] += offset;
+                }
+                else if (ballTransComponent.m_pos[1] < transComponent.m_pos[1])
+                {
+                    transComponent.m_pos[1] -= offset;
+                }
+            }
+        }
     }
 }

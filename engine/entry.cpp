@@ -14,7 +14,8 @@ void main(int argc, char** argv)
     g_pFrameListener->RegisterSerializeClass();
     g_pFrameListener->AppStarts();
 
-    while (g_pRenderManager->WindowShouldClose() == false)
+    while (g_pRenderManager->WindowShouldClose() == false &&
+           g_pFrameListener->GameShouldClose()   == false)
     {
         // Poll events, resize handling
         g_pRenderManager->BeginNewFrame();

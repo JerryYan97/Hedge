@@ -97,6 +97,7 @@ namespace PongGame
         bool CheckOutOfBound(bool& oIsPlayerWin);
         void ResetTurn();
         void RandomGenerateBallDir();
+        void AiMovement(float deltaTime);
 
         BoardMoveCommandGenerator m_boardMoveCommandGenerator;
         ExitGameCommandGenerator  m_exitGameCommandGenerator;

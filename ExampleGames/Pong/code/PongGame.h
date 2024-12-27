@@ -54,13 +54,14 @@ namespace Hedge
             m_showPauseGameGui = true;
             m_isPlayerWin = isPlayerWin;
         }
+        void HidePauseGameGui() { m_showPauseGameGui = false; }
 
     protected:
         virtual void CustomFontInit() override;
 
     private:
         void GenerateHUDEntityImGuiData();
-
+        
         void SetupMainGameInputHandling();
 
         uint32_t m_playerScore;

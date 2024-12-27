@@ -81,6 +81,11 @@ namespace Hedge
             frameInputs.push_back(ImGuiInput(InputEnum::PRESS_D));
         }
 
+        if (ImGui::IsKeyDown(ImGuiKey_R))
+        {
+            frameInputs.push_back(ImGuiInput(InputEnum::PRESS_R));
+        }
+
         if (ImGui::IsKeyDown(ImGuiKey_UpArrow))
         {
             frameInputs.push_back(ImGuiInput(InputEnum::PRESS_UP));
