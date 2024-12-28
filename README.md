@@ -4,6 +4,14 @@ Currently, the hedge engine and editor is a personal game engine or rendering fr
 
 ![Cover Image](./imgs/Cover.PNG)
 
+## Sample Games
+
+### 3D Pong
+
+Itch.io: https://jerryjiarui.itch.io/3d-pong
+
+![Pong Game](./imgs/Pong_ItchIO_Cover_0_1.PNG)
+
 ## Prerequisite
 
 This project relies on [VulkanSDK]((https://vulkan.lunarg.com/sdk/home)), [CMake](https://cmake.org/), [Ninja](https://ninja-build.org/manual.html), [Python](https://www.python.org/), [WindowSDK and MSVC](https://visualstudio.microsoft.com/vs/community/). Please have them ready before you continue on. One recommendation configuration is to install Visual studio for WindowsSDK and MSVC and intall others separately.
