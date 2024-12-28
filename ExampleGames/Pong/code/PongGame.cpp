@@ -174,6 +174,7 @@ namespace Hedge
             ImGui::PushFont(m_pRuleTxtFont);
             ImGui::Text("Press ESC to exit.");
             ImGui::Text("Press UP and Down to move the board.");
+            ImGui::Text("Get 5 Points to win the game.");
             ImGui::PopFont();
         }
         ImGui::End();

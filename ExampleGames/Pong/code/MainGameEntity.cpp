@@ -9,6 +9,8 @@
 extern Hedge::HBaseGuiManager* g_pGuiManager;
 extern Hedge::HFrameListener* g_pFrameListener;
 
+static const uint32_t WIN_SCORE = 5;
+
 namespace PongGame
 {
     // ================================================================================================================
@@ -24,6 +26,7 @@ namespace PongGame
 
         // Generate a random number between 1 and 100
         int randomNum = rand() % 100 + 1;
+        randomNum -= 50;
 
         float verticalDir = (float)randomNum / 80.f;
 
@@ -39,7 +42,7 @@ namespace PongGame
         g_pGuiManager->AddOrUpdateCommandGenerator(&m_exitGameCommandGenerator);
         
         eventManager.RegisterListener("IMGUI_INPUT", GetEntityHandle());
-        m_ballSpeed = 3.f;
+        m_ballSpeed = 4.f;
         RandomGenerateBallDir();
     }
 
@@ -179,21 +182,35 @@ namespace PongGame
         HEntity* pBall = scene.GetEntity(m_ballHandle);
         TransformComponent& transComponent = pBall->GetComponent<TransformComponent>();
 
-        if (AABBCubeSphereIntersection(m_opponentBoundingBoxMin, m_opponentBoundingBoxMax, transComponent.m_pos, 0.5f))
+        float nearPoint[3] = {};
+
+        if (AABBCubeSphereIntersection(m_opponentBoundingBoxMin, m_opponentBoundingBoxMax, transComponent.m_pos, 0.5f, nearPoint))
         {
             if (m_lastCollisionType != CollisionType::OPPONENT)
             {
                 hitBoard = true;
                 m_lastCollisionType = CollisionType::OPPONENT;
+
+                // Randomize the ball direction
+                float boardCenterY = (m_opponentBoundingBoxMax[1] + m_opponentBoundingBoxMin[1]) / 2.f;
+                float offset = nearPoint[1] - boardCenterY;
+                m_ballVecDir[1] += (0.2 * offset);
+                NormalizeVec(m_ballVecDir, 3);
             }
         }
 
-        if (AABBCubeSphereIntersection(m_playerBoundingBoxMin, m_playerBoundingBoxMax, transComponent.m_pos, 0.5f))
+        if (AABBCubeSphereIntersection(m_playerBoundingBoxMin, m_playerBoundingBoxMax, transComponent.m_pos, 0.5f, nearPoint))
         {
             if (m_lastCollisionType != CollisionType::PLAYER)
             {
                 hitBoard = true;
                 m_lastCollisionType = CollisionType::PLAYER;
+
+                // Randomize the ball direction
+                float boardCenterY = (m_playerBoundingBoxMax[1] + m_playerBoundingBoxMin[1]) / 2.f;
+                float offset = nearPoint[1] - boardCenterY;
+                m_ballVecDir[1] += (0.2 * offset);
+                NormalizeVec(m_ballVecDir, 3);
             }
         }
 
@@ -209,7 +226,9 @@ namespace PongGame
         HEntity* pBall = scene.GetEntity(m_ballHandle);
         TransformComponent& transComponent = pBall->GetComponent<TransformComponent>();
 
-        if (AABBCubeSphereIntersection(m_upperWallBoundingBoxMin, m_upperWallBoundingBoxMax, transComponent.m_pos, 0.5f))
+        float nearPoint[3] = {};
+
+        if (AABBCubeSphereIntersection(m_upperWallBoundingBoxMin, m_upperWallBoundingBoxMax, transComponent.m_pos, 0.5f, nearPoint))
         {
             if (m_lastCollisionType != CollisionType::UPPER_WALL)
             {
@@ -218,7 +237,7 @@ namespace PongGame
             }
         }
 
-        if (AABBCubeSphereIntersection(m_lowerWallBoundingBoxMin, m_lowerWallBoundingBoxMax, transComponent.m_pos, 0.5f))
+        if (AABBCubeSphereIntersection(m_lowerWallBoundingBoxMin, m_lowerWallBoundingBoxMax, transComponent.m_pos, 0.5f, nearPoint))
         {
             if (m_lastCollisionType != CollisionType::LOWER_WALL)
             {
@@ -262,7 +281,7 @@ namespace PongGame
     // ================================================================================================================
     void HMainGameEntity::ResetTurn()
     {
-        m_ballSpeed = 2.f;
+        m_ballSpeed = 4.f;
         m_ballVecDir[0] = 1.0f;
         m_ballVecDir[1] = 0.0f;
 
@@ -359,13 +378,13 @@ namespace PongGame
 
                 ResetTurn();
 
-                if (m_playerScore == 1 || m_opponentScore == 1)
+                if (m_playerScore == WIN_SCORE || m_opponentScore == WIN_SCORE)
                 {
                     if (pGuiManager)
                     {
                         pGuiManager->SetPlayerScore(m_playerScore);
                         pGuiManager->SetOpponentScore(m_opponentScore);
-                        pGuiManager->ShowPauseGameGui(m_playerScore == 1);
+                        pGuiManager->ShowPauseGameGui(m_playerScore == WIN_SCORE);
                     }
 
                     g_pGuiManager->AddOrUpdateCommandGenerator(&m_restartGameCommandGenerator);
@@ -408,6 +427,7 @@ namespace PongGame
                     HEntity* pPlayerBoard = scene.GetEntity(m_playerBoardHandle);
                     TransformComponent& transComponent = pPlayerBoard->GetComponent<TransformComponent>();
                     transComponent.m_pos[1] += move * 0.1f;
+                    transComponent.m_pos[1] = std::clamp(transComponent.m_pos[1], -2.f, 2.f);
                 }
             }
 
@@ -456,6 +476,8 @@ namespace PongGame
                     transComponent.m_pos[1] -= offset;
                 }
             }
+
+            transComponent.m_pos[1] = std::clamp(transComponent.m_pos[1], -2.f, 2.f);
         }
     }
 }

@@ -3,6 +3,11 @@
 #include "core/HFrameListener.h"
 #include "scene/HScene.h"
 
+// Hide console window in release mode
+#ifndef _DEBUG
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
+
 extern Hedge::HFrameListener* g_pFrameListener;
 extern Hedge::HRenderManager* g_pRenderManager;
 extern Hedge::HGpuRsrcManager* g_pGpuRsrcManager;

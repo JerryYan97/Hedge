@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.13)
 set(GAME_NAME "Pong")
 project(Pong VERSION 0.1 LANGUAGES CXX)
 
@@ -27,7 +27,7 @@ set_property(SOURCE DUMMY_FILE
 add_custom_command(
         OUTPUT
             DUMMY_FILE
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/PackProject ${GAME_BINARY_DIR}/Debug
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/PackProject ${GAME_BINARY_DIR}/$<IF:$<CONFIG:Debug>,Debug,Release>
 )
 
 add_custom_target(PACK_PROJECT

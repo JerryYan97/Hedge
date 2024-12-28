@@ -158,5 +158,5 @@ namespace Hedge
     // Realtime rendering -- P75 -- Eqn(4.30)
     void GenRotationMatArb(float* axis, float radien, float* pResMat);
 
-    bool AABBCubeSphereIntersection(float* cubeMin, float* cubeMax, float* sphereCenter, float sphereRadius);
+    bool AABBCubeSphereIntersection(float* cubeMin, float* cubeMax, float* sphereCenter, float sphereRadius, float* nearPoint);
 }

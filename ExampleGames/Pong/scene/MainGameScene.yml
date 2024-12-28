@@ -41,7 +41,7 @@ Scene Entities:
       TransformComponent:
         POS: [0, 0, 10]
         ROT: [0, 0, 0]
-        SCALE: [0.5, 0.5, 0.5]
+        SCALE: [0.25, 0.25, 0.25]
       StaticMeshComponent:
         Asset Name: SM_Sphere
   DefaultPointLightInst:

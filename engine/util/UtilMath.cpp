@@ -139,7 +139,7 @@ namespace Hedge
         pResMat[8] = cosf(radien) + (1.f - cosf(radien)) * axis[2] * axis[2];
     }
 
-    bool AABBCubeSphereIntersection(float* cubeMin, float* cubeMax, float* sphereCenter, float sphereRadius)
+    bool AABBCubeSphereIntersection(float* cubeMin, float* cubeMax, float* sphereCenter, float sphereRadius, float* nearPoint)
     {
         float dmin = 0.f;
         for (int i = 0; i < 3; i++)
@@ -147,10 +147,16 @@ namespace Hedge
             if (sphereCenter[i] < cubeMin[i])
             {
                 dmin += ((sphereCenter[i] - cubeMin[i]) * (sphereCenter[i] - cubeMin[i]));
+                nearPoint[i] = cubeMin[i];
             }
             else if (sphereCenter[i] > cubeMax[i])
             {
                 dmin += ((sphereCenter[i] - cubeMax[i]) * (sphereCenter[i] - cubeMax[i]));
+                nearPoint[i] = cubeMax[i];
+            }
+            else
+            {
+                nearPoint[i] = sphereCenter[i];
             }
         }
         if (dmin <= (sphereRadius * sphereRadius))
