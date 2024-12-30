@@ -1,6 +1,7 @@
 #include "HComponent.h"
 #include "yaml-cpp/yaml.h"
 #include "HAssetRsrcManager.h"
+#include "../util/UtilMath.h"
 
 extern Hedge::HAssetRsrcManager* g_pAssetRsrcManager;
 
@@ -121,6 +122,21 @@ namespace Hedge
         m_far = far;
         m_near = near;
         m_active = isActive;
+    }
+
+    // ================================================================================================================
+    void CameraComponent::GetRight(float* oRight)
+    {
+        CrossProductVec3(m_view, m_up, oRight);
+        NormalizeVec(oRight, 3);
+    }
+
+    // ================================================================================================================
+    void CameraComponent::GetNearPlane(float& width, float& height, float& near)
+    {
+        near = m_near;
+        height = 2.f * near * tanf(m_fov / 2.f);
+        width  = m_aspect * height;
     }
 
     // ================================================================================================================

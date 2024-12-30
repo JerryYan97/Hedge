@@ -81,6 +81,8 @@ namespace Hedge
 
         void Seralize(YAML::Emitter& emitter);
         void Deseralize(YAML::Node& node);
+        void GetRight(float* oRight);
+        void GetNearPlane(float& width, float& height, float& near);
 
         float m_view[3];
         float m_up[3];
@@ -129,5 +131,19 @@ namespace Hedge
 
         uint64_t    m_envBrdfGUID;
         std::string m_envBrdfAssetNamePath;
+    };
+
+    class BackgroundCubemapComponent
+    {
+    public:
+        BackgroundCubemapComponent() :
+            m_cubemapGUID(0)
+        {}
+
+        void Seralize(YAML::Emitter& emitter) {}
+        void Deseralize(YAML::Node& node) {}
+
+        uint64_t m_cubemapGUID;
+        std::string m_cubemapAssetNamePath;
     };
 }

@@ -8,4 +8,6 @@ target_sources(
     HRenderManager.h
     HPipeline.cpp
     HPipeline.h
+    HCubemapRendererPipeline.h
+    HCubemapRendererPipeline.cpp
 )

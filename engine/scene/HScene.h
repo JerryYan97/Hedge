@@ -19,6 +19,18 @@ namespace Hedge
         float eles[3];
     };
 
+    struct CameraInfo
+    {
+        float view[3];
+        float padding0;
+        float right[3];
+        float padding1;
+        float up[3];
+        float nearPlane;
+        float nearWidthHeight[2];
+        float viewportWidthHeight[2];
+    };
+
     // TODO: We may need a large one batch vertex + idx buffer.
     struct SceneRenderInfo
     {
@@ -46,8 +58,9 @@ namespace Hedge
         
         float iblMaxMipLevels;
 
-        HMat4x4 vpMat;
-        float   cameraPos[3];
+        HMat4x4    vpMat;
+        float      cameraPos[3];
+        CameraInfo cameraInfo;
     };
 
     class HScene

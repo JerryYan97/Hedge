@@ -28,7 +28,12 @@ namespace Hedge
         m_serializer.RegisterAClass(crc32("HPointLightEntity"), { HPointLightEntity::Seralize,
                                                                   HPointLightEntity::Deseralize,
                                                                   HPointLightEntity::CreateEntity });
-
+        m_serializer.RegisterAClass(crc32("HImageBasedLightingEntity"), { HImageBasedLightingEntity::Seralize,
+                                                                          HImageBasedLightingEntity::Deseralize,
+                                                                          HImageBasedLightingEntity::CreateEntity });
+        m_serializer.RegisterAClass(crc32("HBackgroundCubemapEntity"), { HBackgroundCubemapEntity::Seralize,
+                                                                         HBackgroundCubemapEntity::Deseralize,
+                                                                         HBackgroundCubemapEntity::CreateEntity });
         // Register custom entity classes
         RegisterCustomSerializeClass();
     }

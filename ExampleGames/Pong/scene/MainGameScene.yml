@@ -8,6 +8,11 @@ Scene Entities:
         SCALE: [0.1, 1, 0.5]
       StaticMeshComponent:
         Asset Name: SM_Cube
+        Material:
+          Type: ConstantMaterial
+          Albedo: [0.0, 0.0, 1.0]
+          roughness: 0.5
+          metallic: 0.0
   PlayerBoardInst:
     Type: HCubeEntity
     Components:
@@ -17,6 +22,11 @@ Scene Entities:
         SCALE: [0.1, 1, 0.5]
       StaticMeshComponent:
         Asset Name: SM_Cube
+        Material:
+          Type: ConstantMaterial
+          Albedo: [1.0, 0.0, 0.0]
+          roughness: 0.5
+          metallic: 0.0
   TopWallInst:
     Type: HCubeEntity
     Components:
@@ -26,6 +36,11 @@ Scene Entities:
         SCALE: [8, 1, 2]
       StaticMeshComponent:
         Asset Name: SM_Cube
+        Material:
+          Type: ConstantMaterial
+          Albedo: [1.0, 1.0, 1.0]
+          roughness: 0.5
+          metallic: 0.0
   BottomWallInst:
     Type: HCubeEntity
     Components:
@@ -35,6 +50,11 @@ Scene Entities:
         SCALE: [8, 1, 2]
       StaticMeshComponent:
         Asset Name: SM_Cube
+        Material:
+          Type: ConstantMaterial
+          Albedo: [1.0, 1.0, 1.0]
+          roughness: 0.5
+          metallic: 0.0
   PongBallInst:
     Type: HCubeEntity
     Components:
@@ -44,6 +64,11 @@ Scene Entities:
         SCALE: [0.25, 0.25, 0.25]
       StaticMeshComponent:
         Asset Name: SM_Sphere
+        Material:
+          Type: ConstantMaterial
+          Albedo: [1.0, 1.0, 1.0]
+          roughness: 0.5
+          metallic: 0.0
   DefaultPointLightInst:
     Type: HPointLightEntity
     Components:
@@ -69,5 +94,15 @@ Scene Entities:
         far: 100
         near: 0.100000001
         isActive: true
+  BackgroundCubemapInst:
+    Type: HBackgroundCubemapEntity
+    Components:
+      BackgroundCubemapComponent:
+        Asset Name: CM_Skybox
+  ImageBasedLightingInst:
+    Type: HImageBasedLightingEntity
+    Components:
+      ImageBasedLightingComponent:
+        Asset Name: IBL_MainGameLighting
   DefaultMainGameInst:
     Type: HMainGameEntity

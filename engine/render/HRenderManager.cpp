@@ -1,5 +1,6 @@
 #include "HRenderManager.h"
 #include "HRenderer.h"
+#include "HCubemapRendererPipeline.h"
 #include "../logging/HLogger.h"
 #include "Utils.h"
 #include "HBaseGuiManager.h"
@@ -70,6 +71,9 @@ namespace Hedge
         m_pRenderers.push_back(pPbrRenderer);
         m_activeRendererIdx = 0;
 
+        // Create other skybox renderers/post-processing renderers
+        m_pSkyboxRenderer = new HCubemapRenderer(*pDevice);
+
         m_frameColorRenderResults.resize(m_swapchainImgCnt);
         m_frameDepthRenderResults.resize(m_swapchainImgCnt);
         m_renderImgsExtents.resize(m_swapchainImgCnt);
@@ -106,6 +110,11 @@ namespace Hedge
         for (auto itr : m_inFlightFences)
         {
             vkDestroyFence(*pVkDevice, itr, nullptr);
+        }
+
+        if (m_pSkyboxRenderer)
+        {
+            delete m_pSkyboxRenderer;
         }
 
         for (auto itr : m_pRenderers)

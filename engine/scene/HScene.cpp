@@ -210,7 +210,14 @@ namespace Hedge
             GenPerspectiveProjMat(camComponent.m_near, camComponent.m_far, camComponent.m_fov, camComponent.m_aspect, persMat);
             MatrixMul4x4(persMat, viewMat, renderInfo.vpMat.eles);
 
+            camComponent.GetRight(renderInfo.cameraInfo.right);
+            camComponent.GetNearPlane(renderInfo.cameraInfo.nearWidthHeight[0],
+                                      renderInfo.cameraInfo.nearWidthHeight[1],
+                                      renderInfo.cameraInfo.nearPlane);
+
             memcpy(renderInfo.cameraPos, transComponent.m_pos, sizeof(float) * 3);
+            memcpy(renderInfo.cameraInfo.view, camComponent.m_view, sizeof(float) * 3);
+            memcpy(renderInfo.cameraInfo.up, camComponent.m_up, sizeof(float) * 3);
         }
 
         auto pointLightsView = m_registry.view<PointLightComponent>();

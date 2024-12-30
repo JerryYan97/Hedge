@@ -62,6 +62,11 @@ namespace Hedge
             delete m_pDynamicState;
         }
 
+        if (m_pNext != nullptr)
+        {
+            delete m_pNext;
+        }
+
         // Destroy the pipeline
         if (m_device != VK_NULL_HANDLE)
         {

@@ -157,5 +157,7 @@ namespace Hedge
         std::vector<HGpuImg*>      m_frameColorRenderResults;
         std::vector<HGpuImg*>      m_frameDepthRenderResults;
         std::vector<VkExtent2D>    m_renderImgsExtents;
+
+        HRenderer* m_pSkyboxRenderer;
     };
 }

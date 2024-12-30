@@ -156,4 +156,22 @@ namespace Hedge
 
     private:
     };
+
+    class HBackgroundCubemapEntity : public HEntity
+    {
+    public:
+        HBackgroundCubemapEntity() : HEntity("HBackgroundCubemapEntity", "DefaultBackgroundCubemapInst") {}
+        ~HBackgroundCubemapEntity() {}
+
+        virtual void OnDefineEntity(HEventManager& eventManager) {}
+        virtual bool OnEvent(HEvent& ievent) { return true; }
+
+        // Seralization
+        static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis) {}
+        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis) {}
+        static HEntity* CreateEntity() { return new HBackgroundCubemapEntity(); };
+
+        protected:
+            virtual void InitComponentsNamesHashes() override {};
+    };
 }
