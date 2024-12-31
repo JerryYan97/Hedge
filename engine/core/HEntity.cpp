@@ -468,4 +468,19 @@ namespace Hedge
         m_componentsNamesHashes.push_back(crc32("TransformComponent"));
         m_componentsNamesHashes.push_back(crc32("PointLightComponent"));
     }
+
+    // ================================================================================================================
+    void HBackgroundCubemapEntity::Deseralize(
+        YAML::Node&        node,
+        const std::string& name,
+        Hedge::HEntity*    pThis)
+    {
+        HBackgroundCubemapEntity* pBgCubemapEntity = dynamic_cast<HBackgroundCubemapEntity*>(pThis);
+
+        // Background Cubemap Component
+        auto& bgCubemapComponent = pBgCubemapEntity->GetComponent<BackgroundCubemapComponent>();
+        bgCubemapComponent.Deseralize(node["BackgroundCubemapComponent"]);
+
+        pBgCubemapEntity->m_customName = name;
+    }
 }

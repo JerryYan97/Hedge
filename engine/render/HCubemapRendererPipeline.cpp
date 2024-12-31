@@ -1,5 +1,8 @@
 #include "HCubemapRendererPipeline.h"
 #include "Utils.h"
+#include "HRenderManager.h"
+#include "../scene/HScene.h"
+#include "../core/HGpuRsrcManager.h"
 #include "g_prebuiltShaders.h"
 
 namespace Hedge
@@ -115,6 +118,87 @@ namespace Hedge
         const SceneRenderInfo& sceneRenderInfo,
         HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl)
     {
+        if (sceneRenderInfo.skyboxCubemapGpuImg)
+        {
+            VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 
+            VkRenderingAttachmentInfoKHR renderColorAttachmentInfo{};
+            {
+                renderColorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+                renderColorAttachmentInfo.imageView = pRenderCtx->pColorAttachmentImg->gpuImgView;
+                renderColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                renderColorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                renderColorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                renderColorAttachmentInfo.clearValue = clearColor;
+            }
+
+            VkClearValue depthClearVal{};
+            depthClearVal.depthStencil.depth = 0.f;
+            VkRenderingAttachmentInfoKHR depthModelAttachmentInfo{};
+            {
+                depthModelAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+                depthModelAttachmentInfo.imageView = pRenderCtx->pDepthAttachmentImg->gpuImgView;
+                depthModelAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+                depthModelAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                depthModelAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                depthModelAttachmentInfo.clearValue = depthClearVal;
+            }
+
+            VkRenderingInfoKHR renderInfo{};
+            {
+                renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+                renderInfo.renderArea = pRenderCtx->renderArea;
+                renderInfo.layerCount = 1;
+                renderInfo.colorAttachmentCount = 1;
+                renderInfo.pColorAttachments = &renderColorAttachmentInfo;
+                renderInfo.pDepthAttachment = &depthModelAttachmentInfo;
+            }
+
+            vkCmdBeginRendering(cmdBuf, &renderInfo);
+            vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipelines[0]->GetVkPipeline());
+
+            VkViewport viewport{};
+            {
+                viewport.x = 0.f;
+                viewport.y = 0.f;
+                viewport.width = pRenderCtx->renderArea.extent.width;
+                viewport.height = pRenderCtx->renderArea.extent.height;
+                viewport.minDepth = 0.f;
+                viewport.maxDepth = 1.f;
+            }
+            vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
+
+            VkRect2D scissor{};
+            {
+                scissor.offset = { 0, 0 };
+                scissor.extent = pRenderCtx->renderArea.extent;
+            }
+            vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+
+            std::vector<ShaderInputBinding> bindings = GenPerFrameGpuRsrcBindings(sceneRenderInfo, pFrameGpuRsrcControl);
+            m_pPipelines[0]->CmdBindDescriptors(cmdBuf, bindings);
+
+            vkCmdDraw(cmdBuf, 6, 1, 0, 0); // 6 vertices for a screen quad.
+
+            vkCmdEndRendering(cmdBuf);
+        }
+    }
+
+    // ================================================================================================================
+    std::vector<ShaderInputBinding> HCubemapRenderer::GenPerFrameGpuRsrcBindings(const SceneRenderInfo& sceneRenderInfo,
+        HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl)
+    {
+        ShaderInputBinding cubemapTexBinding{ HGPU_IMG, 0, sceneRenderInfo.skyboxCubemapGpuImg };
+
+        HGpuBuffer* pCameraUboBuffer = pFrameGpuRsrcControl->CreateInitTmpGpuBuffer(
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+            (void*)&sceneRenderInfo.cameraInfo, sizeof(sceneRenderInfo.cameraInfo));
+
+        ShaderInputBinding cameraUboBinding{ HGPU_BUFFER, 1, pCameraUboBuffer };
+
+        std::vector<ShaderInputBinding> bindings{ cubemapTexBinding, cameraUboBinding };
+
+        return bindings;
     }
 } // End of namespace Hedge.

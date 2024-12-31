@@ -107,6 +107,26 @@ namespace Hedge
         uint64_t    m_occlusionGUID;
     };
 
+    /*
+    struct HCreateTextureAssetInfo
+    {
+        bool     isVta;
+        bool     isCubemap;
+        bool     is2D;
+        uint32_t widthPix;
+        uint32_t heightPix;
+        uint8_t  elePerPix;
+        uint8_t  bytesPerEle;
+    };
+    */
+
+    enum class HTextureType
+    {
+        VTA,
+        CUBEMAP,
+        TEXTURE2D
+    };
+
     // NOTE: We temporily don't use it since we don't have standalone texture...
     //       We can just put textures into the material...
     //       The texture asset maybe implemented in the future because we need to make sure for one color or texture it
@@ -116,15 +136,31 @@ namespace Hedge
     class HTextureAsset : public HAsset
     {
     public:
-        HTextureAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
+        HTextureAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager, HTextureType texAssetType);
         ~HTextureAsset();
 
-        virtual void LoadAssetFromDisk();
+        // void SetTextureInfoAsVta();
+        // void SetTextureInfoAsCubemap();
+        // void SetTextureInfoAs2D();
+
+        virtual void LoadAssetFromDisk() override;
 
         HGpuImg* GetGpuImgPtr() { return m_pGpuImg; }
 
     private:
         void GetColorValFromName(const std::string& name, float* pVal);
+
+        /*
+        void GenVtaTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo);
+        void GenCubemapTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo);
+        void Gen2DTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo);
+        */
+
+        // HCreateTextureAssetInfo m_texAssetInfo;
+        HTextureType m_texAssetType;
+
+        // HGpuImgCreateInfo m_imgCreateInfo;
+        // VkBufferImageCopy m_bufferImgCopy;
 
         uint32_t             m_widthPix;
         uint32_t             m_heightPix;

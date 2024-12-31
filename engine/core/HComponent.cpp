@@ -168,4 +168,12 @@ namespace Hedge
 
         m_radius = node["Affect Radius"].as<float>();
     }
+
+    // ================================================================================================================
+    void BackgroundCubemapComponent::Deseralize(
+        YAML::Node& node)
+    {
+        std::string assetName = node["Asset Name"].as<std::string>();
+        m_cubemapGUID = g_pAssetRsrcManager->LoadAsset(assetName);
+    }
 }

@@ -141,7 +141,7 @@ namespace Hedge
         {}
 
         void Seralize(YAML::Emitter& emitter) {}
-        void Deseralize(YAML::Node& node) {}
+        void Deseralize(YAML::Node& node);
 
         uint64_t m_cubemapGUID;
         std::string m_cubemapAssetNamePath;

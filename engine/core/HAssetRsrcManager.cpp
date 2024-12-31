@@ -29,6 +29,24 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    HTextureType StrToAssetType(std::string str)
+    {
+        if (str.compare("Cubemap") == 0)
+        {
+            return HTextureType::CUBEMAP;
+        }
+        else if (str.compare("Texture2D") == 0)
+        {
+            return HTextureType::TEXTURE2D;
+        }
+        else
+        {
+            assert(1, "Unrecognized texture type.");
+            return HTextureType::TEXTURE2D;
+        }
+    }
+
+    // ================================================================================================================
     uint64_t HAssetRsrcManager::LoadAsset(
         const std::string& assetName)
     {
@@ -46,17 +64,20 @@ namespace Hedge
 
             // Read the type of the asset
             std::string assetTypeStr;
+            YAML::Node config;
+            HTextureType texType = HTextureType::TEXTURE2D;
 
             if (assetName.rfind('.') != std::string::npos)
             {
                 // virtual texture asset: .vta
                 assetTypeStr = "HTextureAsset";
+                texType = HTextureType::VTA;
             }
             else
             {
                 std::string assetConfigFileNamePath;
                 assetConfigFileNamePath = m_assetFolderPath + assetName + "\\" + assetName + ".yml";
-                YAML::Node config = YAML::LoadFile(assetConfigFileNamePath.c_str());
+                config = YAML::LoadFile(assetConfigFileNamePath.c_str());
                 assetTypeStr = config["asset type"].as<std::string>();
             }
 
@@ -70,7 +91,12 @@ namespace Hedge
             }
             else if (crc32(assetTypeStr.c_str()) == crc32("HTextureAsset"))
             {
-                assetWrap.pAsset = new HTextureAsset(guid, m_assetFolderPath + assetName, this);
+                if (texType != HTextureType::VTA)
+                {
+                    std::string texTypeStr = config["texture asset type"].as<std::string>();
+                    texType = StrToAssetType(texTypeStr);
+                }
+                assetWrap.pAsset = new HTextureAsset(guid, m_assetFolderPath + assetName, this, texType);
             }
             else
             {
@@ -405,14 +431,34 @@ namespace Hedge
     HTextureAsset::HTextureAsset(
         uint64_t    guid,
         std::string assetPathName,
-        HAssetRsrcManager* pAssetRsrcManager) :
+        HAssetRsrcManager* pAssetRsrcManager,
+        HTextureType texType) :
         HAsset(guid, assetPathName, pAssetRsrcManager),
         m_widthPix(0),
         m_heightPix(0),
         m_elePerPix(0),
         m_bytesPerEle(0),
-        m_pGpuImg(nullptr)
-    {}
+        m_pGpuImg(nullptr),
+        m_texAssetType(texType)
+    {
+        /*
+        switch (m_texAssetType)
+        {
+        case HTextureType::VTA:
+            SetTextureInfoAsVta();
+            break;
+        case HTextureType::CUBEMAP:
+            SetTextureInfoAsCubemap();
+            break;
+        case HTextureType::TEXTURE2D:
+            SetTextureInfoAs2D();
+            break;
+        default:
+            assert(1, "Unrecognized texture type.");
+            break;
+        }
+        */
+    }
 
     // ================================================================================================================
     HTextureAsset::~HTextureAsset()
@@ -424,17 +470,23 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    void HTextureAsset::LoadAssetFromDisk()
+    static VkImageSubresourceRange GenImgSubrsrcRange(uint32_t layerCnt = 1)
     {
         VkImageSubresourceRange imgSubRsrcRange{};
         {
             imgSubRsrcRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imgSubRsrcRange.baseArrayLayer = 0;
-            imgSubRsrcRange.layerCount = 1;
+            imgSubRsrcRange.layerCount = layerCnt;
             imgSubRsrcRange.baseMipLevel = 0;
             imgSubRsrcRange.levelCount = 1;
         }
 
+        return imgSubRsrcRange;
+    }
+
+    // ================================================================================================================
+    static VkSamplerCreateInfo GenSamplerCreateInfo()
+    {
         VkSamplerCreateInfo samplerInfo{};
         {
             samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -449,6 +501,39 @@ namespace Hedge
             samplerInfo.maxAnisotropy = 1.0f;
         }
 
+        return samplerInfo;
+    }
+
+    // ================================================================================================================
+    static VkBufferImageCopy GenBufferImgCopyInfo(uint32_t width, uint32_t height, uint32_t layerCnt = 1)
+    {
+        VkBufferImageCopy bufToImgCopyInfo{};
+        {
+            VkExtent3D extent{};
+            {
+                extent.width = width;
+                extent.height = height;
+                extent.depth = 1;
+            }
+
+            bufToImgCopyInfo.bufferRowLength = 1;
+            bufToImgCopyInfo.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            bufToImgCopyInfo.imageSubresource.mipLevel = 0;
+            bufToImgCopyInfo.imageSubresource.baseArrayLayer = 0;
+            bufToImgCopyInfo.imageSubresource.layerCount = layerCnt;
+            bufToImgCopyInfo.imageExtent = extent;
+        }
+
+        return bufToImgCopyInfo;
+    }
+
+    // ================================================================================================================
+    static void GenVtaTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
+    {
+        VkImageSubresourceRange imgSubRsrcRange = GenImgSubrsrcRange();
+
+        VkSamplerCreateInfo samplerInfo = GenSamplerCreateInfo();
+
         HGpuImgCreateInfo gpuImgCreateInfoTemplate{};
         {
             gpuImgCreateInfoTemplate.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
@@ -457,30 +542,33 @@ namespace Hedge
             gpuImgCreateInfoTemplate.imgUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
             gpuImgCreateInfoTemplate.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
             gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
+            gpuImgCreateInfoTemplate.imgExtent = VkExtent3D{ 1, 1, 1 };
+            gpuImgCreateInfoTemplate.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
         }
+        oImgCreateInfo = gpuImgCreateInfoTemplate;
 
-        // TODO: We may want to put it as a static/const member of the class so that we can reuse it.
-        VkBufferImageCopy bufToImgCopyTemplate{};
-        {
-            VkExtent3D extent{};
-            {
-                extent.width = 1;
-                extent.height = 1;
-                extent.depth = 1;
-            }
+        VkBufferImageCopy bufToImgCopyTemplate = GenBufferImgCopyInfo(1, 1);
+        oBufferImgCopyInfo = bufToImgCopyTemplate;
+    }
 
-            bufToImgCopyTemplate.bufferRowLength = 1;
-            bufToImgCopyTemplate.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            bufToImgCopyTemplate.imageSubresource.mipLevel = 0;
-            bufToImgCopyTemplate.imageSubresource.baseArrayLayer = 0;
-            bufToImgCopyTemplate.imageSubresource.layerCount = 1;
-            bufToImgCopyTemplate.imageExtent = extent;
-        }
+    // ================================================================================================================
+    static void GenCubemapTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
+    {
 
+    }
 
-        std::string postFix = GetPostFix(m_assetPathName);
+    // ================================================================================================================
+    static void Gen2DTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
+    {
+
+    }
+
+    // ================================================================================================================
+    void HTextureAsset::LoadAssetFromDisk()
+    {
+        // std::string postFix = GetPostFix(m_assetPathName);
         // Always assume 4 color channels in a vta.
-        if (postFix == "vta")
+        if (m_texAssetType == HTextureType::VTA)
         {
             // Virtual texture asset. Pure consant color image.
             m_widthPix = 1;
@@ -496,21 +584,18 @@ namespace Hedge
             GetColorValFromName(nameWithPostFix.substr(0, dotIdx), data);
             
             m_dataFloat = std::vector<float>(data, data + 4);
+            HGpuImgCreateInfo imgCreateInfo{};
+            VkBufferImageCopy bufferImgCopy{};
 
-            HGpuImgCreateInfo gpuImgCreateInfo = gpuImgCreateInfoTemplate;
-            gpuImgCreateInfo.imgExtent = VkExtent3D{ 1, 1, 1 };
-            gpuImgCreateInfo.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
-
-            m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(gpuImgCreateInfo, m_assetPathName);
-
-            VkBufferImageCopy baseColorCopy = bufToImgCopyTemplate;
+            GenVtaTextureCreateInitInfo(imgCreateInfo, bufferImgCopy);
+            m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(imgCreateInfo, m_assetPathName);
 
             m_dataUInt8.push_back(255 * m_dataFloat[0]);
             m_dataUInt8.push_back(255 * m_dataFloat[1]);
             m_dataUInt8.push_back(255 * m_dataFloat[2]);
             m_dataUInt8.push_back(255 * m_dataFloat[3]);
 
-            g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, baseColorCopy, m_dataUInt8.data(), sizeof(uint8_t) * m_dataUInt8.size());
+            g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, bufferImgCopy, m_dataUInt8.data(), sizeof(uint8_t) * m_dataUInt8.size());
             g_pGpuRsrcManager->TransImageLayout(m_pGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
         else

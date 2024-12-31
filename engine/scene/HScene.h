@@ -61,6 +61,9 @@ namespace Hedge
         HMat4x4    vpMat;
         float      cameraPos[3];
         CameraInfo cameraInfo;
+
+        // Skybox -- We will render the skybox if the skyboxCubemapGpuImg is not nullptr.
+        HGpuImg* skyboxCubemapGpuImg;
     };
 
     class HScene

@@ -36,5 +36,8 @@ namespace Hedge
     protected:
 
     private:
+        std::vector<ShaderInputBinding> GenPerFrameGpuRsrcBindings(const SceneRenderInfo& sceneRenderInfo,
+                                                                   HFrameGpuRenderRsrcControl* pFrameGpuRsrcControl);
+
     };
 }

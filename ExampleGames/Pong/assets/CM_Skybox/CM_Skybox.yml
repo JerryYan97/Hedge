@@ -1,0 +1,3 @@
+asset type: HTextureAsset
+texture asset type: Cubemap
+src file: background_cubemap.hdr

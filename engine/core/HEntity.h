@@ -168,7 +168,7 @@ namespace Hedge
 
         // Seralization
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis) {}
-        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis) {}
+        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
         static HEntity* CreateEntity() { return new HBackgroundCubemapEntity(); };
 
         protected:

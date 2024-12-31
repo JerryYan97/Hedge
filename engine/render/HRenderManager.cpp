@@ -286,6 +286,12 @@ namespace Hedge
             renderCtx.pDepthAttachmentImg = m_frameDepthRenderResults[m_acqSwapchainImgIdx];
         }
 
+        // Render the skybox background
+        m_pSkyboxRenderer->CmdRenderInsts(curCmdBuffer,
+                                          &renderCtx,
+                                          sceneRenderInfo,
+                                          &m_frameGpuRenderRsrcController);
+
         // Create per frame resources. Record the rendering instructions
         m_pRenderers[m_activeRendererIdx]->CmdRenderInsts(curCmdBuffer,
                                                           &renderCtx,
