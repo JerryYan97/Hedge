@@ -253,14 +253,15 @@ namespace Hedge
 
         // Check whether the scene has skybox. If we don't have, we will just let it empty.
         auto skyboxComponentView = m_registry.view<BackgroundCubemapComponent>();
-        if (skyboxComponentView.empty())
+        if (!skyboxComponentView.empty())
         {
             auto skyboxEntity = skyboxComponentView.front();
             auto& cubemapComponent = skyboxComponentView.get<BackgroundCubemapComponent>(skyboxEntity);
             HTextureAsset* pSkyboxCubemapAsset = nullptr;
             g_pAssetRsrcManager->GetAssetPtr(cubemapComponent.m_cubemapGUID, (HAsset**)&pSkyboxCubemapAsset);
+            renderInfo.skyboxCubemapGpuImg = pSkyboxCubemapAsset->GetGpuImgPtr();
         }
-
+        
         return renderInfo;
     }
 

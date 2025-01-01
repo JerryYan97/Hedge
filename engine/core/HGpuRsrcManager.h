@@ -57,6 +57,7 @@ namespace Hedge
         VkExtent3D               imgExtent;
         VkImageUsageFlags        imgUsageFlags;
         VkImageCreateFlags       imgCreateFlags; // For the cubemap image.
+        VkImageTiling            imgTiling;
 
         bool                hasSampler;
         VkSamplerCreateInfo samplerInfo;

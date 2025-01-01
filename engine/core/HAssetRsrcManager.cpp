@@ -516,7 +516,7 @@ namespace Hedge
                 extent.depth = 1;
             }
 
-            bufToImgCopyInfo.bufferRowLength = 1;
+            bufToImgCopyInfo.bufferRowLength = width;
             bufToImgCopyInfo.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             bufToImgCopyInfo.imageSubresource.mipLevel = 0;
             bufToImgCopyInfo.imageSubresource.baseArrayLayer = 0;
@@ -544,17 +544,35 @@ namespace Hedge
             gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
             gpuImgCreateInfoTemplate.imgExtent = VkExtent3D{ 1, 1, 1 };
             gpuImgCreateInfoTemplate.imgFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            gpuImgCreateInfoTemplate.imgTiling = VK_IMAGE_TILING_OPTIMAL;
         }
         oImgCreateInfo = gpuImgCreateInfoTemplate;
 
-        VkBufferImageCopy bufToImgCopyTemplate = GenBufferImgCopyInfo(1, 1);
-        oBufferImgCopyInfo = bufToImgCopyTemplate;
+        oBufferImgCopyInfo = GenBufferImgCopyInfo(1, 1);
     }
 
     // ================================================================================================================
-    static void GenCubemapTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
+    static void GenCubemapTextureCreateInitInfo(VkExtent2D widthHeightOneLayer, HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
     {
+        // Assume HDR and 6 faces.
+        VkImageSubresourceRange imgSubRsrcRange = GenImgSubrsrcRange(6);
+        VkSamplerCreateInfo samplerInfo = GenSamplerCreateInfo();
+        HGpuImgCreateInfo gpuImgCreateInfoTemplate{};
+        {
+            gpuImgCreateInfoTemplate.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            gpuImgCreateInfoTemplate.hasSampler = true;
+            gpuImgCreateInfoTemplate.imgSubresRange = imgSubRsrcRange;
+            gpuImgCreateInfoTemplate.imgUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            gpuImgCreateInfoTemplate.imgViewType = VK_IMAGE_VIEW_TYPE_CUBE;
+            gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
+            gpuImgCreateInfoTemplate.imgExtent = VkExtent3D{ widthHeightOneLayer.width, widthHeightOneLayer.height / 6, 1 };
+            gpuImgCreateInfoTemplate.imgFormat = VK_FORMAT_R32G32B32_SFLOAT;
+            gpuImgCreateInfoTemplate.imgTiling = VK_IMAGE_TILING_LINEAR;
+            gpuImgCreateInfoTemplate.imgCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        }
+        oImgCreateInfo = gpuImgCreateInfoTemplate;
 
+        oBufferImgCopyInfo = GenBufferImgCopyInfo(widthHeightOneLayer.width, widthHeightOneLayer.height / 6, 6);
     }
 
     // ================================================================================================================
@@ -598,9 +616,37 @@ namespace Hedge
             g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, bufferImgCopy, m_dataUInt8.data(), sizeof(uint8_t) * m_dataUInt8.size());
             g_pGpuRsrcManager->TransImageLayout(m_pGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
+        else if (m_texAssetType == HTextureType::CUBEMAP)
+        {
+            // Read the configuration file
+            std::string assetConfigFileNamePath = m_assetPathName + "\\" + GetNamePathFolderName(m_assetPathName) + ".yml";
+            YAML::Node config = YAML::LoadFile(assetConfigFileNamePath.c_str());
+            std::string fileName = config["src file"].as<std::string>();
+            std::string cubemapTexFilePathName = m_assetPathName + "\\" + fileName;
+
+            int width, height, nrComponents;
+            float* pData = stbi_loadf(cubemapTexFilePathName.c_str(), &width, &height, &nrComponents, 0);
+            m_dataFloat.resize(width * height * nrComponents);
+            memcpy(m_dataFloat.data(), pData, sizeof(float) * width * height * nrComponents);
+            delete pData;
+
+            HGpuImgCreateInfo imgCreateInfo{};
+            VkBufferImageCopy bufferImgCopy{};
+
+            // Cubemap texture asset.
+            GenCubemapTextureCreateInitInfo(VkExtent2D{(uint32_t)width, (uint32_t)height}, imgCreateInfo, bufferImgCopy);
+            m_pGpuImg = g_pGpuRsrcManager->CreateGpuImage(imgCreateInfo, m_assetPathName);
+            g_pGpuRsrcManager->SendDataToImage(m_pGpuImg, bufferImgCopy, m_dataFloat.data(), sizeof(float) * m_dataFloat.size());
+            g_pGpuRsrcManager->TransImageLayout(m_pGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+        else if (m_texAssetType == HTextureType::TEXTURE2D)
+        {
+            // 2D texture asset.
+
+        }
         else
         {
-
+            assert(1, "Unrecognized texture type.");
         }
     }
 

@@ -180,6 +180,8 @@ namespace Hedge
 
             vkCmdDraw(cmdBuf, 6, 1, 0, 0); // 6 vertices for a screen quad.
 
+            pFrameGpuRsrcControl->AddGpuImgReferControl(sceneRenderInfo.skyboxCubemapGpuImg);
+
             vkCmdEndRendering(cmdBuf);
         }
     }

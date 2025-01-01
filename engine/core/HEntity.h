@@ -163,7 +163,7 @@ namespace Hedge
         HBackgroundCubemapEntity() : HEntity("HBackgroundCubemapEntity", "DefaultBackgroundCubemapInst") {}
         ~HBackgroundCubemapEntity() {}
 
-        virtual void OnDefineEntity(HEventManager& eventManager) {}
+        virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
 
         // Seralization

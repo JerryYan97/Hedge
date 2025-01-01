@@ -772,6 +772,7 @@ namespace Hedge
             colorRenderTargetInfo.imgUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
                                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                                                   VK_IMAGE_USAGE_SAMPLED_BIT; // Maybe sent to ImGui for showing.
+            colorRenderTargetInfo.imgTiling = VK_IMAGE_TILING_OPTIMAL;
 
             VkImageSubresourceRange imgSubRsrcRange{};
             {
@@ -811,6 +812,7 @@ namespace Hedge
                 imgSubRsrcRange.levelCount = 1;
             }
             depthRenderTarget.imgSubresRange = imgSubRsrcRange;
+            depthRenderTarget.imgTiling = VK_IMAGE_TILING_OPTIMAL;
         }
 
         return depthRenderTarget;

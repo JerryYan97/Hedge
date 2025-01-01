@@ -470,6 +470,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HBackgroundCubemapEntity::OnDefineEntity(HEventManager& eventManager)
+    {
+        AddComponent<BackgroundCubemapComponent>();
+    }
+
+    // ================================================================================================================
     void HBackgroundCubemapEntity::Deseralize(
         YAML::Node&        node,
         const std::string& name,
