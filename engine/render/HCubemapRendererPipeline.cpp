@@ -70,6 +70,7 @@ namespace Hedge
         VkDescriptorSetLayoutCreateInfo skyboxDescriptorSetLayoutCreateInfo{};
         {
             skyboxDescriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            skyboxDescriptorSetLayoutCreateInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
             skyboxDescriptorSetLayoutCreateInfo.bindingCount = skyboxDescriptorSetBindings.size();
             skyboxDescriptorSetLayoutCreateInfo.pBindings = skyboxDescriptorSetBindings.data();
         }
@@ -132,6 +133,7 @@ namespace Hedge
                 renderColorAttachmentInfo.clearValue = clearColor;
             }
 
+            /*
             VkClearValue depthClearVal{};
             depthClearVal.depthStencil.depth = 0.f;
             VkRenderingAttachmentInfoKHR depthModelAttachmentInfo{};
@@ -143,6 +145,7 @@ namespace Hedge
                 depthModelAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                 depthModelAttachmentInfo.clearValue = depthClearVal;
             }
+            */
 
             VkRenderingInfoKHR renderInfo{};
             {
@@ -151,7 +154,7 @@ namespace Hedge
                 renderInfo.layerCount = 1;
                 renderInfo.colorAttachmentCount = 1;
                 renderInfo.pColorAttachments = &renderColorAttachmentInfo;
-                renderInfo.pDepthAttachment = &depthModelAttachmentInfo;
+                // renderInfo.pDepthAttachment = &depthModelAttachmentInfo;
             }
 
             vkCmdBeginRendering(cmdBuf, &renderInfo);

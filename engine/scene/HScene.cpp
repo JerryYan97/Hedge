@@ -218,6 +218,8 @@ namespace Hedge
             memcpy(renderInfo.cameraPos, transComponent.m_pos, sizeof(float) * 3);
             memcpy(renderInfo.cameraInfo.view, camComponent.m_view, sizeof(float) * 3);
             memcpy(renderInfo.cameraInfo.up, camComponent.m_up, sizeof(float) * 3);
+            renderInfo.cameraInfo.viewportWidthHeight[0] = (float)g_pGuiManager->GetRenderExtent().width;
+            renderInfo.cameraInfo.viewportWidthHeight[1] = (float)g_pGuiManager->GetRenderExtent().height;
         }
 
         auto pointLightsView = m_registry.view<PointLightComponent>();

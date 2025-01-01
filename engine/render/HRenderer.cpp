@@ -170,7 +170,7 @@ namespace Hedge
             renderColorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
             renderColorAttachmentInfo.imageView = pRenderCtx->pColorAttachmentImg->gpuImgView;
             renderColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            renderColorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            renderColorAttachmentInfo.loadOp = sceneRenderInfo.skyboxCubemapGpuImg == nullptr ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
             renderColorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             renderColorAttachmentInfo.clearValue = clearColor;
         }
