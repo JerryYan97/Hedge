@@ -1,0 +1,6 @@
+asset type: HMaterialAsset
+name: M_Ball
+base color: [1.0, 1.0, 1.0]
+normal map: [0.5, 0.5, 1.0]
+metalic roughness: [0.0, 0.1]
+occlusion: [1.0]

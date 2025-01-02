@@ -143,16 +143,16 @@ namespace Hedge
         HImageBasedLightingEntity() : HEntity("HImageBasedLightingEntity", "DefaultImageBasedLightingInst") {}
         ~HImageBasedLightingEntity() {}
 
-        virtual void OnDefineEntity(HEventManager& eventManager) {}
+        virtual void OnDefineEntity(HEventManager& eventManager);
         virtual bool OnEvent(HEvent& ievent) { return true; }
 
         // Seralization
         static void Seralize(YAML::Emitter& emitter, Hedge::HEntity* pThis) {}
-        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis) {}
+        static void Deseralize(YAML::Node& node, const std::string& name, Hedge::HEntity* pThis);
         static HEntity* CreateEntity() { return new HImageBasedLightingEntity(); };
 
     protected:
-        virtual void InitComponentsNamesHashes() override {};
+        virtual void InitComponentsNamesHashes() override;
 
     private:
     };
@@ -172,6 +172,6 @@ namespace Hedge
         static HEntity* CreateEntity() { return new HBackgroundCubemapEntity(); };
 
         protected:
-            virtual void InitComponentsNamesHashes() override {};
+            virtual void InitComponentsNamesHashes() override;
     };
 }

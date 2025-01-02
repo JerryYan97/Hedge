@@ -7,7 +7,7 @@ Scene Entities:
         ROT: [0, 0, 0]
         SCALE: [0.1, 1, 0.5]
       StaticMeshComponent:
-        Asset Name: SM_Cube
+        Asset Name: SM_Opponent_Board
         Material:
           Type: ConstantMaterial
           Albedo: [0.0, 0.0, 1.0]
@@ -21,7 +21,7 @@ Scene Entities:
         ROT: [0, 0, 0]
         SCALE: [0.1, 1, 0.5]
       StaticMeshComponent:
-        Asset Name: SM_Cube
+        Asset Name: SM_Player_Board
         Material:
           Type: ConstantMaterial
           Albedo: [1.0, 0.0, 0.0]
@@ -35,7 +35,7 @@ Scene Entities:
         ROT: [0, 0, 0]
         SCALE: [8, 1, 2]
       StaticMeshComponent:
-        Asset Name: SM_Cube
+        Asset Name: SM_Basic_Wall
         Material:
           Type: ConstantMaterial
           Albedo: [1.0, 1.0, 1.0]
@@ -49,7 +49,7 @@ Scene Entities:
         ROT: [0, 0, 0]
         SCALE: [8, 1, 2]
       StaticMeshComponent:
-        Asset Name: SM_Cube
+        Asset Name: SM_Basic_Wall
         Material:
           Type: ConstantMaterial
           Albedo: [1.0, 1.0, 1.0]

@@ -476,6 +476,12 @@ namespace Hedge
     }
 
     // ================================================================================================================
+    void HBackgroundCubemapEntity::InitComponentsNamesHashes()
+    {
+        m_componentsNamesHashes.push_back(crc32("BackgroundCubemapComponent"));
+    }
+
+    // ================================================================================================================
     void HBackgroundCubemapEntity::Deseralize(
         YAML::Node&        node,
         const std::string& name,
@@ -488,5 +494,32 @@ namespace Hedge
         bgCubemapComponent.Deseralize(node["BackgroundCubemapComponent"]);
 
         pBgCubemapEntity->m_customName = name;
+    }
+
+    // ================================================================================================================
+    void HImageBasedLightingEntity::InitComponentsNamesHashes()
+    {
+        m_componentsNamesHashes.push_back(crc32("ImageBasedLightingComponent"));
+    }
+
+    // ================================================================================================================
+    void HImageBasedLightingEntity::OnDefineEntity(HEventManager& eventManager)
+    {
+        AddComponent<ImageBasedLightingComponent>();
+    }
+
+    // ================================================================================================================
+    void HImageBasedLightingEntity::Deseralize(
+        YAML::Node& node,
+        const std::string& name,
+        Hedge::HEntity* pThis)
+    {
+        HImageBasedLightingEntity* pIblEntity = dynamic_cast<HImageBasedLightingEntity*>(pThis);
+
+        // Image Based Lighting Component
+        auto& iblComponent = pIblEntity->GetComponent<ImageBasedLightingComponent>();
+        iblComponent.Deseralize(node["ImageBasedLightingComponent"]);
+
+        pIblEntity->m_customName = name;
     }
 }

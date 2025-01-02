@@ -25,6 +25,7 @@ namespace Hedge
     std::string GetPostFix(const std::string& namePath);
     std::string GetNamePathFolderName(const std::string& assetNamePath);
     std::vector<int> FindLocations(std::string sample, char findIt);
+    void GetAllFileNames(const std::string& dir, std::vector<std::string>& outputVec);
 
     namespace Util
     {

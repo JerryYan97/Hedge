@@ -115,14 +115,16 @@ namespace Hedge
     {
     public:
         ImageBasedLightingComponent() :
-            m_diffuseIrradianceGUID(0),
-            m_envBrdfGUID(0),
-            m_prefilterEnvGUID(0)
+            m_iblGUID(0)
         {}
 
         void Seralize(YAML::Emitter& emitter) {}
-        void Deseralize(YAML::Node& node) {}
+        void Deseralize(YAML::Node& node);
 
+        uint64_t    m_iblGUID;
+        std::string m_iblAssetNamePath;
+
+        /*
         uint64_t    m_diffuseIrradianceGUID;
         std::string m_diffuseIrradianceTextureAssetNamePath;
 
@@ -131,6 +133,7 @@ namespace Hedge
 
         uint64_t    m_envBrdfGUID;
         std::string m_envBrdfAssetNamePath;
+        */
     };
 
     class BackgroundCubemapComponent

@@ -134,6 +134,7 @@ float4 main(
     }
 
     float3 color = iblRadiance + pointLightsRadiance;
+    // float3 color = iblRadiance;
 
     // Gamma Correction
     color = color / (color + float3(1.0, 1.0, 1.0));

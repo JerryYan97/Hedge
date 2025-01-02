@@ -124,7 +124,8 @@ namespace Hedge
     {
         VTA,
         CUBEMAP,
-        TEXTURE2D
+        TEXTURE2D,
+        Mipmap
     };
 
     // NOTE: We temporily don't use it since we don't have standalone texture...
@@ -170,6 +171,33 @@ namespace Hedge
         std::vector<uint8_t> m_dataUInt8;
 
         HGpuImg* m_pGpuImg;
+    };
+
+    class HIBLAsset : public HAsset
+    {
+    public:
+        HIBLAsset(uint64_t guid, std::string assetPathName, HAssetRsrcManager* pAssetRsrcManager);
+        ~HIBLAsset();
+
+        virtual void LoadAssetFromDisk() override;
+
+        HGpuImg* GetDiffuseCubemap() { return m_diffuseCubemapGpuImg; }
+        HGpuImg* GetPrefilterEnvCubemap() { return m_prefilterEnvCubemapGpuImg; }
+        HGpuImg* GetEnvBrdfTex() { return m_envBrdfGpuImg; }
+
+        float GetIblMaxMipLevels() { return m_iblMaxMipLevels; }
+
+    private:
+        std::string m_diffuseCubemapPathName;
+        HGpuImg*    m_diffuseCubemapGpuImg;
+        
+        std::string m_prefilterEnvCubemapPathName;
+        HGpuImg*    m_prefilterEnvCubemapGpuImg;
+
+        std::string m_envBrdfPathName;
+        HGpuImg*    m_envBrdfGpuImg;
+
+        float m_iblMaxMipLevels;
     };
 
     // GUID - RAM ptr based asset manager.

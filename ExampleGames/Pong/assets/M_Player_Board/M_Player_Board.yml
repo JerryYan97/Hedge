@@ -1,0 +1,6 @@
+asset type: HMaterialAsset
+name: M_Opponent_Board
+base color: [0.8, 0.8, 0.1]
+normal map: [0.5, 0.5, 1.0]
+metalic roughness: [1.0, 0.1]
+occlusion: [1.0]

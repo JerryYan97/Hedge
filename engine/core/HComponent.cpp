@@ -176,4 +176,11 @@ namespace Hedge
         std::string assetName = node["Asset Name"].as<std::string>();
         m_cubemapGUID = g_pAssetRsrcManager->LoadAsset(assetName);
     }
+
+    // ================================================================================================================
+    void ImageBasedLightingComponent::Deseralize(YAML::Node& node)
+    {
+        std::string assetName = node["Asset Name"].as<std::string>();
+        m_iblGUID = g_pAssetRsrcManager->LoadAsset(assetName);
+    }
 }

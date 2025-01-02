@@ -3,6 +3,7 @@
 #include "Utils.h"
 #include "yaml-cpp/yaml.h"
 #include "HGpuRsrcManager.h"
+#include <filesystem>
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -59,6 +60,7 @@ namespace Hedge
         {
             // TODO: We may need a better design for loading assets, but the current naive design won't cause big
             //       troubles in the future.
+            //       Note that each asset has a yaml config file or it's a VTA asset. Thus, some code is unable to be reused.
             AssetWrap assetWrap;
             assetWrap.refCounter = 1;
 
@@ -97,6 +99,10 @@ namespace Hedge
                     texType = StrToAssetType(texTypeStr);
                 }
                 assetWrap.pAsset = new HTextureAsset(guid, m_assetFolderPath + assetName, this, texType);
+            }
+            else if (crc32(assetTypeStr.c_str()) == crc32("HIBLAsset"))
+            {
+                assetWrap.pAsset = new HIBLAsset(guid, m_assetFolderPath + assetName, this);
             }
             else
             {
@@ -470,7 +476,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    static VkImageSubresourceRange GenImgSubrsrcRange(uint32_t layerCnt = 1)
+    static VkImageSubresourceRange GenImgSubrsrcRange(uint32_t layerCnt = 1, uint32_t mipLevels = 1)
     {
         VkImageSubresourceRange imgSubRsrcRange{};
         {
@@ -478,7 +484,7 @@ namespace Hedge
             imgSubRsrcRange.baseArrayLayer = 0;
             imgSubRsrcRange.layerCount = layerCnt;
             imgSubRsrcRange.baseMipLevel = 0;
-            imgSubRsrcRange.levelCount = 1;
+            imgSubRsrcRange.levelCount = mipLevels;
         }
 
         return imgSubRsrcRange;
@@ -505,7 +511,7 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    static VkBufferImageCopy GenBufferImgCopyInfo(uint32_t width, uint32_t height, uint32_t layerCnt = 1)
+    static VkBufferImageCopy GenBufferImgCopyInfo(uint32_t width, uint32_t height, uint32_t layerCnt = 1, uint32_t mipLevelId = 0)
     {
         VkBufferImageCopy bufToImgCopyInfo{};
         {
@@ -518,7 +524,7 @@ namespace Hedge
 
             bufToImgCopyInfo.bufferRowLength = width;
             bufToImgCopyInfo.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            bufToImgCopyInfo.imageSubresource.mipLevel = 0;
+            bufToImgCopyInfo.imageSubresource.mipLevel = mipLevelId;
             bufToImgCopyInfo.imageSubresource.baseArrayLayer = 0;
             bufToImgCopyInfo.imageSubresource.layerCount = layerCnt;
             bufToImgCopyInfo.imageExtent = extent;
@@ -552,10 +558,10 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    static void GenCubemapTextureCreateInitInfo(VkExtent2D widthHeightOneLayer, HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
+    static void GenCubemapTextureCreateInitInfo(VkExtent2D widthHeightOneLayer, HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo, int mipLevels = 1)
     {
         // Assume HDR and 6 faces.
-        VkImageSubresourceRange imgSubRsrcRange = GenImgSubrsrcRange(6);
+        VkImageSubresourceRange imgSubRsrcRange = GenImgSubrsrcRange(6, mipLevels);
         VkSamplerCreateInfo samplerInfo = GenSamplerCreateInfo();
         HGpuImgCreateInfo gpuImgCreateInfoTemplate{};
         {
@@ -576,9 +582,26 @@ namespace Hedge
     }
 
     // ================================================================================================================
-    static void Gen2DTextureCreateInitInfo(HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
+    static void Gen2DTextureCreateInitInfo(VkExtent2D widthHeightOneLayer, HGpuImgCreateInfo& oImgCreateInfo, VkBufferImageCopy& oBufferImgCopyInfo)
     {
+        VkImageSubresourceRange imgSubRsrcRange = GenImgSubrsrcRange();
+        VkSamplerCreateInfo samplerInfo = GenSamplerCreateInfo();
+        HGpuImgCreateInfo gpuImgCreateInfoTemplate{};
+        {
+            gpuImgCreateInfoTemplate.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            gpuImgCreateInfoTemplate.hasSampler = true;
+            gpuImgCreateInfoTemplate.imgSubresRange = imgSubRsrcRange;
+            gpuImgCreateInfoTemplate.imgUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            gpuImgCreateInfoTemplate.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+            gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
+            gpuImgCreateInfoTemplate.imgExtent = VkExtent3D{ widthHeightOneLayer.width, widthHeightOneLayer.height, 1 };
+            gpuImgCreateInfoTemplate.imgFormat = VK_FORMAT_R32G32B32_SFLOAT;
+            gpuImgCreateInfoTemplate.imgTiling = VK_IMAGE_TILING_LINEAR;
+            // gpuImgCreateInfoTemplate.imgCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        }
+        oImgCreateInfo = gpuImgCreateInfoTemplate;
 
+        oBufferImgCopyInfo = GenBufferImgCopyInfo(widthHeightOneLayer.width, widthHeightOneLayer.height);
     }
 
     // ================================================================================================================
@@ -642,6 +665,10 @@ namespace Hedge
         else if (m_texAssetType == HTextureType::TEXTURE2D)
         {
             // 2D texture asset.
+
+        }
+        else if (m_texAssetType == HTextureType::Mipmap)
+        {
 
         }
         else
@@ -796,6 +823,127 @@ namespace Hedge
         else
         {
 
+        }
+    }
+
+    // ================================================================================================================
+    HIBLAsset::HIBLAsset(
+        uint64_t guid,
+        std::string assetPathName,
+        HAssetRsrcManager* pAssetRsrcManager) :
+        HAsset(guid, assetPathName, pAssetRsrcManager),
+        m_diffuseCubemapGpuImg(nullptr),
+        m_prefilterEnvCubemapGpuImg(nullptr),
+        m_envBrdfGpuImg(nullptr),
+        m_iblMaxMipLevels(0)
+    {
+    }
+
+    // ================================================================================================================
+    HIBLAsset::~HIBLAsset()
+    {
+        if (m_diffuseCubemapGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_diffuseCubemapGpuImg);
+        }
+
+        if (m_prefilterEnvCubemapGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_prefilterEnvCubemapGpuImg);
+        }
+
+        if (m_envBrdfGpuImg != nullptr)
+        {
+            g_pGpuRsrcManager->DereferGpuImg(m_envBrdfGpuImg);
+        }
+    }
+
+    // ================================================================================================================
+    void HIBLAsset::LoadAssetFromDisk()
+    {
+        std::string folderName = GetNamePathFolderName(m_assetPathName);
+        m_envBrdfPathName = m_assetPathName + "/envBrdf.hdr";
+        m_diffuseCubemapPathName = m_assetPathName + "/diffuse_irradiance_cubemap.hdr";
+        m_prefilterEnvCubemapPathName = m_assetPathName + "/prefilterEnvMaps";
+
+        /*
+        const std::filesystem::path prefilterEnvMapsFolderPath(m_prefilterEnvCubemapPathName);
+        m_iblMaxMipLevels = 0;
+        for (auto& p : std::filesystem::directory_iterator(prefilterEnvMapsFolderPath))
+        {
+            m_iblMaxMipLevels++;
+        }
+        */
+
+        // Load the diffuse cubemap
+        {
+            std::vector<float> dataFloat;
+            int width, height, nrComponents;
+            float* pData = stbi_loadf(m_diffuseCubemapPathName.c_str(), &width, &height, &nrComponents, 0);
+            dataFloat.resize(width * height * nrComponents);
+            memcpy(dataFloat.data(), pData, sizeof(float) * width * height * nrComponents);
+            delete pData;
+
+            HGpuImgCreateInfo imgCreateInfo{};
+            VkBufferImageCopy bufferImgCopy{};
+
+            // Cubemap texture asset.
+            GenCubemapTextureCreateInitInfo(VkExtent2D{(uint32_t)width, (uint32_t)height}, imgCreateInfo, bufferImgCopy);
+            m_diffuseCubemapGpuImg = g_pGpuRsrcManager->CreateGpuImage(imgCreateInfo, m_assetPathName);
+            g_pGpuRsrcManager->SendDataToImage(m_diffuseCubemapGpuImg, bufferImgCopy, dataFloat.data(), sizeof(float) * dataFloat.size());
+            g_pGpuRsrcManager->TransImageLayout(m_diffuseCubemapGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
+        // Load the environment BRDF
+        {
+            std::vector<float> dataFloat;
+            int width, height, nrComponents;
+            float* pData = stbi_loadf(m_envBrdfPathName.c_str(), &width, &height, &nrComponents, 0);
+            dataFloat.resize(width * height * nrComponents);
+            memcpy(dataFloat.data(), pData, sizeof(float) * width * height * nrComponents);
+            delete pData;
+
+            HGpuImgCreateInfo imgCreateInfo{};
+            VkBufferImageCopy bufferImgCopy{};
+
+            // 2D texture
+            Gen2DTextureCreateInitInfo(VkExtent2D{(uint32_t)width, (uint32_t)height}, imgCreateInfo, bufferImgCopy);
+            m_envBrdfGpuImg = g_pGpuRsrcManager->CreateGpuImage(imgCreateInfo, m_assetPathName);
+            g_pGpuRsrcManager->SendDataToImage(m_envBrdfGpuImg, bufferImgCopy, dataFloat.data(), sizeof(float) * dataFloat.size());
+            g_pGpuRsrcManager->TransImageLayout(m_envBrdfGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
+        // Load the prefilter environment cubemaps
+        {
+            std::vector<std::string> mipImgNames;
+            GetAllFileNames(m_prefilterEnvCubemapPathName, mipImgNames);
+            m_iblMaxMipLevels = mipImgNames.size();
+
+            for (uint32_t i = 0; i < mipImgNames.size(); i++)
+            {
+                std::string mipImgPathName = m_prefilterEnvCubemapPathName + "/" + mipImgNames[i];
+                std::vector<float> dataFloat;
+                int width, height, nrComponents;
+                float* pData = stbi_loadf(mipImgPathName.c_str(), &width, &height, &nrComponents, 0);
+                dataFloat.resize(width * height * nrComponents);
+                memcpy(dataFloat.data(), pData, sizeof(float) * width * height * nrComponents);
+                delete pData;
+
+                HGpuImgCreateInfo imgCreateInfo{};
+                VkBufferImageCopy bufferImgCopy{};
+
+                // Cubemap texture asset.
+                if (i == 0)
+                {
+                    GenCubemapTextureCreateInitInfo(VkExtent2D{(uint32_t)width, (uint32_t)height}, imgCreateInfo, bufferImgCopy, m_iblMaxMipLevels);
+                    m_prefilterEnvCubemapGpuImg = g_pGpuRsrcManager->CreateGpuImage(imgCreateInfo, m_assetPathName);
+                }
+                
+                bufferImgCopy = GenBufferImgCopyInfo(width, width, 6, i);
+                g_pGpuRsrcManager->SendDataToImage(m_prefilterEnvCubemapGpuImg, bufferImgCopy, dataFloat.data(), sizeof(float) * dataFloat.size());
+            }
+
+            g_pGpuRsrcManager->TransImageLayout(m_prefilterEnvCubemapGpuImg, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     }
 }

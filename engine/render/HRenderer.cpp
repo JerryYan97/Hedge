@@ -143,8 +143,11 @@ namespace Hedge
         memset(pFragPushConstantData, 0, fragPushConstantDataBytesCnt);
         memcpy(pFragPushConstantData, sceneRenderInfo.cameraPos, sizeof(float) * 3);
 
+        memcpy(static_cast<char*>(pFragPushConstantData) + sizeof(float) * 3, &sceneRenderInfo.iblMaxMipLevels, sizeof(uint32_t));
+
         uint32_t ptLightsCnt = sceneRenderInfo.pointLightsPositions.size();
         memcpy(static_cast<char*>(pFragPushConstantData) + sizeof(float) * 4, &ptLightsCnt, sizeof(ptLightsCnt));
+
 
         bytesCnt = fragPushConstantDataBytesCnt;
 

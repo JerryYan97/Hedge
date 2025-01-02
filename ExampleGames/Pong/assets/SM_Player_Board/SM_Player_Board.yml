@@ -1,4 +1,4 @@
 asset type: HStaticMeshAsset
-src file: uvSphere.gltf
+src file: cube.gltf
 materials:
-  - M_Ball
+  - M_Player_Board

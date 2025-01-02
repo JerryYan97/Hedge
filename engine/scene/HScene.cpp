@@ -240,8 +240,8 @@ namespace Hedge
 
         // Check whether the scene has IBL. If we don't have, then we need to use black texture asset to init IBL
         // textures
-        auto iblView = m_registry.view<HImageBasedLightingEntity>();
-        if (iblView.empty())
+        auto iblEntityView = m_registry.view<ImageBasedLightingComponent>();
+        if (iblEntityView.empty())
         {
             if ((m_pDummyBlackCubemap == nullptr) || (m_pDummyBlack2dImg == nullptr))
             {
@@ -251,6 +251,19 @@ namespace Hedge
             renderInfo.diffuseCubemapGpuImg = m_pDummyBlackCubemap;
             renderInfo.prefilterEnvCubemapGpuImg = m_pDummyBlackCubemap;
             renderInfo.envBrdfGpuImg = m_pDummyBlack2dImg;
+        }
+        else
+        {
+            auto iblEntity = iblEntityView.front();
+            auto& iblComponent = iblEntityView.get<ImageBasedLightingComponent>(iblEntity);
+
+            HIBLAsset* pIBLAsset = nullptr;
+            g_pAssetRsrcManager->GetAssetPtr(iblComponent.m_iblGUID, (HAsset**)&pIBLAsset);
+
+            renderInfo.diffuseCubemapGpuImg = pIBLAsset->GetDiffuseCubemap();
+            renderInfo.prefilterEnvCubemapGpuImg = pIBLAsset->GetPrefilterEnvCubemap();
+            renderInfo.envBrdfGpuImg = pIBLAsset->GetEnvBrdfTex();
+            renderInfo.iblMaxMipLevels = pIBLAsset->GetIblMaxMipLevels();
         }
 
         // Check whether the scene has skybox. If we don't have, we will just let it empty.
