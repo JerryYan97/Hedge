@@ -10,7 +10,7 @@ Currently, the hedge engine and editor is a personal game engine or rendering fr
 
 Itch.io: https://jerryjiarui.itch.io/3d-pong
 
-![Pong Game](./imgs/Pong_ItchIO_Cover_0_2.PNG)
+![Pong Game](./imgs/Pong_ItchIO_Cover_0_2.png)
 
 ## Prerequisite
 
