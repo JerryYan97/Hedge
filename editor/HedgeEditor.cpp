@@ -17,6 +17,7 @@ Hedge::HFrameListener* g_pFrameListener = g_raiiManager.GetHedgeEditor();
 Hedge::HRenderManager* g_pRenderManager = g_raiiManager.GetHedgeEditorRenderManager();
 Hedge::HGpuRsrcManager* g_pGpuRsrcManager = g_raiiManager.GetGpuRsrcManager();
 Hedge::HAssetRsrcManager* g_pAssetRsrcManager = g_raiiManager.GetAssetRsrcManager();
+Hedge::HBaseGuiManager* g_pGuiManager = g_raiiManager.GetHedgeEditorGuiManager();
 
 namespace Hedge
 {

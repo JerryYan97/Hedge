@@ -688,6 +688,8 @@ namespace Hedge
             imgInfo.flags = createInfo.imgCreateFlags;
         }
 
+
+
         VK_CHECK(vmaCreateImage(m_vmaAllocator,
                                 &imgInfo,
                                 &imgAllocInfo,

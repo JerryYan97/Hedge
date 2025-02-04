@@ -559,7 +559,7 @@ namespace Hedge
             HGpuImgCreateInfo iconImgCreateInfo{};
             {
                 iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-                    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                                               VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
                 iconImgCreateInfo.hasSampler = true;
                 iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
                 iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
@@ -567,6 +567,7 @@ namespace Hedge
                 iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
                 iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
                 iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+                iconImgCreateInfo.imgTiling = VK_IMAGE_TILING_LINEAR;
             }
             m_pAssetIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Asset Icon PNG");
 
@@ -593,7 +594,7 @@ namespace Hedge
             HGpuImgCreateInfo iconImgCreateInfo{};
             {
                 iconImgCreateInfo.allocFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT |
-                    VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                                               VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
                 iconImgCreateInfo.hasSampler = true;
                 iconImgCreateInfo.samplerInfo = Util::LinearRepeatSamplerInfo();
                 iconImgCreateInfo.imgExtent = Util::Depth1Extent3D(iconWidth, iconHeight);
@@ -601,6 +602,7 @@ namespace Hedge
                 iconImgCreateInfo.imgSubresRange = Util::ImgSubRsrcRangeTexColor2D();
                 iconImgCreateInfo.imgUsageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
                 iconImgCreateInfo.imgViewType = VK_IMAGE_VIEW_TYPE_2D;
+                iconImgCreateInfo.imgTiling = VK_IMAGE_TILING_LINEAR;
             }
             m_pFolderIconImg = g_pGpuRsrcManager->CreateGpuImage(iconImgCreateInfo, "Editor Folder Icon PNG");
 
