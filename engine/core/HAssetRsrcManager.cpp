@@ -573,7 +573,7 @@ namespace Hedge
             gpuImgCreateInfoTemplate.samplerInfo = samplerInfo;
             gpuImgCreateInfoTemplate.imgExtent = VkExtent3D{ widthHeightOneLayer.width, widthHeightOneLayer.height / 6, 1 };
             gpuImgCreateInfoTemplate.imgFormat = VK_FORMAT_R32G32B32_SFLOAT;
-            gpuImgCreateInfoTemplate.imgTiling = VK_IMAGE_TILING_LINEAR;
+            gpuImgCreateInfoTemplate.imgTiling = VK_IMAGE_TILING_OPTIMAL; // VK_IMAGE_TILING_LINEAR; Nvidia needs it to be optimal.
             gpuImgCreateInfoTemplate.imgCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
         }
         oImgCreateInfo = gpuImgCreateInfoTemplate;
